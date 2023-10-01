@@ -6,6 +6,7 @@ import {
   method,
   Struct,
   Poseidon,
+  Bool,
 } from 'o1js';
 
 class GeographicalPoint extends Struct({
@@ -31,31 +32,76 @@ class SimplePolygon extends Struct({
   }
 }
 
+/**
+ * Represents a proof that a geographical point is inside a polygon.
+ *
+ */
 export class PolygonProof extends SmartContract {
+  /** Hash of all of the fields composing the Polygon. */
   @state(Field) polygonCommitment = State<Field>();
-  @state(Field) pointCommitment = State<Field>();
+
+  /**
+   * Hash of the coordinates whose incluison inside of the Polygon is being verified
+   * This is needed for the multi-polygon proof to verify that the assetions are related to the
+   * same set of coordinates.
+   */
+  @state(Field) coordinatesCommitment = State<Field>();
+
+  /** Hash of he source commitement of the Polygon. */
   @state(Field) sourceCommitment = State<Field>();
 
-  init() {
+  /** Boolean indicating wether the point is to be included in the Polygon. */
+  @state(Bool) isInPolygon = State<boolean>();
+
+  /**
+   * Initializes the PolygonProof smart contract.
+   */
+  @method init() {
     super.init();
+
+    // Set default values for the state variables
     this.polygonCommitment.set(Field(0));
-
-    this.pointCommitment.set(Field(0));
-
+    this.coordinatesCommitment.set(Field(0));
     this.sourceCommitment.set(Field(0));
+    this.isInPolygon.set(false);
   }
 }
 
-export class SimplePolygonProof extends PolygonProof {
-  @method provePointInPolygon(
+/**
+ * Represents a proof that a geographical point is inside a polygon. This proof
+ * can remain "private", i.e. local to the User's machine.
+ */
+export class CoordinatesInPolygon extends PolygonProof {
+  /*
+   * Proof that a geographical point is inside a simple polygon defied by 3 points.
+   */
+  @method proveCoordinatesIn3PointPolygon(
     point: GeographicalPoint,
     polygon: SimplePolygon
   ) {
-    // verify if the point is in the polygon
+    // here, we verify if the point is in the polygon
     const hashOfGeoPoint = point.hash();
     const hashOfPolygon = polygon.hash();
 
-    this.pointCommitment.set(hashOfGeoPoint);
+    this.coordinatesCommitment.set(hashOfGeoPoint);
     this.polygonCommitment.set(hashOfPolygon);
   }
+}
+
+class CoordinatesInPolygonProof extends CoordinatesInPolygon.Proof() {}
+
+/*
+ * Combines multiple PolygonProofs into a single proof that the coordinates are inside
+ * at least one of the polygons. This proof can remain "private", i.e. local to the User's machine.
+ */
+export class CoordinatesInMultiPolygon extends PolygonProof {
+  @method OR(proof: CoordinatesInPolygonProof) {
+    proof.verify();
+    // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
+    //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
+    // 2. Verify that the commitment is for the same coordinates
+    // 3. Set isInPolygon to any(this.isInPolygon, proof.isInPolygon)
+  }
+
+  // TODO: Implement AND
 }
