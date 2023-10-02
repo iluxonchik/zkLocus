@@ -93,15 +93,69 @@ class CoordinatesInPolygonProof extends CoordinatesInPolygon.Proof() {}
 /*
  * Combines multiple PolygonProofs into a single proof that the coordinates are inside
  * at least one of the polygons. This proof can remain "private", i.e. local to the User's machine.
+ * This Smart Contract allows to compose multiple ZK Proofs into a single one, by using the OR and AND
+ * primitives.
  */
 export class CoordinatesInMultiPolygon extends PolygonProof {
+  @method ONLY(proof: CoordinatesInPolygonProof) {
+    proof.verify();
+    // 1. Verify that commintments have not been initialized yet
+    // 2. Set isInPolygon to proof.isInPolygon
+  }
   @method OR(proof: CoordinatesInPolygonProof) {
     proof.verify();
     // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
     //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
     // 2. Verify that the commitment is for the same coordinates
-    // 3. Set isInPolygon to any(this.isInPolygon, proof.isInPolygon)
+    // 3. Update commitments
+    // 4. Set isInPolygon to any(this.isInPolygon, proof.isInPolygon)
   }
 
-  // TODO: Implement AND
+  @method AND(proof: CoordinatesInPolygonProof) {
+    proof.verify();
+    // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
+    //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
+    // 2. Verify that the commitment is for the same coordinates
+    // 3. Update commitments
+    // 4. Set isInPolygon to all(this.isInPolygon, proof.isInPolygon)
+  }
+}
+
+class CoordinatesInMultiPolygonProof extends CoordinatesInMultiPolygon.Proof() {}
+
+/**
+ * Represents a proof that a geographical point is inside a polygon. This is the proof that will
+ * be submitted to the blockchain or sent to a thrid-party. It strips away the sensitive information
+ * from the CoordinatesInMultiPolygonProof, namely the hash of the user's coordinates. Only the data
+ * regarding the polygon(s) in which the user is inside is kept.
+ */
+export class LocationInPolygon extends SmartContract {
+  @state(Field) polygonCommitment = State<Field>();
+
+  @method init() {
+    super.init();
+    this.polygonCommitment.set(Field(0));
+  }
+
+  @method proveLocationInPolygon(
+    multiPolygonProof: CoordinatesInMultiPolygonProof
+  ) {
+    multiPolygonProof.verify();
+    //1. Update commitments
+  }
+}
+
+/**
+ * Represents the history of locations. The history of locations is composed of proofs from `LocationInPolygon`.
+ * All of the histoircal data and assertions about the lcoation are performed here.
+ *
+ * This is a "public" proof, meaning it is stored on the blockchain.
+ */
+export class LocationHistory extends SmartContract {
+  @state(Field) merkleRoot = State<Field>();
+
+  @method init() {
+    super.init();
+    this.merkleRoot.set(Field(0));
+  }
 }
