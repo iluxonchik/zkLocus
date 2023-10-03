@@ -78,13 +78,15 @@ export class CoordinatesInPolygon extends PolygonProof {
   @method proveCoordinatesIn3PointPolygon(
     point: GeographicalPoint,
     polygon: SimplePolygon
-  ) {
+  ): Bool {
     // here, we verify if the point is in the polygon
     const hashOfGeoPoint = point.hash();
     const hashOfPolygon = polygon.hash();
 
     this.coordinatesCommitment.set(hashOfGeoPoint);
     this.polygonCommitment.set(hashOfPolygon);
+
+    return Bool(true);
   }
 }
 
@@ -100,7 +102,13 @@ export class CoordinatesInMultiPolygon extends PolygonProof {
   @method ONLY(proof: CoordinatesInPolygonProof) {
     proof.verify();
     // 1. Verify that commintments have not been initialized yet
+    this.polygonCommitment.assertEquals(Field(0));
+    this.coordinatesCommitment.assertEquals(Field(0));
+    this.sourceCommitment.assertEquals(Field(0));
+
     // 2. Set isInPolygon to proof.isInPolygon
+    let isInPolygon: Bool = proof.publicOutput;
+    this.isInPolygon.set(isInPolygon);
   }
   @method OR(proof: CoordinatesInPolygonProof) {
     proof.verify();
