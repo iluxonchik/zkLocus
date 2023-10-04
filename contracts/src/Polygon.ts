@@ -7,6 +7,8 @@ import {
   Struct,
   Poseidon,
   Bool,
+  Experimental,
+  SelfProof,
 } from 'o1js';
 
 class GeographicalPoint extends Struct({
@@ -18,7 +20,7 @@ class GeographicalPoint extends Struct({
   }
 }
 
-class SimplePolygon extends Struct({
+class ThreePointPolygon extends Struct({
   vertice1: GeographicalPoint,
   vertice2: GeographicalPoint,
   vertice3: GeographicalPoint,
@@ -32,11 +34,47 @@ class SimplePolygon extends Struct({
   }
 }
 
+class CoordinateProofState extends Struct({
+  polygonCommitment: Field,
+  coordinatesCommitment: Field,
+  isInPolygon: Bool,
+}) {}
+
+function proveCoordinatesIn3PointPolygon(
+  point: GeographicalPoint,
+  polygon: ThreePointPolygon
+): CoordinateProofState {
+  // compute if point in Polygon
+  // TODO
+
+  // If point in polygon, return the commitment data
+  let polygonCommitment = polygon.hash();
+  let coordinatesCommitment = point.hash();
+  let isInPolygon = Bool(true);
+
+  return new CoordinateProofState({
+    polygonCommitment,
+    coordinatesCommitment,
+    isInPolygon,
+  });
+}
+
+const CoordinatesInPolygon = Experimental.ZkProgram({
+  publicOutput: CoordinateProofState,
+
+  methods: {
+    proveCoordinatesIn3PointPolygon: {
+      privateInputs: [GeographicalPoint, ThreePointPolygon],
+      method: proveCoordinatesIn3PointPolygon,
+    },
+  },
+});
+
 /**
  * Represents a proof that a geographical point is inside a polygon.
  *
  */
-export class PolygonProof extends SmartContract {
+export class PolygonProofSC extends SmartContract {
   /** Hash of all of the fields composing the Polygon. */
   @state(Field) polygonCommitment = State<Field>();
 
@@ -71,13 +109,13 @@ export class PolygonProof extends SmartContract {
  * Represents a proof that a geographical point is inside a polygon. This proof
  * can remain "private", i.e. local to the User's machine.
  */
-export class CoordinatesInPolygon extends PolygonProof {
+export class CoordinatesInPolygonSC extends PolygonProofSC {
   /*
    * Proof that a geographical point is inside a simple polygon defied by 3 points.
    */
   @method proveCoordinatesIn3PointPolygon(
     point: GeographicalPoint,
-    polygon: SimplePolygon
+    polygon: ThreePointPolygon
   ): Bool {
     // here, we verify if the point is in the polygon
     const hashOfGeoPoint = point.hash();
@@ -90,7 +128,7 @@ export class CoordinatesInPolygon extends PolygonProof {
   }
 }
 
-class CoordinatesInPolygonProof extends CoordinatesInPolygon.Proof() {}
+class CoordinatesInPolygonProofSC extends CoordinatesInPolygonSC.Proof() {}
 
 /*
  * Combines multiple PolygonProofs into a single proof that the coordinates are inside
@@ -98,8 +136,8 @@ class CoordinatesInPolygonProof extends CoordinatesInPolygon.Proof() {}
  * This Smart Contract allows to compose multiple ZK Proofs into a single one, by using the OR and AND
  * primitives.
  */
-export class CoordinatesInMultiPolygon extends PolygonProof {
-  @method ONLY(proof: CoordinatesInPolygonProof) {
+export class CoordinatesInMultiPolygonSC extends PolygonProofSC {
+  @method ONLY(proof: CoordinatesInPolygonProofSC) {
     proof.verify();
     // 1. Verify that commintments have not been initialized yet
     this.polygonCommitment.assertEquals(Field(0));
@@ -110,7 +148,7 @@ export class CoordinatesInMultiPolygon extends PolygonProof {
     let isInPolygon: Bool = proof.publicOutput;
     this.isInPolygon.set(isInPolygon);
   }
-  @method OR(proof: CoordinatesInPolygonProof) {
+  @method OR(proof: CoordinatesInPolygonProofSC) {
     proof.verify();
     // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
     //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
@@ -119,7 +157,7 @@ export class CoordinatesInMultiPolygon extends PolygonProof {
     // 4. Set isInPolygon to any(this.isInPolygon, proof.isInPolygon)
   }
 
-  @method AND(proof: CoordinatesInPolygonProof) {
+  @method AND(proof: CoordinatesInPolygonProofSC) {
     proof.verify();
     // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
     //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
@@ -129,7 +167,7 @@ export class CoordinatesInMultiPolygon extends PolygonProof {
   }
 }
 
-class CoordinatesInMultiPolygonProof extends CoordinatesInMultiPolygon.Proof() {}
+class CoordinatesInMultiPolygonProofSC extends CoordinatesInMultiPolygonSC.Proof() {}
 
 /**
  * Represents a proof that a geographical point is inside a polygon. This is the proof that will
@@ -137,7 +175,7 @@ class CoordinatesInMultiPolygonProof extends CoordinatesInMultiPolygon.Proof() {
  * from the CoordinatesInMultiPolygonProof, namely the hash of the user's coordinates. Only the data
  * regarding the polygon(s) in which the user is inside is kept.
  */
-export class LocationInPolygon extends SmartContract {
+export class LocationInPolygonSC extends SmartContract {
   @state(Field) polygonCommitment = State<Field>();
 
   @method init() {
@@ -146,7 +184,7 @@ export class LocationInPolygon extends SmartContract {
   }
 
   @method proveLocationInPolygon(
-    multiPolygonProof: CoordinatesInMultiPolygonProof
+    multiPolygonProof: CoordinatesInMultiPolygonProofSC
   ) {
     multiPolygonProof.verify();
     //1. Update commitments
@@ -159,7 +197,7 @@ export class LocationInPolygon extends SmartContract {
  *
  * This is a "public" proof, meaning it is stored on the blockchain.
  */
-export class LocationHistory extends SmartContract {
+export class LocationHistorySC extends SmartContract {
   @state(Field) merkleRoot = State<Field>();
 
   @method init() {
