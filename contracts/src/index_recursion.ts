@@ -1,7 +1,7 @@
 import { MyContract } from './Recursion.js';
-import { zkLocusDataStore } from './zkLocusDataStore.js';
+import { SimpleStateUpdate } from './SimpleStateUpdate.js';
 
-export { zkLocusDataStore };
+export { SimpleStateUpdate };
 
 import {
   isReady,
