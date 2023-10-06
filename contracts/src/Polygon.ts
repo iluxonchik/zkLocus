@@ -9,6 +9,8 @@ import {
   Bool,
   Experimental,
   SelfProof,
+  Empty,
+  Provable,
 } from 'o1js';
 
 class GeographicalPoint extends Struct({
@@ -59,6 +61,68 @@ function proveCoordinatesIn3PointPolygon(
   });
 }
 
+function AND(
+  proof1: SelfProof<Empty, CoordinateProofState>,
+  proof2: SelfProof<Empty, CoordinateProofState>
+): CoordinateProofState {
+  proof1.verify();
+  proof2.verify();
+
+  // ensure that the proof is for the same coordinates
+  proof1.publicOutput.coordinatesCommitment.assertEquals(
+    proof2.publicOutput.coordinatesCommitment
+  );
+  // ensure that the proof is not done for the same polygon
+  proof1.publicOutput.polygonCommitment.assertNotEquals(
+    proof2.publicOutput.polygonCommitment
+  );
+
+  // logic of AND
+  proof1.publicOutput.isInPolygon.assertEquals(Bool(true));
+  proof2.publicOutput.isInPolygon.assertEquals(Bool(true));
+
+  return new CoordinateProofState({
+    polygonCommitment: Poseidon.hash([
+      proof1.publicOutput.polygonCommitment,
+      proof2.publicOutput.polygonCommitment,
+    ]),
+    coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
+    isInPolygon: Bool(true),
+  });
+}
+
+function OR(
+  proof1: SelfProof<Empty, CoordinateProofState>,
+  proof2: SelfProof<Empty, CoordinateProofState>
+): CoordinateProofState {
+  proof1.verify();
+  proof2.verify();
+
+  // ensure that the proof is for the same coordinates
+  proof1.publicOutput.coordinatesCommitment.assertEquals(
+    proof2.publicOutput.coordinatesCommitment
+  );
+  // ensure that the proof is not done for the same polygon
+  proof1.publicOutput.polygonCommitment.assertNotEquals(
+    proof2.publicOutput.polygonCommitment
+  );
+
+  // logic of OR
+  let isInPolygon = proof1.publicOutput.isInPolygon.or(
+    proof2.publicOutput.isInPolygon
+  );
+  proof2.publicOutput.isInPolygon.assertEquals(Bool(true));
+
+  return new CoordinateProofState({
+    polygonCommitment: Poseidon.hash([
+      proof1.publicOutput.polygonCommitment,
+      proof2.publicOutput.polygonCommitment,
+    ]),
+    coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
+    isInPolygon: Bool(true),
+  });
+}
+
 const CoordinatesInPolygon = Experimental.ZkProgram({
   publicOutput: CoordinateProofState,
 
@@ -66,6 +130,22 @@ const CoordinatesInPolygon = Experimental.ZkProgram({
     proveCoordinatesIn3PointPolygon: {
       privateInputs: [GeographicalPoint, ThreePointPolygon],
       method: proveCoordinatesIn3PointPolygon,
+    },
+
+    AND: {
+      privateInputs: [
+        SelfProof<Empty, CoordinateProofState>,
+        SelfProof<Empty, CoordinateProofState>,
+      ],
+      method: AND,
+    },
+
+    OR: {
+      privateInputs: [
+        SelfProof<Empty, CoordinateProofState>,
+        SelfProof<Empty, CoordinateProofState>,
+      ],
+      method: OR,
     },
   },
 });
