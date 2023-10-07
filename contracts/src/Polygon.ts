@@ -47,12 +47,20 @@ function proveCoordinatesIn3PointPolygon(
   polygon: ThreePointPolygon
 ): CoordinateProofState {
   // compute if point in Polygon
-  // TODO
+  // NOTE: fow now, using this mock impelementation: if the sum of the coordinates is greater than 100, it's inside,
+  // otherwise, it's outside.
+  let sumOfCoordinates: Field = point.latitude.add(point.longitude);
+
+  let isGreaterThan100: Bool = Provable.if(
+    sumOfCoordinates.greaterThan(Field(100)),
+    Bool(true),
+    Bool(false)
+  );
 
   // If point in polygon, return the commitment data
   let polygonCommitment = polygon.hash();
   let coordinatesCommitment = point.hash();
-  let isInPolygon = Bool(true);
+  let isInPolygon = isGreaterThan100;
 
   return new CoordinateProofState({
     polygonCommitment,
@@ -78,9 +86,13 @@ function AND(
   );
 
   // logic of AND
-  proof1.publicOutput.isInPolygon.assertEquals(Bool(true));
-  proof2.publicOutput.isInPolygon.assertEquals(Bool(true));
+  let isInPolygon = Provable.if(
+    proof1.publicOutput.isInPolygon.and(proof2.publicOutput.isInPolygon),
+    Bool(true),
+    Bool(false)
+  );
 
+  isInPolygon.assertEquals(Bool(true));
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
       proof1.publicOutput.polygonCommitment,
@@ -108,10 +120,13 @@ function OR(
   );
 
   // logic of OR
-  let isInPolygon = proof1.publicOutput.isInPolygon.or(
-    proof2.publicOutput.isInPolygon
+  let isInPolygon = Provable.if(
+    proof1.publicOutput.isInPolygon.or(proof2.publicOutput.isInPolygon),
+    Bool(true),
+    Bool(false)
   );
-  proof2.publicOutput.isInPolygon.assertEquals(Bool(true));
+
+  isInPolygon.assertEquals(Bool(true));
 
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
@@ -149,127 +164,6 @@ const CoordinatesInPolygon = Experimental.ZkProgram({
     },
   },
 });
-
-/**
- * Represents a proof that a geographical point is inside a polygon.
- *
- */
-export class PolygonProofSC extends SmartContract {
-  /** Hash of all of the fields composing the Polygon. */
-  @state(Field) polygonCommitment = State<Field>();
-
-  /**
-   * Hash of the coordinates whose incluison inside of the Polygon is being verified
-   * This is needed for the multi-polygon proof to verify that the assetions are related to the
-   * same set of coordinates.
-   */
-  @state(Field) coordinatesCommitment = State<Field>();
-
-  /** Hash of he source commitement of the Polygon. */
-  @state(Field) sourceCommitment = State<Field>();
-
-  /** Boolean indicating wether the point is to be included in the Polygon. */
-  @state(Bool) isInPolygon = State<boolean>();
-
-  /**
-   * Initializes the PolygonProof smart contract.
-   */
-  @method init() {
-    super.init();
-
-    // Set default values for the state variables
-    this.polygonCommitment.set(Field(0));
-    this.coordinatesCommitment.set(Field(0));
-    this.sourceCommitment.set(Field(0));
-    this.isInPolygon.set(false);
-  }
-}
-
-/**
- * Represents a proof that a geographical point is inside a polygon. This proof
- * can remain "private", i.e. local to the User's machine.
- */
-export class CoordinatesInPolygonSC extends PolygonProofSC {
-  /*
-   * Proof that a geographical point is inside a simple polygon defied by 3 points.
-   */
-  @method proveCoordinatesIn3PointPolygon(
-    point: GeographicalPoint,
-    polygon: ThreePointPolygon
-  ): Bool {
-    // here, we verify if the point is in the polygon
-    const hashOfGeoPoint = point.hash();
-    const hashOfPolygon = polygon.hash();
-
-    this.coordinatesCommitment.set(hashOfGeoPoint);
-    this.polygonCommitment.set(hashOfPolygon);
-
-    return Bool(true);
-  }
-}
-
-class CoordinatesInPolygonProofSC extends CoordinatesInPolygonSC.Proof() {}
-
-/*
- * Combines multiple PolygonProofs into a single proof that the coordinates are inside
- * at least one of the polygons. This proof can remain "private", i.e. local to the User's machine.
- * This Smart Contract allows to compose multiple ZK Proofs into a single one, by using the OR and AND
- * primitives.
- */
-export class CoordinatesInMultiPolygonSC extends PolygonProofSC {
-  @method ONLY(proof: CoordinatesInPolygonProofSC) {
-    proof.verify();
-    // 1. Verify that commintments have not been initialized yet
-    this.polygonCommitment.assertEquals(Field(0));
-    this.coordinatesCommitment.assertEquals(Field(0));
-    this.sourceCommitment.assertEquals(Field(0));
-
-    // 2. Set isInPolygon to proof.isInPolygon
-    let isInPolygon: Bool = proof.publicOutput;
-    this.isInPolygon.set(isInPolygon);
-  }
-  @method OR(proof: CoordinatesInPolygonProofSC) {
-    proof.verify();
-    // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
-    //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
-    // 2. Verify that the commitment is for the same coordinates
-    // 3. Update commitments
-    // 4. Set isInPolygon to any(this.isInPolygon, proof.isInPolygon)
-  }
-
-  @method AND(proof: CoordinatesInPolygonProofSC) {
-    proof.verify();
-    // 1. Special case for init: If all commitements are Field(0), then accept polygon as valid
-    //    ! - this has the edge case of the hashes causing a collision. Use an alternative, like a new boolean Field
-    // 2. Verify that the commitment is for the same coordinates
-    // 3. Update commitments
-    // 4. Set isInPolygon to all(this.isInPolygon, proof.isInPolygon)
-  }
-}
-
-class CoordinatesInMultiPolygonProofSC extends CoordinatesInMultiPolygonSC.Proof() {}
-
-/**
- * Represents a proof that a geographical point is inside a polygon. This is the proof that will
- * be submitted to the blockchain or sent to a thrid-party. It strips away the sensitive information
- * from the CoordinatesInMultiPolygonProof, namely the hash of the user's coordinates. Only the data
- * regarding the polygon(s) in which the user is inside is kept.
- */
-export class LocationInPolygonSC extends SmartContract {
-  @state(Field) polygonCommitment = State<Field>();
-
-  @method init() {
-    super.init();
-    this.polygonCommitment.set(Field(0));
-  }
-
-  @method proveLocationInPolygon(
-    multiPolygonProof: CoordinatesInMultiPolygonProofSC
-  ) {
-    multiPolygonProof.verify();
-    //1. Update commitments
-  }
-}
 
 /**
  * Represents the history of locations. The history of locations is composed of proofs from `LocationInPolygon`.
