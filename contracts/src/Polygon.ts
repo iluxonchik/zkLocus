@@ -13,7 +13,7 @@ import {
   Provable,
 } from 'o1js';
 
-class GeographicalPoint extends Struct({
+export class GeographicalPoint extends Struct({
   latitude: Field,
   longitude: Field,
 }) {
@@ -22,7 +22,7 @@ class GeographicalPoint extends Struct({
   }
 }
 
-class ThreePointPolygon extends Struct({
+export class ThreePointPolygon extends Struct({
   vertice1: GeographicalPoint,
   vertice2: GeographicalPoint,
   vertice3: GeographicalPoint,
@@ -138,7 +138,7 @@ function OR(
   });
 }
 
-const CoordinatesInPolygon = Experimental.ZkProgram({
+export const CoordinatesInPolygon = Experimental.ZkProgram({
   publicOutput: CoordinateProofState,
 
   methods: {

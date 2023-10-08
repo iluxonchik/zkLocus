@@ -1,3 +1,8 @@
+import {
+  CoordinatesInPolygon,
+  GeographicalPoint,
+  ThreePointPolygon,
+} from './Polygon.js';
 import { zkLocusDataStore } from './zkLocusDataStore.js';
 
 export { zkLocusDataStore };
@@ -20,34 +25,42 @@ const { privateKey: deployerKey, publicKey: deployerAccount } =
 const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
-// the zkApp that will be deployed
-const zkAppPrivateKey = PrivateKey.random();
-const zkAppAddress = zkAppPrivateKey.toPublicKey();
+// Compilete the ZKApp
+await CoordinatesInPolygon.compile();
 
-// deploy zkApp to MINA blockchain
-const zkAppInstance: zkLocusDataStore = new zkLocusDataStore(zkAppAddress);
-const deployTxn = await Mina.transaction(deployerAccount, () => {
-  AccountUpdate.fundNewAccount(deployerAccount);
-  zkAppInstance.deploy();
+// Setup Coordinates and Polygon
+// 1. Mocked coordinates, whose lat and lon sum to below 100
+let notInPolygonCoordsMocked = new GeographicalPoint({
+  latitude: Field(10),
+  longitude: Field(10),
 });
 
-// transaction signed by both, the zkApp and the deployer of the zkApp
-await deployTxn.sign([deployerKey, zkAppPrivateKey]).send();
-
-// get initial state of zkApp
-const num0 = zkAppInstance.num.get();
-console.log('state after init:', num0.toString());
-
-const txn1 = await Mina.transaction(senderAccount, () => {
-  zkAppInstance.incrementBy(Field(64));
+// 2. Mocked coordinates, whose lat and lon sum to above 100
+let inPolygonCoordsMocked = new GeographicalPoint({
+  latitude: Field(100),
+  longitude: Field(100),
 });
-// create a zero-knowledge proof of the transaction that calls the update method and changes the state to new values
-await txn1.prove();
-// sign the proof, attesting that it came from a particular source and no one else
-await txn1.sign([senderKey]).send();
 
-const num1 = zkAppInstance.num.get();
-console.log('state after txt1, with update() called:', num1.toString());
+// 3. Polygon: For the mock, any Polygon is okay
+let mockedPolygon = new ThreePointPolygon({
+  vertice1: new GeographicalPoint({ latitude: Field(1), longitude: Field(1) }),
+  vertice2: new GeographicalPoint({ latitude: Field(2), longitude: Field(2) }),
+  vertice3: new GeographicalPoint({ latitude: Field(3), longitude: Field(3) }),
+});
 
-console.log('Shutting down');
-await shutdown();
+const proofNotInPolygon =
+  await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+    notInPolygonCoordsMocked,
+    mockedPolygon
+  );
+const proofInPolygon =
+  await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+    inPolygonCoordsMocked,
+    mockedPolygon
+  );
+
+const notInPolygonPublicOutput = proofNotInPolygon.publicOutput;
+const inPolygonPublicOutput = proofInPolygon.publicOutput;
+
+console.log('notInPolygonPublicOutput', notInPolygonPublicOutput);
+console.log('inPolygonPublicOutput', inPolygonPublicOutput);
