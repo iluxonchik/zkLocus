@@ -3,18 +3,8 @@ import {
   GeographicalPoint,
   ThreePointPolygon,
 } from './Polygon.js';
-import { zkLocusDataStore } from './zkLocusDataStore.js';
 
-export { zkLocusDataStore };
-
-import {
-  isReady,
-  shutdown,
-  Field,
-  Mina,
-  PrivateKey,
-  AccountUpdate,
-} from 'o1js';
+import { Field, Mina, PrivateKey, AccountUpdate } from 'o1js';
 
 console.log('o1js loaded');
 const useProof = false;

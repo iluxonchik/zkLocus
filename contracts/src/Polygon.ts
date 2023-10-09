@@ -51,21 +51,29 @@ function proveCoordinatesIn3PointPolygon(
   // otherwise, it's outside.
   let sumOfCoordinates: Field = point.latitude.add(point.longitude);
 
+  Provable.log('Sum Of Coordinates: ', sumOfCoordinates);
+
   let isGreaterThan100: Bool = Provable.if(
     sumOfCoordinates.greaterThan(Field(100)),
     Bool(true),
     Bool(false)
   );
 
+  Provable.log('Is Greater Than 100: ', isGreaterThan100);
+
   // If point in polygon, return the commitment data
   let polygonCommitment = polygon.hash();
   let coordinatesCommitment = point.hash();
   let isInPolygon = isGreaterThan100;
 
+  Provable.log('Polygon Commitment: ', polygonCommitment);
+  Provable.log('Coordinates Commitment: ', coordinatesCommitment);
+  Provable.log('Is In Polygon: ', isInPolygon);
+
   return new CoordinateProofState({
-    polygonCommitment,
-    coordinatesCommitment,
-    isInPolygon,
+    polygonCommitment: polygonCommitment,
+    coordinatesCommitment: coordinatesCommitment,
+    isInPolygon: isInPolygon,
   });
 }
 
