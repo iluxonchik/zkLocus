@@ -16,7 +16,9 @@ const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
 // Compilete the ZKApp
+console.log('Compiling ZKApp...');
 await CoordinatesInPolygon.compile();
+console.log('\tZKApp compiled successfully ✅');
 
 // Setup Coordinates and Polygon
 // 1. Mocked coordinates, whose lat and lon sum to below 100
@@ -38,19 +40,37 @@ let mockedPolygon = new ThreePointPolygon({
   vertice3: new GeographicalPoint({ latitude: Field(3), longitude: Field(3) }),
 });
 
+console.log('Proving Coordinates in Polygon...');
 const proofNotInPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
     notInPolygonCoordsMocked,
     mockedPolygon
   );
+
+console.log('Proving Coordinates in Polygon...');
 const proofInPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
     inPolygonCoordsMocked,
     mockedPolygon
   );
 
-const notInPolygonPublicOutput = proofNotInPolygon.publicOutput;
-const inPolygonPublicOutput = proofInPolygon.publicOutput;
+const notInPolygonPublicOutput: string =
+  proofNotInPolygon.publicOutput.toString();
+const inPolygonPublicOutput: string = proofInPolygon.publicOutput.toString();
 
-console.log('notInPolygonPublicOutput', notInPolygonPublicOutput);
-console.log('inPolygonPublicOutput', inPolygonPublicOutput);
+console.log(
+  '1️⃣ Not In Polygon Coordinates Output:\n',
+  notInPolygonPublicOutput
+);
+console.log('2️⃣ In Polygon Coordinates Output:\n', inPolygonPublicOutput);
+
+// 4. Do OR operation on the two proofs
+console.log('ORing the two proofs...');
+const orProof = await CoordinatesInPolygon.OR(
+  proofNotInPolygon,
+  proofInPolygon
+);
+console.log('\tORing the two proofs successful ✅');
+
+const orProofPublicOutput: string = orProof.publicOutput.toString();
+console.log('3️⃣ OR Proof Output:\n', orProofPublicOutput);

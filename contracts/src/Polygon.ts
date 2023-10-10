@@ -40,7 +40,11 @@ class CoordinateProofState extends Struct({
   polygonCommitment: Field,
   coordinatesCommitment: Field,
   isInPolygon: Bool,
-}) {}
+}) {
+  toString(): string {
+    return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
+  }
+}
 
 function proveCoordinatesIn3PointPolygon(
   point: GeographicalPoint,
