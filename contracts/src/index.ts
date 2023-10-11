@@ -15,48 +15,88 @@ const { privateKey: deployerKey, publicKey: deployerAccount } =
 const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
-// Compilete the ZKApp
+// Compile the ZKApp
 console.log('Compiling ZKApp...');
 await CoordinatesInPolygon.compile();
 console.log('\tZKApp compiled successfully ✅');
 
 // Setup Coordinates and Polygon
-// 1. Mocked coordinates, whose lat and lon sum to below 100
-let notInPolygonCoordsMocked = new GeographicalPoint({
+// 1. Coordinates with small latitude value
+let smallLatitudeCoords = new GeographicalPoint({
   latitude: Field(10),
   longitude: Field(10),
 });
 
-// 2. Mocked coordinates, whose lat and lon sum to above 100
-let inPolygonCoordsMocked = new GeographicalPoint({
+// 2. Coordinates with large latitude value
+let largeLatitudeCoords = new GeographicalPoint({
   latitude: Field(100),
   longitude: Field(100),
 });
 
-// 3. Polygon: For the mock, any Polygon is okay
-let mockedPolygon = new ThreePointPolygon({
+// 3. Define the polygons
+
+// 3.1. Polygon with small latitude values.
+let mockedPolygonSmallVertice = new ThreePointPolygon({
   vertice1: new GeographicalPoint({ latitude: Field(1), longitude: Field(1) }),
   vertice2: new GeographicalPoint({ latitude: Field(2), longitude: Field(2) }),
   vertice3: new GeographicalPoint({ latitude: Field(3), longitude: Field(3) }),
 });
 
-console.log('Proving Coordinates in Polygon...');
-const proofNotInPolygon =
+// 3.2 Polygon with medium latitude values.
+let mockedPolygonMediumVertice = new ThreePointPolygon({
+  vertice1: new GeographicalPoint({ latitude: Field(50), longitude: Field(1) }),
+  vertice2: new GeographicalPoint({ latitude: Field(50), longitude: Field(2) }),
+  vertice3: new GeographicalPoint({ latitude: Field(50), longitude: Field(3) }),
+});
+
+// 3.2. Polygon with large latitude values.
+let mockedPolygonLargeVertice = new ThreePointPolygon({
+  vertice1: new GeographicalPoint({
+    latitude: Field(100),
+    longitude: Field(1),
+  }),
+  vertice2: new GeographicalPoint({
+    latitude: Field(200),
+    longitude: Field(2),
+  }),
+  vertice3: new GeographicalPoint({
+    latitude: Field(300),
+    longitude: Field(3),
+  }),
+});
+
+console.log('Proving small coordinates not in small polygon...');
+const proofSmallCoordinatesNotInSmallPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
-    notInPolygonCoordsMocked,
-    mockedPolygon
+    smallLatitudeCoords,
+    mockedPolygonSmallVertice
   );
 
-console.log('Proving Coordinates in Polygon...');
-const proofInPolygon =
+console.log('Proving small coordinates not in medium polygon...');
+const proofSmallCoordinatesNotInMediumPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
-    inPolygonCoordsMocked,
-    mockedPolygon
+    smallLatitudeCoords,
+    mockedPolygonMediumVertice
+  );
+
+console.log('Proving small coordinates in large polygon...');
+const proofSmallCoordinatesInLargePolygon =
+  await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+    smallLatitudeCoords,
+    mockedPolygonLargeVertice
+  );
+
+console.log('Proving large coordintes in small polygon...');
+const prooLargeCoordinatesInSmallPolygon =
+  await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+    largeLatitudeCoords,
+    mockedPolygonSmallVertice
   );
 
 const notInPolygonPublicOutput: string =
-  proofNotInPolygon.publicOutput.toString();
-const inPolygonPublicOutput: string = proofInPolygon.publicOutput.toString();
+  proofSmallCoordinatesNotInSmallPolygon.publicOutput.toString();
+const inPolygonPublicOutput: string =
+  prooLargeCoordinatesInSmallPolygon.publicOutput.toString();
 
 console.log(
   '1️⃣ Not In Polygon Coordinates Output:\n',
@@ -64,13 +104,28 @@ console.log(
 );
 console.log('2️⃣ In Polygon Coordinates Output:\n', inPolygonPublicOutput);
 
-// 4. Do OR operation on the two proofs
-console.log('ORing the two proofs...');
-const orProof = await CoordinatesInPolygon.OR(
-  proofNotInPolygon,
-  proofInPolygon
+// 4. Do OR operation on a set of proofs
+
+// 4.1 ORing the two proofs that should yield an in-polygon result
+console.log('ORing the two proofs that should yield an in-polygon result...');
+const orProof1 = await CoordinatesInPolygon.OR(
+  proofSmallCoordinatesNotInSmallPolygon,
+  proofSmallCoordinatesInLargePolygon
 );
 console.log('\tORing the two proofs successful ✅');
 
-const orProofPublicOutput: string = orProof.publicOutput.toString();
+const orProofPublicOutput: string = orProof1.publicOutput.toString();
 console.log('3️⃣ OR Proof Output:\n', orProofPublicOutput);
+
+// 4.2 ORing the two proofs that should yield a not in-polygon result
+console.log(
+  'ORing the two proofs that should yield a not in-polygon result...'
+);
+const orProof2 = await CoordinatesInPolygon.OR(
+  proofSmallCoordinatesNotInSmallPolygon,
+  proofSmallCoordinatesNotInMediumPolygon
+);
+console.log('\tORing the two proofs successful ✅');
+
+const orProof2PublicOutput: string = orProof2.publicOutput.toString();
+console.log('4️⃣ OR Proof Output:\n', orProof2PublicOutput);

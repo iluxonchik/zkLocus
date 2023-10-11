@@ -51,9 +51,9 @@ function proveCoordinatesIn3PointPolygon(
   polygon: ThreePointPolygon
 ): CoordinateProofState {
   // compute if point in Polygon
-  // NOTE: fow now, using this mock impelementation: if the sum of the coordinates is greater than 100, it's inside,
+  // NOTE: fow now, using this mock impelementation: if the sum of latitude and first vertice is greater than 100, it's inside,
   // otherwise, it's outside.
-  let sumOfCoordinates: Field = point.latitude.add(point.longitude);
+  let sumOfCoordinates: Field = point.latitude.add(polygon.vertice1.latitude);
 
   Provable.log('Sum Of Coordinates: ', sumOfCoordinates);
 
