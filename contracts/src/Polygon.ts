@@ -22,6 +22,15 @@ export class GeographicalPoint extends Struct({
   }
 }
 
+export class NoncedGeographicalPoint extends Struct({
+  point: GeographicalPoint,
+  nonce: Field,
+}) {
+  hash() {
+    return Poseidon.hash([this.point.hash(), this.nonce]);
+  }
+}
+
 export class ThreePointPolygon extends Struct({
   vertice1: GeographicalPoint,
   vertice2: GeographicalPoint,
@@ -38,7 +47,7 @@ export class ThreePointPolygon extends Struct({
 
 class CoordinateProofState extends Struct({
   polygonCommitment: Field,
-  coordinatesCommitment: Field,
+  coordinatesCommitment: Field, // IMPORTANT: without a nonce, this leaks the coordinates
   isInPolygon: Bool,
 }) {
   toString(): string {
@@ -47,13 +56,15 @@ class CoordinateProofState extends Struct({
 }
 
 function proveCoordinatesIn3PointPolygon(
-  point: GeographicalPoint,
+  point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): CoordinateProofState {
   // compute if point in Polygon
   // NOTE: fow now, using this mock impelementation: if the sum of latitude and first vertice is greater than 100, it's inside,
   // otherwise, it's outside.
-  let sumOfCoordinates: Field = point.latitude.add(polygon.vertice1.latitude);
+  let sumOfCoordinates: Field = point.point.latitude.add(
+    polygon.vertice1.latitude
+  );
 
   Provable.log('Sum Of Coordinates: ', sumOfCoordinates);
 
@@ -143,7 +154,7 @@ function OR(
       proof2.publicOutput.polygonCommitment,
     ]),
     coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
-    isInPolygon: Bool(true),
+    isInPolygon: isInPolygon,
   });
 }
 
@@ -152,7 +163,7 @@ export const CoordinatesInPolygon = Experimental.ZkProgram({
 
   methods: {
     proveCoordinatesIn3PointPolygon: {
-      privateInputs: [GeographicalPoint, ThreePointPolygon],
+      privateInputs: [NoncedGeographicalPoint, ThreePointPolygon],
       method: proveCoordinatesIn3PointPolygon,
     },
 
