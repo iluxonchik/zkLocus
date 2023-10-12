@@ -104,7 +104,6 @@ function AND(
     Bool(false)
   );
 
-  isInPolygon.assertEquals(Bool(true));
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
       proof1.publicOutput.polygonCommitment,
@@ -137,8 +136,6 @@ function OR(
     Bool(true),
     Bool(false)
   );
-
-  isInPolygon.assertEquals(Bool(true));
 
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
