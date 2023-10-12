@@ -87,16 +87,23 @@ const proofSmallCoordinatesInLargePolygon =
   );
 
 console.log('Proving large coordintes in small polygon...');
-const prooLargeCoordinatesInSmallPolygon =
+const proofLargeCoordinatesInSmallPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
     largeLatitudeCoords,
     mockedPolygonSmallVertice
   );
 
+console.log('Proving large coordintes in medium polygon...');
+const proofLargeCoordinatesInMediumPolygon =
+  await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+    largeLatitudeCoords,
+    mockedPolygonMediumVertice
+  );
+
 const notInPolygonPublicOutput: string =
   proofSmallCoordinatesNotInSmallPolygon.publicOutput.toString();
 const inPolygonPublicOutput: string =
-  prooLargeCoordinatesInSmallPolygon.publicOutput.toString();
+  proofLargeCoordinatesInSmallPolygon.publicOutput.toString();
 
 console.log(
   '1️⃣ Not In Polygon Coordinates Output:\n',
@@ -121,6 +128,7 @@ console.log('3️⃣ OR Proof Output:\n', orProofPublicOutput);
 console.log(
   'ORing the two proofs that should yield a not in-polygon result...'
 );
+console.log('Proving Coordinates in Polygon...');
 const orProof2 = await CoordinatesInPolygon.OR(
   proofSmallCoordinatesNotInSmallPolygon,
   proofSmallCoordinatesNotInMediumPolygon
@@ -129,3 +137,29 @@ console.log('\tORing the two proofs successful ✅');
 
 const orProof2PublicOutput: string = orProof2.publicOutput.toString();
 console.log('4️⃣ OR Proof Output:\n', orProof2PublicOutput);
+
+// 5. Do AND operation on a set of proofs
+
+// 4.1 ANDing the two proofs that should yield an in-polygon result
+console.log('ANDing the two proofs that should yield an in-polygon result...');
+const andProof1 = await CoordinatesInPolygon.AND(
+  proofLargeCoordinatesInMediumPolygon,
+  proofLargeCoordinatesInSmallPolygon
+);
+console.log('\tANDing the two proofs successful ✅');
+
+const andProofPublicOutput: string = andProof1.publicOutput.toString();
+console.log('5️⃣ AND Proof Output:\n', andProofPublicOutput);
+
+// 4.2 ANDing the two proofs that should yield a not in-polygon result
+console.log(
+  'ANDing the two proofs that should yield a not in-polygon result...'
+);
+const andProof2 = await CoordinatesInPolygon.AND(
+  proofSmallCoordinatesNotInSmallPolygon,
+  proofSmallCoordinatesInLargePolygon
+);
+console.log('\tANDing the two proofs successful ✅');
+
+const andProof2PublicOutput: string = andProof2.publicOutput.toString();
+console.log('6️⃣ AND Proof Output:\n', andProof2PublicOutput);
