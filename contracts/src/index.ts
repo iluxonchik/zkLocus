@@ -1,6 +1,7 @@
 import {
   CoordinatesInPolygon,
   GeographicalPoint,
+  NoncedGeographicalPoint,
   ThreePointPolygon,
 } from './Polygon.js';
 
@@ -22,15 +23,21 @@ console.log('\tZKApp compiled successfully ✅');
 
 // Setup Coordinates and Polygon
 // 1. Coordinates with small latitude value
-let smallLatitudeCoords = new GeographicalPoint({
-  latitude: Field(10),
-  longitude: Field(10),
+let smallLatitudeCoords = new NoncedGeographicalPoint({
+  point: new GeographicalPoint({
+    latitude: Field(10),
+    longitude: Field(10),
+  }),
+  nonce: Field(Math.floor(Math.random() * 1000000)),
 });
 
 // 2. Coordinates with large latitude value
-let largeLatitudeCoords = new GeographicalPoint({
-  latitude: Field(100),
-  longitude: Field(100),
+let largeLatitudeCoords = new NoncedGeographicalPoint({
+  point: new GeographicalPoint({
+    latitude: Field(100),
+    longitude: Field(100),
+  }),
+  nonce: Field(Math.floor(Math.random() * 1000000)),
 });
 
 // 3. Define the polygons
