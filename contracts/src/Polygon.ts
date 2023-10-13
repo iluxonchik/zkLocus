@@ -57,6 +57,16 @@ class CoordinateProofState extends Struct({
   }
 }
 
+class CoordinatePolygonInclusionExclusionProof extends Struct({
+  insidePolygonCommitment: Field,
+  outsidePolygonCommitment: Field,
+  coordinatesCommitment: Field,
+}) {
+  toString(): string {
+    return `Inside Polygon Commitment: ${this.insidePolygonCommitment.toString()}\nOutside Polygon Commitment: ${this.outsidePolygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}`;
+  }
+}
+
 function isPointIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
@@ -282,6 +292,39 @@ export const CoordinatesInPolygon = Experimental.ZkProgram({
     },
   },
 });
+
+
+function fromCoordinatesInPolygonProof(
+  proof: SelfProof<Empty, CoordinateProofState>
+): CoordinatePolygonInclusionExclusionProof {
+  proof.verify();
+  
+  const coodinatesInPolygonProof: CoordinateProofState = proof.publicOutput;
+  const insideCommitment = Provable.if(coodinatesInPolygonProof.isInPolygon, coodinatesInPolygonProof.polygonCommitment, Field(0));
+  const outsideCommitment = Provable.if(coodinatesInPolygonProof.isInPolygon, Field(0), coodinatesInPolygonProof.polygonCommitment);
+
+  return new CoordinatePolygonInclusionExclusionProof({
+    insidePolygonCommitment: insideCommitment,
+    outsidePolygonCommitment: outsideCommitment,
+    coordinatesCommitment: coodinatesInPolygonProof.coordinatesCommitment,
+  });
+}
+
+export const CoordinatesInOrOutOfPolygon = Experimental.ZkProgram({
+  // TODO: consider a public input, instead of public output?
+  // If so, the public input can be CoordinateProofState, and then I'll have
+  // another ZKProgram that combines multiple CoordinatesInOrOutOfPolygon.
+  publicOutput: CoordinatePolygonInclusionExclusionProof,
+
+  methods: {
+    fromCoordinatesInPolygonProof: {
+      privateInputs: [
+        SelfProof<Empty, CoordinateProofState>,
+      ],
+      method: fromCoordinatesInPolygonProof,
+    }
+  }
+})
 
 /**
  * Represents the history of locations. The history of locations is composed of proofs from `LocationInPolygon`.
