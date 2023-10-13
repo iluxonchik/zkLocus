@@ -46,12 +46,14 @@ export class ThreePointPolygon extends Struct({
 }
 
 class CoordinateProofState extends Struct({
-  polygonCommitment: Field,
+  insidePolygonCommitment: Field,
+  // TODO: consider including outSidePolygonCommitment proofs, in order to inlcude the "inner" and "outer" polygon definitions of GeoJSON
+  //outsidePolygonCommitment: Field,
   coordinatesCommitment: Field, // IMPORTANT: without a nonce, this leaks the coordinates
   isInPolygon: Bool,
 }) {
   toString(): string {
-    return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
+    return `Polygon Commitment: ${this.insidePolygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
   }
 }
 
@@ -120,40 +122,34 @@ function proveCoordinatesIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): CoordinateProofState {
-  // compute if point in Polygon
-  // NOTE: fow now, using this mock impelementation: if the sum of latitude and first vertice is greater than 100, it's inside,
-  // otherwise, it's outside.
-  let sumOfCoordinates: Field = point.point.latitude.add(
-    polygon.vertice1.latitude
-  );
-
-  Provable.log('Sum Of Coordinates: ', sumOfCoordinates);
-
-  let isGreaterThan100: Bool = Provable.if(
-    sumOfCoordinates.greaterThan(Field(100)),
-    Bool(true),
-    Bool(false)
-  );
-
   const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
 
-  Provable.log('Is Greater Than 100: ', isGreaterThan100);
+  Provable.log('Is in Polygon ', isInPolygon);
 
   // If point in polygon, return the commitment data
-  const polygonCommitment = polygon.hash();
+  const insidePolygonCommitment = polygon.hash();
   const coordinatesCommitment = point.hash();
 
-  Provable.log('Polygon Commitment: ', polygonCommitment);
+  Provable.log('Polygon Commitment: ', insidePolygonCommitment);
   Provable.log('Coordinates Commitment: ', coordinatesCommitment);
   Provable.log('Is In Polygon: ', isInPolygon);
 
   return new CoordinateProofState({
-    polygonCommitment: polygonCommitment,
+    insidePolygonCommitment: insidePolygonCommitment,
     coordinatesCommitment: coordinatesCommitment,
     isInPolygon: isInPolygon,
   });
 }
 
+/**
+ * Given two proofs, it combines them into a single proof that is the AND of the two proofs.
+ * The AND operand is applied to the `isInPolygon` field of the two proofs. The proof is computed
+ * even if neither of the proofs have `isInPolygon` set to true. The proof verifies that the
+ * `coordinatesCommitment` are the same, and that the `insidePolygonCommitment` are different.
+ * @param proof1 - the first proof
+ * @param proof2  - the second proof
+ * @returns CoordinateProofState
+ */
 function AND(
   proof1: SelfProof<Empty, CoordinateProofState>,
   proof2: SelfProof<Empty, CoordinateProofState>
@@ -166,8 +162,8 @@ function AND(
     proof2.publicOutput.coordinatesCommitment
   );
   // ensure that the proof is not done for the same polygon
-  proof1.publicOutput.polygonCommitment.assertNotEquals(
-    proof2.publicOutput.polygonCommitment
+  proof1.publicOutput.insidePolygonCommitment.assertNotEquals(
+    proof2.publicOutput.insidePolygonCommitment
   );
 
   // logic of AND
@@ -178,18 +174,27 @@ function AND(
   );
 
   return new CoordinateProofState({
-    polygonCommitment: Poseidon.hash([
-      proof1.publicOutput.polygonCommitment,
-      proof2.publicOutput.polygonCommitment,
+    insidePolygonCommitment: Poseidon.hash([
+      proof1.publicOutput.insidePolygonCommitment,
+      proof2.publicOutput.insidePolygonCommitment,
     ]),
     coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
-    isInPolygon: Bool(true),
+    isInPolygon: isInPolygon,
   });
 }
 
+/**
+ * Given two proofs, it combines them into a single proof that is the OR of the two proofs.
+ * The OR operand is applied to the `isInPolygon` field of the two proofs. The proof is computed
+ * even if neither of the proofs have `isInPolygon` set to true. The proof verifies that the
+ * `coordinatesCommitment` are the same, and that the `insidePolygonCommitment` are different.
+ * @param proof1 - the first proof
+ * @param proof2 - the second proof 
+ * @returns CoordinateProofState
+ */
 function OR(
   proof1: SelfProof<Empty, CoordinateProofState>,
-  proof2: SelfProof<Empty, CoordinateProofState>
+  proof2: SelfProof<Empty, CoordinateProofState>,
 ): CoordinateProofState {
   proof1.verify();
   proof2.verify();
@@ -199,8 +204,8 @@ function OR(
     proof2.publicOutput.coordinatesCommitment
   );
   // ensure that the proof is not done for the same polygon
-  proof1.publicOutput.polygonCommitment.assertNotEquals(
-    proof2.publicOutput.polygonCommitment
+  proof1.publicOutput.insidePolygonCommitment.assertNotEquals(
+    proof2.publicOutput.insidePolygonCommitment
   );
 
   // logic of OR
@@ -211,9 +216,9 @@ function OR(
   );
 
   return new CoordinateProofState({
-    polygonCommitment: Poseidon.hash([
-      proof1.publicOutput.polygonCommitment,
-      proof2.publicOutput.polygonCommitment,
+    insidePolygonCommitment: Poseidon.hash([
+      proof1.publicOutput.insidePolygonCommitment,
+      proof2.publicOutput.insidePolygonCommitment,
     ]),
     coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
     isInPolygon: isInPolygon,
