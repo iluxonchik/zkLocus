@@ -55,6 +55,67 @@ class CoordinateProofState extends Struct({
   }
 }
 
+function isPointIn3PointPolygon(
+  point: NoncedGeographicalPoint,
+  polygon: ThreePointPolygon
+): Bool {
+  const x: Field = point.point.latitude;
+  const y: Field = point.point.longitude;
+
+  let vertices: Array<GeographicalPoint> = [
+    polygon.vertice1,
+    polygon.vertice2,
+    polygon.vertice3,
+  ];
+  let inside: Bool = Bool(false);
+
+  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+    const xi = vertices[i].latitude;
+    const yi = vertices[i].longitude;
+    const xj = vertices[j].latitude;
+    const yj = vertices[j].longitude;
+
+    const condition1: Bool = Provable.if(
+      yi.greaterThan(y),
+      Bool(true),
+      Bool(false)
+    );
+    const condition2: Bool = Provable.if(
+      yj.greaterThan(y),
+      Bool(true),
+      Bool(false)
+    );
+    const jointCondition1: Bool = Provable.if(
+      condition1.equals(condition2),
+      Bool(true),
+      Bool(false)
+    );
+
+    const numerator: Field = xj.sub(xi).mul(y.sub(yi));
+    const denominator: Field = yj.sub(yi).add(xi);
+
+    // NOTE: adapt zero check?
+    denominator.assertNotEquals(Field(0));
+
+    const result: Field = numerator.div(denominator);
+
+    const jointCondition2: Bool = Provable.if(
+      x.lessThan(result),
+      Bool(true),
+      Bool(false)
+    );
+    const isIntersect: Bool = Provable.if(
+      jointCondition1.and(jointCondition2),
+      Bool(true),
+      Bool(false)
+    );
+
+    inside = Provable.if(isIntersect, inside.not(), inside);
+  }
+
+  return inside;
+}
+
 function proveCoordinatesIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
@@ -74,12 +135,13 @@ function proveCoordinatesIn3PointPolygon(
     Bool(false)
   );
 
+  const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
+
   Provable.log('Is Greater Than 100: ', isGreaterThan100);
 
   // If point in polygon, return the commitment data
-  let polygonCommitment = polygon.hash();
-  let coordinatesCommitment = point.hash();
-  let isInPolygon = isGreaterThan100;
+  const polygonCommitment = polygon.hash();
+  const coordinatesCommitment = point.hash();
 
   Provable.log('Polygon Commitment: ', polygonCommitment);
   Provable.log('Coordinates Commitment: ', coordinatesCommitment);
