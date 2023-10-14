@@ -310,10 +310,65 @@ function fromCoordinatesInPolygonProof(
   });
 }
 
+function combine(proof1: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>, proof2: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>): CoordinatePolygonInclusionExclusionProof {
+  proof1.verify();
+  proof2.verify();
+
+  const proof1PublicOutput: CoordinatePolygonInclusionExclusionProof = proof1.publicOutput;
+  const proof2PublicOutput: CoordinatePolygonInclusionExclusionProof = proof2.publicOutput;
+
+  // ensure that the proof is for the same coordinates
+  proof1.publicOutput.coordinatesCommitment.assertEquals(
+    proof2.publicOutput.coordinatesCommitment
+  );
+
+  // Ensure that we are not combining identical proofs. An identical proof
+  // is a proof that commits to the samae inside and outside polygon commitments
+  const isInsidePolygonCommitmentEqual: Bool = Provable.if(proof1PublicOutput.insidePolygonCommitment.equals(proof2PublicOutput.insidePolygonCommitment), Bool(true), Bool(false));
+  const isOutsidePolygonCommitmentEqual: Bool = Provable.if(proof1PublicOutput.outsidePolygonCommitment.equals(proof2PublicOutput.outsidePolygonCommitment), Bool(true), Bool(false));
+  
+  // this will only fail the assertion, if both, the inside and outside polygon commitments are equal
+  isInsidePolygonCommitmentEqual.and(isOutsidePolygonCommitmentEqual).assertEquals(Bool(false));
+
+  const isInsideCommitmentPresentInProof1: Bool = Provable.if(proof1PublicOutput.insidePolygonCommitment.equals(Field(0)), Bool(false), Bool(true));
+  const isInsideCommitmentPresentInProof2: Bool = Provable.if(proof2PublicOutput.insidePolygonCommitment.equals(Field(0)), Bool(false), Bool(true));
+  const isOutsideCommitmentPresentInProof1: Bool = Provable.if(proof1PublicOutput.outsidePolygonCommitment.equals(Field(0)), Bool(false), Bool(true));
+  const isOutsideCommitmentPresentInProof2: Bool = Provable.if(proof2PublicOutput.outsidePolygonCommitment.equals(Field(0)), Bool(false), Bool(true));
+
+  
+  // Inside commitments of Proof1 and Proof2 should only be combined if they're non-zero. Here is how the value of the combined inside commitment is calculated:
+  // * Proof1's and Proof2's inside commitments are non-Field(0): Poseidon.hash([Proof1, Proof2])
+  // * Proof1==Field(0) and Proof2!=Field(0): Proof2
+  // * Proof1!=Field(0) and Proof2==Field(0): Proof1
+  // * Proof1==Field(0) and Proof2==Field(0): Field(0)
+
+  // First, compute the joint hash, in case both of the fields are provided
+  const newInsideCommitmentBothPresent: Field = Poseidon.hash([proof1PublicOutput.insidePolygonCommitment, proof2PublicOutput.insidePolygonCommitment]);
+
+  // Now, iteratively build up ot the final hash. The idea is to start with an assumption that both proofs were provided. After that,
+  // we ensure that hte assumption is correct by verifying the other conditions. The answer is only altered if one of the
+  // conditions sets a new reality.
+  // 1. If only proof1 is present, set to the value of proof1, otherwise, joint proof
+  let newInsideCommitment = Provable.if(isInsideCommitmentPresentInProof1.and(isInsideCommitmentPresentInProof2.not()), proof1PublicOutput.insidePolygonCommitment, newInsideCommitmentBothPresent);
+  // 2. Only change the value of the commitment if proof1 is not presen and proof2 is present
+  newInsideCommitment = Provable.if(isInsideCommitmentPresentInProof1.not().and(isInsideCommitmentPresentInProof2), proof2PublicOutput.insidePolygonCommitment, newInsideCommitment);
+  // 3. Only set the commitemnt explicitly to Field(0) if neither proof1, nor proof2 were provided
+  newInsideCommitment = Provable.if(isInsideCommitmentPresentInProof1.not().and(isInsideCommitmentPresentInProof2.not()), Field(0), newInsideCommitment);
+
+  const newOutsideCommitmentBothPresent: Field = Poseidon.hash([proof1PublicOutput.outsidePolygonCommitment, proof2PublicOutput.outsidePolygonCommitment]);
+
+  let newOutsideCommitment: Field = Provable.if(isOutsideCommitmentPresentInProof1.and(isOutsideCommitmentPresentInProof2.not()), proof1PublicOutput.outsidePolygonCommitment, newOutsideCommitmentBothPresent);
+  newOutsideCommitment = Provable.if(isOutsideCommitmentPresentInProof1.not().and(isInsideCommitmentPresentInProof2), proof2PublicOutput.outsidePolygonCommitment, newOutsideCommitment);
+  newInsideCommitment = Provable.if(isInsideCommitmentPresentInProof1.not().and(isInsideCommitmentPresentInProof2.not()), Field(0), newOutsideCommitment);
+
+  return new CoordinatePolygonInclusionExclusionProof({
+    insidePolygonCommitment: newInsideCommitment,
+    outsidePolygonCommitment: newOutsideCommitment,
+    coordinatesCommitment: proof1PublicOutput.coordinatesCommitment,
+  });
+  }
+
 export const CoordinatesInOrOutOfPolygon = Experimental.ZkProgram({
-  // TODO: consider a public input, instead of public output?
-  // If so, the public input can be CoordinateProofState, and then I'll have
-  // another ZKProgram that combines multiple CoordinatesInOrOutOfPolygon.
   publicOutput: CoordinatePolygonInclusionExclusionProof,
 
   methods: {
@@ -322,9 +377,16 @@ export const CoordinatesInOrOutOfPolygon = Experimental.ZkProgram({
         SelfProof<Empty, CoordinateProofState>,
       ],
       method: fromCoordinatesInPolygonProof,
+    },
+    combine: {
+      privateInputs: [
+        SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>,
+        SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>,
+      ],
+      method: combine,
     }
-  }
-})
+  },
+  });
 
 /**
  * Represents the history of locations. The history of locations is composed of proofs from `LocationInPolygon`.
