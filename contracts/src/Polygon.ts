@@ -16,6 +16,7 @@ import {
 export class GeographicalPoint extends Struct({
   latitude: Field,
   longitude: Field,
+  percision: Field,
 }) {
   hash() {
     return Poseidon.hash([this.latitude, this.longitude]);
