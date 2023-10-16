@@ -13,13 +13,35 @@ import {
   Provable,
 } from 'o1js';
 
+
+
+class DecimalPointFieldArithmentic {
+  static getScaleFactor(percision: Field): Field {
+    return Field(10n ** percision.toBigInt());
+  }
+
+  static scaleToField(value: Field, percision: Field): Field {
+    // first, exponentiate 
+    let scalingFactor = Field(1n);
+    const base: Field = Field(10n);
+    
+    let percisionValue: bigint = percision.toBigInt();
+    while (percisionValue > 0n) {
+      scalingFactor = scalingFactor.mul(base);
+      percisionValue -= 1n;
+    }
+
+    return value.mul(scalingFactor);
+  }
+}
+
 export class GeographicalPoint extends Struct({
   latitude: Field,
   longitude: Field,
   percision: Field,
 }) {
   hash() {
-    return Poseidon.hash([this.latitude, this.longitude]);
+    return Poseidon.hash([this.latitude, this.longitude, this.percision]);
   }
 }
 
