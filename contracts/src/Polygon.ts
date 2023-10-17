@@ -12,28 +12,7 @@ import {
   Empty,
   Provable,
 } from 'o1js';
-
-
-
-class DecimalPointFieldArithmentic {
-  static getScaleFactor(percision: Field): Field {
-    return Field(10n ** percision.toBigInt());
-  }
-
-  static scaleToField(value: Field, percision: Field): Field {
-    // first, exponentiate 
-    let scalingFactor = Field(1n);
-    const base: Field = Field(10n);
-    
-    let percisionValue: bigint = percision.toBigInt();
-    while (percisionValue > 0n) {
-      scalingFactor = scalingFactor.mul(base);
-      percisionValue -= 1n;
-    }
-
-    return value.mul(scalingFactor);
-  }
-}
+/** Data Structures */
 
 /**
  * Represents a geographical point. The point is represented as a pair of latitude and longitude values.
@@ -53,6 +32,14 @@ export class GeographicalPoint extends Struct({
   hash() {
     return Poseidon.hash([this.latitude, this.longitude, this.factor]);
   }
+
+  assertIsValid(): void {
+    // First, asser that the provided latidude and logitude values are within the accepted range
+    this.latitude.div(this.factor).assertGreaterThanOrEqual(Field(-90));
+    this.latitude.assertLessThanOrEqual(Field(90));
+    this.longitude.assertGreaterThanOrEqual(Field(-180));
+    this.longitude.assertLessThanOrEqual(Field(180));;
+  }
 }
 
 export class NoncedGeographicalPoint extends Struct({
@@ -61,6 +48,10 @@ export class NoncedGeographicalPoint extends Struct({
 }) {
   hash() {
     return Poseidon.hash([this.point.hash(), this.nonce]);
+  }
+
+  assertIsValid(): void {
+    this.point.assertIsValid();
   }
 }
 
@@ -75,6 +66,14 @@ export class ThreePointPolygon extends Struct({
       this.vertice2.hash(),
       this.vertice3.hash(),
     ]);
+  }
+
+  assertIsValid(): void {
+    this.vertice1.assertIsValid();
+    this.vertice2.assertIsValid();
+    this.vertice3.assertIsValid();
+
+    // TODO: ensure proper ordering is performed
   }
 }
 
@@ -100,10 +99,54 @@ class CoordinatePolygonInclusionExclusionProof extends Struct({
   }
 }
 
+class ProoveCoordinatesIn3dPolygonArgumentsValues extends Struct({
+  point: GeographicalPoint,
+  polygon: ThreePointPolygon,
+}) {}
+
+/** Intermediate Circuits **/
+
+function verifyProoveCoordinatesIn3dPolygonArguments(point: NoncedGeographicalPoint, polygon: ThreePointPolygon): ProoveCoordinatesIn3dPolygonArgumentsValues {
+  // First, ensure all of the coordinates are valid
+  point.assertPointIsValid();
+  polygon.vertice1.assertIsValid();
+  polygon.vertice2.assertIsValid();
+  polygon.vertice3.assertIsValid();
+
+  // Next, ensure all of the points have the same factor
+  const expectedFactor: Field = point.point.factor;
+  expectedFactor.assertEquals(polygon.vertice1.factor);
+  expectedFactor.assertEquals(polygon.vertice2.factor);
+  expectedFactor.assertEquals(polygon.vertice3.factor);
+
+
+  return new ProoveCoordinatesIn3dPolygonArgumentsValues({
+    point: point.point,
+    polygon: polygon,
+  }); 
+}
+
+export const ProoveCoordinatesIn3dPolygonArguments = Experimental.ZkProgram({
+  publicOutput: ProoveCoordinatesIn3dPolygonArgumentsValues,
+
+  methods: {
+    verifyArguments: {
+      privateInputs: [NoncedGeographicalPoint, ThreePointPolygon],
+      method: verifyProoveCoordinatesIn3dPolygonArguments,
+    },
+  },
+  });
+
+
+
+
+/** Main Circuits */
+
 function isPointIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): Bool {
+  // TODO: correct Field arithmetic
   const x: Field = point.point.latitude;
   const y: Field = point.point.longitude;
 
@@ -165,6 +208,13 @@ function proveCoordinatesIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): CoordinateProofState {
+  // TODO: IT IS CRUCIAL TO VERIFY THAT THE FACTOR OF THE POINT IS THE SAME
+  // AS THE FACTOR OF ALL OF THE POINTS OF THE POLYGON. Oterwise, the math
+  // will fail. Consider implementing this check as another proof.
+  // The argument could be a proof that returns a struct that contains both
+  // of the values provided as arguments. That proof should also validate
+  // that the provided latitude and longitude values are within the accepted
+  // values.
   const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
 
   Provable.log('Is in Polygon ', isInPolygon);
