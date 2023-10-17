@@ -27,7 +27,7 @@ let bucharestCoordinates = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
     latitude: Field(10n**12n),
     longitude: Field(10n**12n),
-    percision: Field(12n),
+    factor: Field(10n**12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -37,7 +37,7 @@ let largeLatitudeCoords = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
     latitude: Field(100),
     longitude: Field(100),
-    percision: Field(12),
+    factor: Field(10n**12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -63,17 +63,17 @@ let mockedPolygonLargeVertice = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
     latitude: Field(100),
     longitude: Field(1),
-    percision. Field(12),
+    factor: Field(10n**12n),
   }),
   vertice2: new GeographicalPoint({
     latitude: Field(200),
     longitude: Field(2),
-    percision: Field(12),
+    factor: Field(10n**12n),
   }),
   vertice3: new GeographicalPoint({
     latitude: Field(300),
     longitude: Field(3),
-    percision: Field(12),
+    factor: Field(10n**12n),
   }),
 });
 

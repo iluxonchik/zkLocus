@@ -35,13 +35,23 @@ class DecimalPointFieldArithmentic {
   }
 }
 
+/**
+ * Represents a geographical point. The point is represented as a pair of latitude and longitude values.
+ * The latitude and longitude values are represented as Field values. The Field values are scaled to
+ * the desired factor, in order to represent the desired percision. The percision is represented as
+ * a Field value. The percision is the number of decimal points that the latitude and longitude values
+ * have. For example, if the percision is 12, then the latitude and longitude values are scaled to
+ * 12 decimal points. The latitude and longitude values are scaled by multiplying them with 10^12.
+ * 10^12 is the scale factor. `factor` is used instead of percision to optimize the efficency, as it prevent
+  the need to perform exponentiation computations
+ */
 export class GeographicalPoint extends Struct({
   latitude: Field,
-  longitude: Field,
-  percision: Field,
+  longitude: Field, 
+  factor: Field,  // see note in docs
 }) {
   hash() {
-    return Poseidon.hash([this.latitude, this.longitude, this.percision]);
+    return Poseidon.hash([this.latitude, this.longitude, this.factor]);
   }
 }
 
