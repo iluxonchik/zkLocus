@@ -16,6 +16,23 @@ const { privateKey: deployerKey, publicKey: deployerAccount } =
 const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
+const field1: Field = Field(120);
+const field2: Field = Field(10);
+const field3: Field = field1.div(field2);
+
+console.log('Operation: 120 / 10');
+console.log(field1.toString());
+console.log(field2.toString());
+console.log(field3.toBigInt());
+
+const field4: Field = Field(1);
+const field5: Field = Field(2);
+const field6 = field4.div(field5);
+const field7: Field = field6.mul(field5);
+console.log('Operation: 1 / 2 * 2');
+console.log(field6.toString());
+console.log(field7.toString());
+
 // Compile the ZKApp
 console.log('Compiling ZKApp...');
 await CoordinatesInPolygon.compile();
@@ -25,9 +42,9 @@ console.log('\tZKApp compiled successfully ✅');
 // 1. Coordinates with small latitude value
 let bucharestCoordinates = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: Field(10n**12n),
-    longitude: Field(10n**12n),
-    factor: Field(10n**12n),
+    latitude: Field(10n ** 12n),
+    longitude: Field(10n ** 12n),
+    factor: Field(10n ** 12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -37,7 +54,7 @@ let largeLatitudeCoords = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
     latitude: Field(100),
     longitude: Field(100),
-    factor: Field(10n**12n),
+    factor: Field(10n ** 12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -46,16 +63,40 @@ let largeLatitudeCoords = new NoncedGeographicalPoint({
 
 // 3.1. Polygon with small latitude values.
 let bucharestPolygon = new ThreePointPolygon({
-  vertice1: new GeographicalPoint({ latitude: Field(44553067187003), longitude: Field(25922498632632), percision: Field(12) }),
-  vertice2: new GeographicalPoint({ latitude: Field(44547026017312), longitude: Field(26.334702160865), percision: Field(12)}),
-  vertice3: new GeographicalPoint({ latitude: Field(44318892330267), longitude: Field(26.087803903594), percision: Field(12)}),
+  vertice1: new GeographicalPoint({
+    latitude: Field(44553067187003),
+    longitude: Field(25922498632632),
+    factor: Field(12),
+  }),
+  vertice2: new GeographicalPoint({
+    latitude: Field(44547026017312),
+    longitude: Field(26.334702160865),
+    factor: Field(12),
+  }),
+  vertice3: new GeographicalPoint({
+    latitude: Field(44318892330267),
+    longitude: Field(26.087803903594),
+    factor: Field(12),
+  }),
 });
 
 // 3.2 Polygon with medium latitude values.
 let mockedPolygonMediumVertice = new ThreePointPolygon({
-  vertice1: new GeographicalPoint({ latitude: Field(50), longitude: Field(1), percision: Field(12) }),
-  vertice2: new GeographicalPoint({ latitude: Field(50), longitude: Field(2), percision: Field(12) }),
-  vertice3: new GeographicalPoint({ latitude: Field(50), longitude: Field(3), percision: Field(12) }),
+  vertice1: new GeographicalPoint({
+    latitude: Field(50),
+    longitude: Field(1),
+    factor: Field(12),
+  }),
+  vertice2: new GeographicalPoint({
+    latitude: Field(50),
+    longitude: Field(2),
+    factor: Field(12),
+  }),
+  vertice3: new GeographicalPoint({
+    latitude: Field(50),
+    longitude: Field(3),
+    factor: Field(12),
+  }),
 });
 
 // 3.2. Polygon with large latitude values.
@@ -63,17 +104,17 @@ let mockedPolygonLargeVertice = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
     latitude: Field(100),
     longitude: Field(1),
-    factor: Field(10n**12n),
+    factor: Field(10n ** 12n),
   }),
   vertice2: new GeographicalPoint({
     latitude: Field(200),
     longitude: Field(2),
-    factor: Field(10n**12n),
+    factor: Field(10n ** 12n),
   }),
   vertice3: new GeographicalPoint({
     latitude: Field(300),
     longitude: Field(3),
-    factor: Field(10n**12n),
+    factor: Field(10n ** 12n),
   }),
 });
 
@@ -81,11 +122,11 @@ console.log('Proving small coordinates not in small polygon...');
 const proofBucharestCoordinatesInBucharest =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
     bucharestCoordinates,
-    bucharestPolygon,
+    bucharestPolygon
   );
 
-  console.log('Results:')
-  console.log(proofBucharestCoordinatesInBucharest.publicOutput.toString());
+console.log('Results:');
+console.log(proofBucharestCoordinatesInBucharest.publicOutput.toString());
 
 // console.log('Proving small coordinates not in medium polygon...');
 // const proofSmallCoordinatesNotInMediumPolygon =
