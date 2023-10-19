@@ -68,12 +68,24 @@ export class ThreePointPolygon extends Struct({
     ]);
   }
 
+  /**
+   * Ensure that the `ThreePointPolygon` instance is valid. This includes
+   * asserting that the coordinates are within the allowed values, and that
+   * those coordinates are ordered correctly.
+   */
   assertIsValid(): void {
+    this.assertIsVerticesValid();
+    this.assertIsOrderingValid();
+  }
+
+  private assertIsVerticesValid(): void {
     this.vertice1.assertIsValid();
     this.vertice2.assertIsValid();
     this.vertice3.assertIsValid();
+  }
 
-    // TODO: ensure proper ordering is performed
+  private assertIsOrderingValid(): void {
+    // TODO: assert that the points in the polygon are correcly ordered
   }
 }
 
