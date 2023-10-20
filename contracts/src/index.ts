@@ -5,7 +5,7 @@ import {
   ThreePointPolygon,
 } from './Polygon.js';
 
-import { Field, Mina, PrivateKey, AccountUpdate } from 'o1js';
+import { Field, Mina, PrivateKey, AccountUpdate, UInt64 } from 'o1js';
 
 console.log('o1js loaded');
 const useProof = false;
@@ -16,22 +16,23 @@ const { privateKey: deployerKey, publicKey: deployerAccount } =
 const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
-const field1: Field = Field(120);
-const field2: Field = Field(10);
-const field3: Field = field1.div(field2);
-
+console.log('Preparing integers...');
+const uint1: UInt64 = UInt64.from(120);
+const uint2: UInt64 = UInt64.from(10);
+console.log('Performing division...');
+const uint3: UInt64 = uint1.div(uint2);
 console.log('Operation: 120 / 10');
-console.log(field1.toString());
-console.log(field2.toString());
-console.log(field3.toBigInt());
+console.log(uint1.toString());
+console.log(uint2.toString());
+console.log(uint3.toString());
 
-const field4: Field = Field(1);
-const field5: Field = Field(2);
-const field6 = field4.div(field5);
-const field7: Field = field6.mul(field5);
+const uint4: UInt64 = UInt64.from(1);
+const uint5: UInt64 = UInt64.from(2);
+const uint6: UInt64 = uint4.div(uint5);
+const uint7: UInt64 = uint6.mul(uint5);
 console.log('Operation: 1 / 2 * 2');
-console.log(field6.toString());
-console.log(field7.toString());
+console.log('1 / 2 = ' + uint6.toString());
+console.log('1 / 2 * 2 = ' + uint7.toString());
 
 // Compile the ZKApp
 console.log('Compiling ZKApp...');
