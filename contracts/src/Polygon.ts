@@ -11,6 +11,7 @@ import {
   SelfProof,
   Empty,
   Provable,
+  UInt32,
 } from 'o1js';
 /** Data Structures */
 
@@ -25,20 +26,24 @@ import {
   the need to perform exponentiation computations
  */
 export class GeographicalPoint extends Struct({
-  latitude: Field,
-  longitude: Field,
-  factor: Field, // see note in docs
+  latitude: UInt32,
+  longitude: UInt32,
+  factor: UInt32, // see note in docs
 }) {
   hash() {
-    return Poseidon.hash([this.latitude, this.longitude, this.factor]);
+    return Poseidon.hash([
+      this.latitude.value,
+      this.longitude.value,
+      this.factor.value,
+    ]);
   }
 
   assertIsValid(): void {
     // First, asser that the provided latidude and logitude values are within the accepted range
-    this.latitude.div(this.factor).assertGreaterThanOrEqual(Field(-90));
-    this.latitude.assertLessThanOrEqual(Field(90));
-    this.longitude.assertGreaterThanOrEqual(Field(-180));
-    this.longitude.assertLessThanOrEqual(Field(180));
+    this.latitude.div(this.factor).assertGreaterThanOrEqual(UInt32.from(-90));
+    this.latitude.assertLessThanOrEqual(UInt32.from(90));
+    this.longitude.assertGreaterThanOrEqual(UInt32.from(-180));
+    this.longitude.assertLessThanOrEqual(UInt32.from(180));
   }
 }
 
@@ -158,8 +163,8 @@ function isPointIn3PointPolygon(
   polygon: ThreePointPolygon
 ): Bool {
   // TODO: correct Field arithmetic
-  const x: Field = point.point.latitude;
-  const y: Field = point.point.longitude;
+  const x: UInt32 = point.point.latitude;
+  const y: UInt32 = point.point.longitude;
 
   let vertices: Array<GeographicalPoint> = [
     polygon.vertice1,
@@ -190,13 +195,13 @@ function isPointIn3PointPolygon(
       Bool(false)
     );
 
-    const numerator: Field = xj.sub(xi).mul(y.sub(yi));
-    const denominator: Field = yj.sub(yi).add(xi);
+    const numerator: UInt32 = xj.sub(xi).mul(y.sub(yi));
+    const denominator: UInt32 = yj.sub(yi).add(xi);
 
     // NOTE: adapt zero check?
-    denominator.assertNotEquals(Field(0));
+    denominator.value.assertNotEquals(Field(0));
 
-    const result: Field = numerator.div(denominator);
+    const result: UInt32 = numerator.div(denominator);
 
     const jointCondition2: Bool = Provable.if(
       x.lessThan(result),
