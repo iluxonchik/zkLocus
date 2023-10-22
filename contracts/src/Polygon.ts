@@ -11,7 +11,7 @@ import {
   SelfProof,
   Empty,
   Provable,
-  UInt32,
+  UInt64,
 } from 'o1js';
 /** Data Structures */
 
@@ -26,9 +26,9 @@ import {
   the need to perform exponentiation computations
  */
 export class GeographicalPoint extends Struct({
-  latitude: UInt32,
-  longitude: UInt32,
-  factor: UInt32, // see note in docs
+  latitude: UInt64,
+  longitude: UInt64,
+  factor: UInt64, // see note in docs
 }) {
   hash() {
     return Poseidon.hash([
@@ -40,10 +40,10 @@ export class GeographicalPoint extends Struct({
 
   assertIsValid(): void {
     // First, asser that the provided latidude and logitude values are within the accepted range
-    this.latitude.div(this.factor).assertGreaterThanOrEqual(UInt32.from(-90));
-    this.latitude.assertLessThanOrEqual(UInt32.from(90));
-    this.longitude.assertGreaterThanOrEqual(UInt32.from(-180));
-    this.longitude.assertLessThanOrEqual(UInt32.from(180));
+    this.latitude.div(this.factor).assertGreaterThanOrEqual(UInt64.from(-90));
+    this.latitude.assertLessThanOrEqual(UInt64.from(90));
+    this.longitude.assertGreaterThanOrEqual(UInt64.from(-180));
+    this.longitude.assertLessThanOrEqual(UInt64.from(180));
   }
 }
 
@@ -134,7 +134,7 @@ function verifyProoveCoordinatesIn3dPolygonArguments(
   polygon.vertice3.assertIsValid();
 
   // Next, ensure all of the points have the same factor
-  const expectedFactor: Field = point.point.factor;
+  const expectedFactor: UInt64 = point.point.factor;
   expectedFactor.assertEquals(polygon.vertice1.factor);
   expectedFactor.assertEquals(polygon.vertice2.factor);
   expectedFactor.assertEquals(polygon.vertice3.factor);
@@ -163,8 +163,8 @@ function isPointIn3PointPolygon(
   polygon: ThreePointPolygon
 ): Bool {
   // TODO: correct Field arithmetic
-  const x: UInt32 = point.point.latitude;
-  const y: UInt32 = point.point.longitude;
+  const x: UInt64 = point.point.latitude;
+  const y: UInt64 = point.point.longitude;
 
   let vertices: Array<GeographicalPoint> = [
     polygon.vertice1,
@@ -195,13 +195,13 @@ function isPointIn3PointPolygon(
       Bool(false)
     );
 
-    const numerator: UInt32 = xj.sub(xi).mul(y.sub(yi));
-    const denominator: UInt32 = yj.sub(yi).add(xi);
+    const numerator: UInt64 = xj.sub(xi).mul(y.sub(yi));
+    const denominator: UInt64 = yj.sub(yi).add(xi);
 
     // NOTE: adapt zero check?
     denominator.value.assertNotEquals(Field(0));
 
-    const result: UInt32 = numerator.div(denominator);
+    const result: UInt64 = numerator.div(denominator);
 
     const jointCondition2: Bool = Provable.if(
       x.lessThan(result),

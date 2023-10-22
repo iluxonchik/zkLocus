@@ -5,7 +5,7 @@ import {
   ThreePointPolygon,
 } from './Polygon.js';
 
-import { Field, Mina, PrivateKey, AccountUpdate, UInt64 } from 'o1js';
+import { Field, Mina, PrivateKey, AccountUpdate, UInt64, UInt32 } from 'o1js';
 
 console.log('o1js loaded');
 const useProof = false;
@@ -43,9 +43,9 @@ console.log('\tZKApp compiled successfully ✅');
 // 1. Coordinates with small latitude value
 let bucharestCoordinates = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: Field(10n ** 12n),
-    longitude: Field(10n ** 12n),
-    factor: Field(10n ** 12n),
+    latitude: UInt64.from(10n ** 12n),
+    longitude: UInt64.from(10n ** 12n),
+    factor: UInt64.from(10n ** 12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -53,9 +53,9 @@ let bucharestCoordinates = new NoncedGeographicalPoint({
 // 2. Coordinates with large latitude value
 let largeLatitudeCoords = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: Field(100),
-    longitude: Field(100),
-    factor: Field(10n ** 12n),
+    latitude: UInt64.from(100),
+    longitude: UInt64.from(100),
+    factor: UInt64.from(10n ** 12n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -65,57 +65,57 @@ let largeLatitudeCoords = new NoncedGeographicalPoint({
 // 3.1. Polygon with small latitude values.
 let bucharestPolygon = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
-    latitude: Field(44553067187003),
-    longitude: Field(25922498632632),
-    factor: Field(12),
+    latitude: UInt64.from(44553067187003),
+    longitude: UInt64.from(25922498632632),
+    factor: UInt64.from(12),
   }),
   vertice2: new GeographicalPoint({
-    latitude: Field(44547026017312),
-    longitude: Field(26.334702160865),
-    factor: Field(12),
+    latitude: UInt64.from(44547026017312),
+    longitude: UInt64.from(26.334702160865),
+    factor: UInt64.from(12),
   }),
   vertice3: new GeographicalPoint({
-    latitude: Field(44318892330267),
-    longitude: Field(26.087803903594),
-    factor: Field(12),
+    latitude: UInt64.from(44318892330267),
+    longitude: UInt64.from(26.087803903594),
+    factor: UInt64.from(12),
   }),
 });
 
 // 3.2 Polygon with medium latitude values.
 let mockedPolygonMediumVertice = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
-    latitude: Field(50),
-    longitude: Field(1),
-    factor: Field(12),
+    latitude: UInt64.from(50),
+    longitude: UInt64.one,
+    factor: UInt64.from(12),
   }),
   vertice2: new GeographicalPoint({
-    latitude: Field(50),
-    longitude: Field(2),
-    factor: Field(12),
+    latitude: UInt64.from(50),
+    longitude: UInt64.from(2),
+    factor: UInt64.from(12),
   }),
   vertice3: new GeographicalPoint({
-    latitude: Field(50),
-    longitude: Field(3),
-    factor: Field(12),
+    latitude: UInt64.from(50),
+    longitude: UInt64.from(3),
+    factor: UInt64.from(12),
   }),
 });
 
 // 3.2. Polygon with large latitude values.
 let mockedPolygonLargeVertice = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
-    latitude: Field(100),
-    longitude: Field(1),
-    factor: Field(10n ** 12n),
+    latitude: UInt64.from(100),
+    longitude: UInt64.from(1),
+    factor: UInt64.from(10n ** 12n),
   }),
   vertice2: new GeographicalPoint({
-    latitude: Field(200),
-    longitude: Field(2),
-    factor: Field(10n ** 12n),
+    latitude: UInt64.from(200),
+    longitude: UInt64.from(2),
+    factor: UInt64.from(10n ** 12n),
   }),
   vertice3: new GeographicalPoint({
-    latitude: Field(300),
-    longitude: Field(3),
-    factor: Field(10n ** 12n),
+    latitude: UInt64.from(300),
+    longitude: UInt64.from(3),
+    factor: UInt64.from(10n ** 12n),
   }),
 });
 
