@@ -41,93 +41,64 @@ console.log('\tZKApp compiled successfully ✅');
 
 // Setup Coordinates and Polygon
 // 1. Coordinates with small latitude value
-let bucharestCoordinates = new NoncedGeographicalPoint({
+
+let brasovCenterCoordinates1 = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: UInt64.from(10n ** 12n),
-    longitude: UInt64.from(10n ** 12n),
-    factor: UInt64.from(10n ** 12n),
+    latitude: UInt64.from(4565267451004980),
+    longitude: UInt64.from(2561045985607537),
+    factor: UInt64.from(10n ** 14n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
 
-// 2. Coordinates with large latitude value
-let largeLatitudeCoords = new NoncedGeographicalPoint({
+let notBrasovCenterCoordinates1 = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: UInt64.from(100),
-    longitude: UInt64.from(100),
-    factor: UInt64.from(10n ** 12n),
+    latitude: UInt64.from(4573351807726547),
+    longitude: UInt64.from(2563860336947891),
+    factor: UInt64.from(10n ** 14n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
 
 // 3. Define the polygons
 
-// 3.1. Polygon with small latitude values.
-let bucharestPolygon = new ThreePointPolygon({
+// 3.1 Polygon in Center of Brasov
+let brasovCenterPolygon = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
-    latitude: UInt64.from(44553067187003),
-    longitude: UInt64.from(25922498632632),
-    factor: UInt64.from(12),
+    latitude: UInt64.from(4567567318665665),
+    longitude: UInt64.from(2555484866751258),
+    factor: UInt64.from(10n ** 14n),
   }),
   vertice2: new GeographicalPoint({
-    latitude: UInt64.from(44547026017312),
-    longitude: UInt64.from(26.334702160865),
-    factor: UInt64.from(12),
+    latitude: UInt64.from(4561431116624503),
+    longitude: UInt64.from(2561711908131041),
+    factor: UInt64.from(10n ** 14n),
   }),
   vertice3: new GeographicalPoint({
-    latitude: UInt64.from(44318892330267),
-    longitude: UInt64.from(26.087803903594),
-    factor: UInt64.from(12),
-  }),
+    latitude: UInt64.from(4567369283283521),
+    longitude: UInt64.from(2567497463146939),
+    factor: UInt64.from(10n ** 14n),
+})
 });
 
-// 3.2 Polygon with medium latitude values.
-let mockedPolygonMediumVertice = new ThreePointPolygon({
-  vertice1: new GeographicalPoint({
-    latitude: UInt64.from(50),
-    longitude: UInt64.one,
-    factor: UInt64.from(12),
-  }),
-  vertice2: new GeographicalPoint({
-    latitude: UInt64.from(50),
-    longitude: UInt64.from(2),
-    factor: UInt64.from(12),
-  }),
-  vertice3: new GeographicalPoint({
-    latitude: UInt64.from(50),
-    longitude: UInt64.from(3),
-    factor: UInt64.from(12),
-  }),
-});
-
-// 3.2. Polygon with large latitude values.
-let mockedPolygonLargeVertice = new ThreePointPolygon({
-  vertice1: new GeographicalPoint({
-    latitude: UInt64.from(100),
-    longitude: UInt64.from(1),
-    factor: UInt64.from(10n ** 12n),
-  }),
-  vertice2: new GeographicalPoint({
-    latitude: UInt64.from(200),
-    longitude: UInt64.from(2),
-    factor: UInt64.from(10n ** 12n),
-  }),
-  vertice3: new GeographicalPoint({
-    latitude: UInt64.from(300),
-    longitude: UInt64.from(3),
-    factor: UInt64.from(10n ** 12n),
-  }),
-});
-
-console.log('Proving small coordinates not in small polygon...');
-const proofBucharestCoordinatesInBucharest =
+console.log('Proving that point in Brasov Center is inside of Brasov Center Polygon...');
+const proofBrasovCenterCoordinatesInBrasovCenterPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
-    bucharestCoordinates,
-    bucharestPolygon
+    brasovCenterCoordinates1,
+    brasovCenterPolygon
   );
 
 console.log('Results:');
-console.log(proofBucharestCoordinatesInBucharest.publicOutput.toString());
+console.log('Proof Brasov Center Coordinates in Brasov Center Polygon:')
+console.log(proofBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
+
+console.log('Proving that point NOT in Brasov Center is inside of Brasov Center Polygon...');
+const proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = 
+    await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+        notBrasovCenterCoordinates1,
+        brasovCenterPolygon
+    );
+
 
 // console.log('Proving small coordinates not in medium polygon...');
 // const proofSmallCoordinatesNotInMediumPolygon =
