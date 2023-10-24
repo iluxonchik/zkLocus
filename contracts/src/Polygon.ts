@@ -11,6 +11,7 @@ import {
   SelfProof,
   Empty,
   Provable,
+  Int64,
   UInt64,
 } from 'o1js';
 /** Data Structures */
@@ -26,24 +27,22 @@ import {
   the need to perform exponentiation computations
  */
 export class GeographicalPoint extends Struct({
-  latitude: UInt64,
-  longitude: UInt64,
-  factor: UInt64, // see note in docs
+  latitude: Int64,
+  longitude: Int64,
+  factor: Int64, // see note in docs
 }) {
   hash() {
     return Poseidon.hash([
-      this.latitude.value,
-      this.longitude.value,
-      this.factor.value,
+      this.latitude.toField(),
+      this.longitude.toField(),
+      this.factor.toField(),
     ]);
   }
 
   assertIsValid(): void {
     // First, asser that the provided latidude and logitude values are within the accepted range
-    this.latitude.div(this.factor).assertGreaterThanOrEqual(UInt64.from(-90));
-    this.latitude.assertLessThanOrEqual(UInt64.from(90));
-    this.longitude.assertGreaterThanOrEqual(UInt64.from(-180));
-    this.longitude.assertLessThanOrEqual(UInt64.from(180));
+    this.latitude.div(this.factor).magnitude.assertLessThanOrEqual(UInt64.from(90));
+    this.longitude.magnitude.assertLessThanOrEqual(UInt64.from(180));
   }
 }
 
@@ -134,7 +133,7 @@ function verifyProoveCoordinatesIn3dPolygonArguments(
   polygon.vertice3.assertIsValid();
 
   // Next, ensure all of the points have the same factor
-  const expectedFactor: UInt64 = point.point.factor;
+  const expectedFactor: Int64 = point.point.factor;
   expectedFactor.assertEquals(polygon.vertice1.factor);
   expectedFactor.assertEquals(polygon.vertice2.factor);
   expectedFactor.assertEquals(polygon.vertice3.factor);
@@ -162,23 +161,26 @@ function isPointIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): Bool {
-  // TODO: correct Field arithmetic
-  const x: UInt64 = point.point.latitude;
-  const y: UInt64 = point.point.longitude;
+  Provable.log('isPointIn3PointPolygon 1 ...');
+  const x: Int64 = point.point.latitude;
+  const y: Int64 = point.point.longitude;
 
+  Provable.log('isPointIn3PointPolygon 2 ...');
   let vertices: Array<GeographicalPoint> = [
     polygon.vertice1,
     polygon.vertice2,
     polygon.vertice3,
   ];
   let inside: Bool = Bool(false);
-
+  
+  Provable.log('isPointIn3PointPolygon 3 ...');
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
     const xi = vertices[i].latitude;
     const yi = vertices[i].longitude;
     const xj = vertices[j].latitude;
     const yj = vertices[j].longitude;
-
+    
+    // TODO: rewrite logic to use UInt64, with .magintude():
     const condition1: Bool = Provable.if(
       yi.greaterThan(y),
       Bool(true),
@@ -194,14 +196,26 @@ function isPointIn3PointPolygon(
       Bool(true),
       Bool(false)
     );
+    
+    Provable.log('isPointIn3PointPolygon 4 ...');
+    Provable.log('xj:', xj);
+    Provable.log('xi:', xi);
+    Provable.log('yj:', yj);
+    Provable.log('yi:', yi);
 
-    const numerator: UInt64 = xj.sub(xi).mul(y.sub(yi));
-    const denominator: UInt64 = yj.sub(yi).add(xi);
+    Provable.log('xj.sub(xi):', xj.sub(xi));
+    Provable.log('y.sub(yi):', y.sub(yi));
 
+    const numerator: Int64 = xj.sub(xi).mul(y.sub(yi));
+    Provable.log('isPointIn3PointPolygon 4.1 ...', numerator);
+    const denominator: Int64 = yj.sub(yi).add(xi);
+    Provable.log('isPointIn3PointPolygon 4.2 ...', denominator);
+
+    Provable.log('isPointIn3PointPolygon 5 ...');
     // NOTE: adapt zero check?
     denominator.value.assertNotEquals(Field(0));
 
-    const result: UInt64 = numerator.div(denominator);
+    const result: Int64 = numerator.div(denominator);
 
     const jointCondition2: Bool = Provable.if(
       x.lessThan(result),
@@ -231,6 +245,7 @@ function proveCoordinatesIn3PointPolygon(
   // of the values provided as arguments. That proof should also validate
   // that the provided latitude and longitude values are within the accepted
   // values.
+  Provable.log('Proving that point is in polygon...');
   const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
 
   Provable.log('Is in Polygon ', isInPolygon);
