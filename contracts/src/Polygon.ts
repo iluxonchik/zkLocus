@@ -13,6 +13,7 @@ import {
   Provable,
   Int64,
   UInt64,
+  Sign,
 } from 'o1js';
 /** Data Structures */
 
@@ -155,6 +156,45 @@ export const ProoveCoordinatesIn3dPolygonArguments = Experimental.ZkProgram({
   },
 });
 
+/*
+* Asserts that x is greater than y, i.e. x > y.
+* Properly uses provable code with assertions.
+*/ 
+function assertInt64XGreaterThanY(x: Int64, y: Int64): Bool {
+    /*
+      if both signs are Positive:
+          the largest maginitude is greater
+      if both signs are Negative:
+          the smallest maginitude is greater
+     
+      if signs are different:
+          the postivie number is greater
+
+      special case for 0: always false
+    */
+  // 1. Are the signs the same?
+  // if they're the same, the their multiplication's result is a positive sign
+  const signMuliplictaion: Sign = x.sgn.mul(y.sgn); 
+  const isSignsEqual: Bool = Provable.if(signMuliplictaion.isPositive(), Bool(true), Bool(false));
+  
+  // 2. For the case of the signs begin equal, we need to decide wether the one with the largest magintude
+  const isXiMagnitudeLargerThanY: Bool = Provable.if(x.magnitude.greaterThan(y.magnitude), Bool(true), Bool(false));
+  const isXMagitudeSmallerThanY: Bool = Provable.if(x.magnitude.lessThan(y.magnitude), Bool(true), Bool(false));
+  const isXandYZero: Bool = Provable.if(x.equals(Int64.from(0)).and(y.equals(Int64.from(0))), Bool(true), Bool(false));
+
+  let isXGreaterThanYIfXandYAreEqual: Bool = Provable.if(x.sgn.isPositive(), isXiMagnitudeLargerThanY, isXMagitudeSmallerThanY);
+  // spcial case for 0: always false
+  isXGreaterThanYIfXandYAreEqual = Provable.if(isXandYZero, Bool(false), isXGreaterThanYIfXandYAreEqual);
+
+
+  // 3. For the case of the signs being different, the positive number is always greater.
+  const isXGreaterThanYIfTheSignsAreDifferent: Bool = Provable.if(x.sgn.isPositive(), Bool(true), Bool(false));
+
+  // 4. If the sings are equal, we return the result o 2. (isXGreaterThanYIfXandYAreEqual), otherwise we return the result of 3. (isXGreaterThanYIfTheSignsAreDifferent).
+  const isXGreaterThanY: Bool = Provable.if(isSignsEqual, isXGreaterThanYIfXandYAreEqual, isXGreaterThanYIfTheSignsAreDifferent);
+  return isXGreaterThanY;
+}
+
 /** Main Circuits */
 
 function isPointIn3PointPolygon(
@@ -175,22 +215,15 @@ function isPointIn3PointPolygon(
   
   Provable.log('isPointIn3PointPolygon 3 ...');
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-    const xi = vertices[i].latitude;
-    const yi = vertices[i].longitude;
-    const xj = vertices[j].latitude;
-    const yj = vertices[j].longitude;
+    const xi: Int64 = vertices[i].latitude;
+    const yi: Int64 = vertices[i].longitude;
+    const xj: Int64 = vertices[j].latitude;
+    const yj: Int64 = vertices[j].longitude;
     
-    // TODO: rewrite logic to use UInt64, with .magintude():
-    const condition1: Bool = Provable.if(
-      yi.greaterThan(y),
-      Bool(true),
-      Bool(false)
-    );
-    const condition2: Bool = Provable.if(
-      yj.greaterThan(y),
-      Bool(true),
-      Bool(false)
-    );
+
+    const condition1: Bool = assertInt64XGreaterThanY(yi, y);
+    const condition2: Bool = assertInt64XGreaterThanY(yj, y);
+     
     const jointCondition1: Bool = Provable.if(
       condition1.equals(condition2),
       Bool(true),
