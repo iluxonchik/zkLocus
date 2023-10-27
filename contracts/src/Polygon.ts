@@ -119,7 +119,7 @@ class CoordinatePolygonInclusionExclusionProof extends Struct({
 class ProoveCoordinatesIn3dPolygonArgumentsValues extends Struct({
   point: GeographicalPoint,
   polygon: ThreePointPolygon,
-}) {}
+}) { }
 
 /** Intermediate Circuits **/
 
@@ -161,24 +161,24 @@ export const ProoveCoordinatesIn3dPolygonArguments = Experimental.ZkProgram({
 /*
 * Asserts that x is greater than y, i.e. x > y.
 * Properly uses provable code with assertions.
-*/ 
+*/
 function provableIsInt64XGreaterThanY(x: Int64, y: Int64): Bool {
-    /*
-      if both signs are Positive:
-          the largest maginitude is greater
-      if both signs are Negative:
-          the smallest maginitude is greater
-     
-      if signs are different:
-          the postivie number is greater
+  /*
+    if both signs are Positive:
+        the largest maginitude is greater
+    if both signs are Negative:
+        the smallest maginitude is greater
+   
+    if signs are different:
+        the postivie number is greater
 
-      special case for x == y: always false
-    */
+    special case for x == y: always false
+  */
   // 1. Are the signs the same?
   // if they're the same, the their multiplication's result is a positive sign
-  const signMuliplictaion: Sign = x.sgn.mul(y.sgn); 
+  const signMuliplictaion: Sign = x.sgn.mul(y.sgn);
   const isSignsEqual: Bool = Provable.if(signMuliplictaion.isPositive(), Bool(true), Bool(false));
-  
+
   // 2. For the case of the signs begin equal, we need to decide wether the one with the largest magintude
   const isXiMagnitudeLargerThanY: Bool = Provable.if(x.magnitude.greaterThan(y.magnitude), Bool(true), Bool(false));
   const isXMagitudeSmallerThanY: Bool = Provable.if(x.magnitude.lessThan(y.magnitude), Bool(true), Bool(false));
@@ -244,45 +244,55 @@ function isPointIn3PointPolygon(
     polygon.vertice3,
   ];
   let inside: Bool = Bool(false);
-  
+
   Provable.log('isPointIn3PointPolygon 3 ...');
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
     const xi: Int64 = vertices[i].latitude;
     const yi: Int64 = vertices[i].longitude;
     const xj: Int64 = vertices[j].latitude;
     const yj: Int64 = vertices[j].longitude;
-    
+
 
     const condition1: Bool = provableIsInt64XGreaterThanY(yi, y);
     const condition2: Bool = provableIsInt64XGreaterThanY(yj, y);
-     
+
     const jointCondition1: Bool = Provable.if(
       condition1.equals(condition2),
       Bool(true),
       Bool(false)
     );
-    
+
     Provable.log('isPointIn3PointPolygon 4 ...');
     Provable.log('xj:', xj);
     Provable.log('xi:', xi);
     Provable.log('yj:', yj);
     Provable.log('yi:', yi);
 
-    Provable.log('xj.sub(xi):', xj.sub(xi));
-    Provable.log('y.sub(yi):', y.sub(yi));
 
-    const numerator: Int64 = xj.sub(xi).mul(y.sub(yi));
+    const leftOperand: Int64 = xj.sub(xi);
+    const rightOperand: Int64 = y.sub(yi);
+    Provable.log('xj.sub(xi):', leftOperand, leftOperand.magnitude, leftOperand.sgn);
+    Provable.log('y.sub(yi):', rightOperand, rightOperand.magnitude, rightOperand.sgn);
+
+    const magnitudeProduct: UInt64 = leftOperand.magnitude.mul(rightOperand.magnitude);
+    const signProduct: Sign = leftOperand.sgn.mul(rightOperand.sgn); 
+
+    Provable.log('magnitudeProduct:', magnitudeProduct);
+    Provable.log('signProduct:', signProduct, signProduct.value, signProduct.isPositive());
+
+    const numerator: Int64 = leftOperand.mul(rightOperand);
+   
     Provable.log('isPointIn3PointPolygon 4.1 ...', numerator);
     const denominator: Int64 = yj.sub(yi).add(xi);
     Provable.log('isPointIn3PointPolygon 4.2 ...', denominator);
 
     Provable.log('isPointIn3PointPolygon 5 ...');
     // NOTE: adapt zero check?
-  
+
     assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
 
     const result: Int64 = numerator.div(denominator);
-    
+
     const jointCondition2: Bool = provableIsInt64XLessThanY(x, result);
     const isIntersect: Bool = Provable.if(
       jointCondition1.and(jointCondition2),
