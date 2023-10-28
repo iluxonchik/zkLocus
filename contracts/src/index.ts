@@ -5,7 +5,7 @@ import {
   ThreePointPolygon,
 } from './Polygon.js';
 
-import { Field, Mina, PrivateKey, AccountUpdate, §Int64 } from 'o1js';
+import { Field, Mina, PrivateKey, AccountUpdate, Int64 } from 'o1js';
 
 console.log('o1js loaded');
 const useProof = false;
@@ -17,14 +17,14 @@ const { privateKey: senderKey, publicKey: senderAccount } =
   Local.testAccounts[1];
 
 console.log('Preparing integers...');
-const uint1: Int64 = Int64.from(4567369283283521);
-const uint2: Int64 = Int64.from(4567567318665665);
-console.log('Performing subtraction...');
-const uint3: Int64 = uint1.sub(uint2);
-console.log('Operation: 4567369283283521 - 4567567318665665');
-console.log('a: ', uint1.toString());
-console.log('b: ', uint2.toString());
-console.log('a - b: ', uint3.toString());
+const uint1: Int64 = Int64.from(-5);
+const uint2: Int64 = Int64.from(5);
+console.log('Performing multiplication...');
+const uint3: Int64 = uint1.mul(uint2);
+console.log('Operation: -5 * 5');
+console.log('a: ', uint1.magnitude.toString(), ' ', uint1.sgn.toString(), ' ', uint1.toString());
+console.log('b: ', uint2.toString(), ' ', uint2.sgn.toString(), ' ', uint2.toString());
+console.log('a * b: ', uint3.toString(), ' ', uint3.sgn.toString(), ' ', uint3.toString());
 
 const uint4: Int64 = Int64.from(1);
 const uint5: Int64 = Int64.from(2);
@@ -44,18 +44,18 @@ console.log('\tZKApp compiled successfully ✅');
 
 let brasovCenterCoordinates1 = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: Int64.from(4565267451004980),
-    longitude: Int64.from(2561045985607537),
-    factor: Int64.from(10n ** 14n),
+    latitude: Int64.from(4565267),
+    longitude: Int64.from(2561046),
+    factor: Int64.from(10n ** 5n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
 
 let notBrasovCenterCoordinates1 = new NoncedGeographicalPoint({
   point: new GeographicalPoint({
-    latitude: Int64.from(4573351807726547),
-    longitude: Int64.from(2563860336947891),
-    factor: Int64.from(10n ** 14n),
+    latitude: Int64.from(4573351),
+    longitude: Int64.from(2563860),
+    factor: Int64.from(10n ** 5n),
   }),
   nonce: Field(Math.floor(Math.random() * 1000000)),
 });
@@ -65,22 +65,23 @@ let notBrasovCenterCoordinates1 = new NoncedGeographicalPoint({
 // 3.1 Polygon in Center of Brasov
 let brasovCenterPolygon = new ThreePointPolygon({
   vertice1: new GeographicalPoint({
-    latitude: Int64.from(4567567318665665),
-    longitude: Int64.from(2555484866751258),
-    factor: Int64.from(10n ** 14n),
+    latitude: Int64.from(4567567),
+    longitude: Int64.from(2555484),
+    factor: Int64.from(10n ** 5n),
   }),
   vertice2: new GeographicalPoint({
-    latitude: Int64.from(4561431116624503),
-    longitude: Int64.from(2561711908131041),
-    factor: Int64.from(10n ** 14n),
+    latitude: Int64.from(4561431),
+    longitude: Int64.from(2561711),
+    factor: Int64.from(10n ** 5n),
   }),
   vertice3: new GeographicalPoint({
-    latitude: Int64.from(4567369283283521),
-    longitude: Int64.from(2567497463146939),
-    factor: Int64.from(10n ** 14n),
+    latitude: Int64.from(4567369),
+    longitude: Int64.from(2567497),
+    factor: Int64.from(10n ** 5n),
 })
 });
 
+// NOTE: manually verified the coordintes for this example on maps
 console.log('Proving that point in Brasov Center is inside of Brasov Center Polygon...');
 const proofBrasovCenterCoordinatesInBrasovCenterPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
