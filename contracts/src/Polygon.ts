@@ -233,11 +233,9 @@ function isPointIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
 ): Bool {
-  Provable.log('isPointIn3PointPolygon 1 ...');
   const x: Int64 = point.point.latitude;
   const y: Int64 = point.point.longitude;
 
-  Provable.log('isPointIn3PointPolygon 2 ...');
   let vertices: Array<GeographicalPoint> = [
     polygon.vertice1,
     polygon.vertice2,
@@ -245,7 +243,6 @@ function isPointIn3PointPolygon(
   ];
   let inside: Bool = Bool(false);
 
-  Provable.log('isPointIn3PointPolygon 3 ...');
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
     const xi: Int64 = vertices[i].latitude;
     const yi: Int64 = vertices[i].longitude;
@@ -262,12 +259,10 @@ function isPointIn3PointPolygon(
       Bool(false)
     );
 
-    Provable.log('isPointIn3PointPolygon 4 ...');
     Provable.log('xj:', xj);
     Provable.log('xi:', xi);
     Provable.log('yj:', yj);
     Provable.log('yi:', yi);
-
 
     const leftOperand: Int64 = xj.sub(xi);
     const rightOperand: Int64 = y.sub(yi);
@@ -282,12 +277,9 @@ function isPointIn3PointPolygon(
 
     const numerator: Int64 = leftOperand.mul(rightOperand);
    
-    Provable.log('isPointIn3PointPolygon 4.1 ...', numerator);
+    Provable.log('numerator: ', numerator);
     const denominator: Int64 = yj.sub(yi).add(xi);
-    Provable.log('isPointIn3PointPolygon 4.2 ...', denominator);
-
-    Provable.log('isPointIn3PointPolygon 5 ...');
-    // NOTE: adapt zero check?
+    Provable.log('denominator: ', denominator);
 
     assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
 
