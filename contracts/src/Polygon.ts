@@ -290,9 +290,14 @@ function isPointIn3PointPolygon(
       jointCondition1.and(jointCondition2),
       Bool(true),
       Bool(false)
-    );
-
+    ); 
     inside = Provable.if(isIntersect, inside.not(), inside);
+    
+    Provable.log('i: ', i, ' j: ', j);
+    Provable.log('jointCondition1: ', jointCondition1);
+    Provable.log('jointCondition2: ', jointCondition2);
+    Provable.log('isIntersect: ', isIntersect);
+    Provable.log('------------------');
   }
 
   return inside;
