@@ -15,7 +15,8 @@ import {
   UInt64,
   Sign,
 } from 'o1js';
-import { provableIsInt64XEqualToInt64Y, provableIsInt64XGreaterThanY, provableIsInt64XLessThanY } from './math/Provable';
+import { provableIsInt64XEqualToInt64Y, provableIsInt64XGreaterThanY, provableIsInt64XLessThanY } from './math/Provers';
+import { assertInt64XNotEqualsInt64Y } from './math/Asserters';
 
 /** Data Structures */
 
@@ -157,11 +158,6 @@ export const ProoveCoordinatesIn3dPolygonArguments = Experimental.ZkProgram({
     },
   },
 });
-
-function assertInt64XNotEqualsInt64Y(x: Int64, y: Int64): void {
-  const isXEqualToY: Bool = provableIsInt64XEqualToInt64Y(x, y);
-  isXEqualToY.assertFalse();
-}
 
 /** Main Circuits */
 
