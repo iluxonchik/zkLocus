@@ -15,8 +15,8 @@ import {
   UInt64,
   Sign,
 } from 'o1js';
-import { provableIsInt64XEqualToInt64Y, provableIsInt64XGreaterThanY, provableIsInt64XLessThanY } from './math/Provers';
-import { assertInt64XNotEqualsInt64Y } from './math/Asserters';
+import { Int64Prover } from './math/Provers';
+import { Int64Asserter } from './math/Asserters';
 
 /** Data Structures */
 
@@ -182,8 +182,8 @@ function isPointIn3PointPolygon(
     const yj: Int64 = vertices[j].longitude;
 
 
-    const condition1: Bool = provableIsInt64XGreaterThanY(yi, y);
-    const condition2: Bool = provableIsInt64XGreaterThanY(yj, y);
+    const condition1: Bool = Int64Prover.provableIsInt64XGreaterThanY(yi, y);
+    const condition2: Bool = Int64Prover.provableIsInt64XGreaterThanY(yj, y);
 
     const jointCondition1: Bool = Provable.if(
       condition1.equals(condition2),
@@ -213,11 +213,11 @@ function isPointIn3PointPolygon(
     const denominator: Int64 = yj.sub(yi).add(xi);
     Provable.log('denominator: ', denominator);
 
-    assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
+    Int64Asserter.assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
 
     const result: Int64 = numerator.div(denominator);
 
-    const jointCondition2: Bool = provableIsInt64XLessThanY(x, result);
+    const jointCondition2: Bool = Int64Prover.provableIsInt64XLessThanY(x, result);
     const isIntersect: Bool = Provable.if(
       jointCondition1.and(jointCondition2),
       Bool(true),
