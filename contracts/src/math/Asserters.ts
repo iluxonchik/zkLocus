@@ -1,5 +1,5 @@
 import { Bool, Int64 } from "o1js";
-import { Int64Prover } from "./Provers";
+import { Int64Prover } from "./Provers.js";
 
 
 export class Int64Asserter {

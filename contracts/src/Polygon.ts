@@ -15,8 +15,8 @@ import {
   UInt64,
   Sign,
 } from 'o1js';
-import { Int64Prover } from './math/Provers';
-import { Int64Asserter } from './math/Asserters';
+import { Int64Prover } from './math/Provers.js';
+import { Int64Asserter } from './math/Asserters.js';
 
 /** Data Structures */
 
