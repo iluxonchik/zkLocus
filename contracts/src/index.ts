@@ -82,24 +82,28 @@ let brasovCenterPolygon = new ThreePointPolygon({
 });
 
 // NOTE: manually verified the coordintes for this example on maps
-console.log('Proving that point in Brasov Center is inside of Brasov Center Polygon...');
+console.log('###### Proving that point in Brasov Center is inside of Brasov Center Polygon... ######');
 const proofBrasovCenterCoordinatesInBrasovCenterPolygon =
   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
     brasovCenterCoordinates1,
     brasovCenterPolygon
   );
+  console.log('\tProving Coordinates in Polygon successful ✅');
 
-console.log('Results:');
-console.log('Proof Brasov Center Coordinates in Brasov Center Polygon:')
-console.log(proofBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
+console.log('\tResults:');
+console.log('\tProof Brasov Center Coordinates in Brasov Center Polygon:')
+console.log('\t', proofBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
 
-console.log('Proving that point NOT in Brasov Center is inside of Brasov Center Polygon...');
+console.log('#####Proving that point NOT in Brasov Center is inside of Brasov Center Polygon...');
 const proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = 
     await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
         notBrasovCenterCoordinates1,
         brasovCenterPolygon
     );
-
+  
+  console.log('\tResults:');
+  console.log('\tProof NOT Brasov Center Coordinates are not inside Brasov Center Polygon:')
+  console.log('\t', proofNotBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
 
 // console.log('Proving small coordinates not in medium polygon...');
 // const proofSmallCoordinatesNotInMediumPolygon =
