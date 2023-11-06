@@ -189,7 +189,7 @@ function isPointIn3PointPolygon(
       condition1.equals(condition2),
       Bool(true),
       Bool(false)
-    );
+    ).not();
 
     Provable.log('xj:', xj);
     Provable.log('xi:', xi);
@@ -210,12 +210,13 @@ function isPointIn3PointPolygon(
     const numerator: Int64 = leftOperand.mul(rightOperand);
    
     Provable.log('numerator: ', numerator);
-    const denominator: Int64 = yj.sub(yi).add(xi);
+    const denominator: Int64 = yj.sub(yi);
     Provable.log('denominator: ', denominator);
 
     Int64Asserter.assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
 
-    const result: Int64 = numerator.div(denominator);
+    const result_before_addition: Int64 = numerator.div(denominator);
+    const result: Int64 = result_before_addition.add(xi);
 
     const jointCondition2: Bool = Int64Prover.provableIsInt64XLessThanY(x, result);
     const isIntersect: Bool = Provable.if(
@@ -225,7 +226,9 @@ function isPointIn3PointPolygon(
     ); 
     inside = Provable.if(isIntersect, inside.not(), inside);
     
+    Provable.log('------------------')
     Provable.log('i: ', i, ' j: ', j);
+    Provable.log('x: ', x, ' y: ', y, 'result: ', result, ' inside: ', inside);
     Provable.log('jointCondition1: ', jointCondition1);
     Provable.log('jointCondition2: ', jointCondition2);
     Provable.log('isIntersect: ', isIntersect);
