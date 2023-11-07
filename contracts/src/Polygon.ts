@@ -25,9 +25,9 @@ import { Int64Asserter } from './math/Asserters.js';
  * The latitude and longitude values are represented as Field values. The Field values are scaled to
  * the desired factor, in order to represent the desired percision. The percision is represented as
  * a Field value. The percision is the number of decimal points that the latitude and longitude values
- * have. For example, if the percision is 12, then the latitude and longitude values are scaled to
- * 12 decimal points. The latitude and longitude values are scaled by multiplying them with 10^12.
- * 10^12 is the scale factor. `factor` is used instead of percision to optimize the efficency, as it prevent
+ * have. For example, if the percision is 7, then the latitude and longitude values are scaled to
+ * 7 decimal points. The latitude and longitude values are scaled by multiplying them with 10^7.
+ * 10^7 is the scale factor. `factor` is used instead of percision to optimize the efficency, as it prevent
   the need to perform exponentiation computations
  */
 export class GeographicalPoint extends Struct({
@@ -47,6 +47,7 @@ export class GeographicalPoint extends Struct({
     // First, asser that the provided latidude and logitude values are within the accepted range
     this.latitude.div(this.factor).magnitude.assertLessThanOrEqual(UInt64.from(90));
     this.longitude.magnitude.assertLessThanOrEqual(UInt64.from(180));
+    this.factor.magnitude.assertLessThanOrEqual(UInt64.from(10n ** 7n)); // maximum percions is 7 decimal points
   }
 }
 
