@@ -97,7 +97,7 @@ export class ThreePointPolygon extends Struct({
   }
 }
 
-class CoordinateProofState extends Struct({
+export class CoordinateProofState extends Struct({
   polygonCommitment: Field,
   // TODO: consider including outSidePolygonCommitment proofs, in order to inlcude the "inner" and "outer" polygon definitions of GeoJSON
   //outsidePolygonCommitment: Field,
