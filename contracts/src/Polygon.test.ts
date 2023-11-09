@@ -284,21 +284,21 @@ describe('CoordinatesInPolygon', () => {
 
             orProofForInsideInsideC1 = await CoordinatesInPolygon.OR(
                 proofInsideCoordinate1InInsidePolygon1,
-                proofInsideCoordinate3InInsidePolygon2,
+                proofInsideCoordinate1InInsidePolygon2,
             );
             orProofForOutsideOutsideC1 = await CoordinatesInPolygon.OR(
                 proofInsideCoordinate1NotInOutsidePolygon1,
-                proofInsideCoordinate3NotInOutsidePolygon1,
+                proofInsideCoordinate1NotInOutsidePolygon2,
             );
 
             andProoForInsideOutsideC1 = await CoordinatesInPolygon.AND(
                 proofInsideCoordinate1InInsidePolygon1,
-                proofInsideCoordinate2NotInOutsidePolygon1,
+                proofInsideCoordinate1NotInOutsidePolygon1,
             );
             
             andProofForInsideInsideC1 = await CoordinatesInPolygon.AND(
                 proofInsideCoordinate1InInsidePolygon1,
-                proofInsideCoordinate3InInsidePolygon2,
+                proofInsideCoordinate1InInsidePolygon2,
             );
 
 
