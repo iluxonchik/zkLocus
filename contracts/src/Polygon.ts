@@ -367,25 +367,21 @@ function AND(
     proof2.publicOutput.coordinatesCommitment
   );
 
+  // NOTE: see note below on .OR
   // ensure that the proof is not done for the same polygon
-  proof1.publicOutput.polygonCommitment.assertNotEquals(
-    proof2.publicOutput.polygonCommitment
-  );
+  //proof1.publicOutput.polygonCommitment.assertNotEquals(
+  // proof2.publicOutput.polygonCommitment
+  //);
 
   // ensure that the proofs are either both for isInPolygon, or both not for isInPolygon
-  let expectedSecondProofIsInPolygon = Provable.if(
-    proof1.publicOutput.isInPolygon,
-    Bool(true),
-    Bool(false)
-  );
-
+  const isInPolygon: Bool = proof1.publicOutput.isInPolygon.and(proof2.publicOutput.isInPolygon);
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
       proof1.publicOutput.polygonCommitment,
       proof2.publicOutput.polygonCommitment,
     ]),
     coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
-    isInPolygon: expectedSecondProofIsInPolygon,
+    isInPolygon: isInPolygon,
   });
 }
 
@@ -409,10 +405,19 @@ function OR(
   proof1.publicOutput.coordinatesCommitment.assertEquals(
     proof2.publicOutput.coordinatesCommitment
   );
+
+  // NOTE: I have decided to forego for this check, as there could be a use-case for combining
+  // different location proofs about the same polygon, as the proofs could have different coordinate
+  // sources. This would allow for the end-user to combine proofs about the same polygon, but from
+  // different sources. For example, a user could combine a proof from a GPS sensor, with a proof
+  // from a cell tower, and a proof from a WiFi hotspot. This would allow for the end-user to
+  // combine proofs from different sources, and achieve a higher level of confidence that they
+  // are inside or outside of the polygon. The decision on whether the to trust the coordinate sources
+  // or not is left to the receiving party.
   // ensure that the proof is not done for the same polygon
-  proof1.publicOutput.polygonCommitment.assertNotEquals(
-    proof2.publicOutput.polygonCommitment
-  );
+  //proof1.publicOutput.polygonCommitment.assertNotEquals(
+  //  proof2.publicOutput.polygonCommitment
+  //);
 
   // logic of OR
   let isInPolygon = Provable.if(
