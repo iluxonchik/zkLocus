@@ -40,14 +40,18 @@ export class Int64Prover {
     return isXGreaterThanY;
   }
 
+  static provableIsInt64XEqualToZero(x: Int64): Bool {
+    const isXZero: Bool = Provable.if(x.magnitude.equals(Int64.zero.magnitude), Bool(true), Bool(false));
+    return isXZero;
+  }
+
   static provableIsInt64XEqualToInt64Y(x: Int64, y: Int64): Bool {
-    const isXandYZero: Bool = Provable.if(x.equals(Int64.zero).and(y.equals(Int64.zero)), Bool(true), Bool(false));
+    const isXandYZero: Bool = Provable.if(this.provableIsInt64XEqualToZero(x).and(this.provableIsInt64XEqualToZero(y)), Bool(true), Bool(false));
     const isMaginitudeEqual: Bool = Provable.if(x.magnitude.equals(y.magnitude), Bool(true), Bool(false));
     const isSignEqual: Bool = Provable.if(x.sgn.equals(y.sgn), Bool(true), Bool(false));
     const isSignAndMaginitudeEqual: Bool = Provable.if(isMaginitudeEqual.and(isSignEqual), Bool(true), Bool(false));
-    const isXEqualToY: Bool = Provable.if(isXandYZero, Bool(false), isSignAndMaginitudeEqual);
+    const isXEqualToY: Bool = Provable.if(isXandYZero, Bool(true), isSignAndMaginitudeEqual);
     return isXEqualToY;
-
   }
 
   /**
@@ -62,6 +66,11 @@ export class Int64Prover {
     const isXEqualToY: Bool = Provable.if(x.equals(y), Bool(true), Bool(false));
     const isXLessThanY: Bool = Provable.if(isXGreaterThanY.not().and(isXEqualToY.not()), Bool(true), Bool(false));
     return isXLessThanY;
+  }
+
+  static provableIsInt64XLessThanOrEqualY(x: Int64, y: Int64): Bool {
+    const isXGreaterThanY: Bool = Int64Prover.provableIsInt64XGreaterThanY(x, y);
+    return isXGreaterThanY.not();
   }
 }
 
