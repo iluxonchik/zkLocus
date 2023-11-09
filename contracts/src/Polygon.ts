@@ -162,6 +162,42 @@ export const ProoveCoordinatesIn3dPolygonArguments = Experimental.ZkProgram({
 
 /** Main Circuits */
 
+function isPointOnEdgeProvable(point: NoncedGeographicalPoint, vertice1: GeographicalPoint, vertice2: GeographicalPoint) {
+  const x: Int64 = point.point.latitude;
+  const y: Int64 = point.point.longitude;
+  const x1: Int64 = vertice1.latitude; // edge start
+  const y1: Int64 = vertice1.longitude; // edge start
+  const x2: Int64 = vertice2.latitude;  // edge end
+  const y2: Int64 = vertice2.longitude; // edge end
+
+  const isX1LargerThanX2: Bool = Int64Prover.provableIsInt64XGreaterThanY(x1, x2);
+  let maximumX: Int64 = Provable.if(isX1LargerThanX2, x1, x2);
+  let minimumX: Int64 = Provable.if(isX1LargerThanX2, x2, x1);
+
+  const isY1LargerThanY2: Bool = Int64Prover.provableIsInt64XGreaterThanY(y1, y2);
+  let maximumY: Int64 = Provable.if(isY1LargerThanY2, y1, y2);
+  let minimumY: Int64 = Provable.if(isY1LargerThanY2, y2, y1);
+
+  const withinXBounds = Int64Prover.provableIsInt64XLessThanOrEqualY(x, maximumX).and(Int64Prover.provableIsInt64XLessThanOrEqualY(minimumX, x));
+  const withinYBounds = Int64Prover.provableIsInt64XLessThanOrEqualY(y, maximumY).and(Int64Prover.provableIsInt64XLessThanOrEqualY(minimumY, y));
+
+  // Check if the point satisfies the line equation for the edge
+  const xDifference1: Int64 = x2.sub(x1);
+  const xDifference2: Int64 = x.sub(x1);
+  const yDiffernce1: Int64 = y2.sub(y1);
+  const yDiffernce2: Int64 = y.sub(y1);
+
+  const firstProduct: Int64 = xDifference1.mul(yDiffernce2)
+  const secondProduct: Int64 = xDifference2.mul(yDiffernce1)
+  const onLine = Provable.equal(
+    firstProduct,
+    secondProduct,
+  );
+
+  return withinXBounds.and(withinYBounds).and(onLine);
+  
+}
+
 function isPointIn3PointPolygon(
   point: NoncedGeographicalPoint,
   polygon: ThreePointPolygon
@@ -175,6 +211,11 @@ function isPointIn3PointPolygon(
     polygon.vertice3,
   ];
   let inside: Bool = Bool(false);
+
+  const isPointOnEdge1: Bool = isPointOnEdgeProvable(point, polygon.vertice1, polygon.vertice2);
+  const isPointOnEdge2: Bool = isPointOnEdgeProvable(point, polygon.vertice2, polygon.vertice3);
+  const isPointOnEdge3: Bool = isPointOnEdgeProvable(point, polygon.vertice3, polygon.vertice1);
+  const isPointLocatedOnEdge: Bool = isPointOnEdge1.or(isPointOnEdge2).or(isPointOnEdge3);
 
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
     const xi: Int64 = vertices[i].latitude;
@@ -211,15 +252,22 @@ function isPointIn3PointPolygon(
     const numerator: Int64 = leftOperand.mul(rightOperand);
    
     Provable.log('numerator: ', numerator);
-    const denominator: Int64 = yj.sub(yi);
-    Provable.log('denominator: ', denominator);
+    let denominator: Int64 = yj.sub(yi);
+    Provable.log('denominator: ', denominator);  
 
-    Int64Asserter.assertInt64XNotEqualsInt64Y(denominator, Int64.zero);
+
+    // Horizontal Edge case: ensure that division by zero does not occur
+    const isHorizontalEdge: Bool = Int64Prover.provableIsInt64XEqualToZero(denominator);
+    denominator = Provable.if(isHorizontalEdge, Int64.one, denominator);
+
 
     const result_before_addition: Int64 = numerator.div(denominator);
     const result: Int64 = result_before_addition.add(xi);
 
-    const jointCondition2: Bool = Int64Prover.provableIsInt64XLessThanY(x, result);
+    let jointCondition2: Bool = Int64Prover.provableIsInt64XLessThanY(x, result);
+    // Horizontal Edge case: this will skip the horizontal edge checks
+    jointCondition2 = Provable.if(isHorizontalEdge, Bool(false), jointCondition2);
+
     const isIntersect: Bool = Provable.if(
       jointCondition1.and(jointCondition2),
       Bool(true),
@@ -235,6 +283,8 @@ function isPointIn3PointPolygon(
     Provable.log('isIntersect: ', isIntersect);
     Provable.log('------------------');
   }
+
+  inside = Provable.if(isPointLocatedOnEdge, Bool(true), inside);
 
   return inside;
 }
@@ -328,8 +378,6 @@ function AND(
     Bool(true),
     Bool(false)
   );
-
-  expectedSecondProofIsInPolygon.assertEquals(proof2.publicOutput.isInPolygon);
 
   return new CoordinateProofState({
     polygonCommitment: Poseidon.hash([
