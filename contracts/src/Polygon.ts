@@ -51,6 +51,31 @@ export class GeographicalPoint extends Struct({
   }
 }
 
+export class IntervalTimestamp extends Struct({
+  start: Field,
+  end: Field,
+}) {
+  hash() {
+    return Poseidon.hash([this.start, this.end]);
+  }
+
+  assertIsValid(): void {
+    this.start.assertLessThanOrEqual(this.end);
+  }
+};
+
+export class GeographicalPointWithTimestamp extends Struct({
+  point: GeographicalPoint,
+  timestamp: IntervalTimestamp, 
+}) {
+  hash() {
+    return Poseidon.hash([
+      this.point.hash(),
+      this.timestamp.hash(),
+    ]);
+  }
+}
+
 export class NoncedGeographicalPoint extends Struct({
   point: GeographicalPoint,
   nonce: Field,
@@ -109,6 +134,12 @@ export class CoordinateProofState extends Struct({
     return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
   }
 }
+
+export class CoordinateProofStateWithMetadata extends Struct({
+  coordinateProofState: CoordinateProofState,
+  metadata: Field,
+}){};
+
 
 class CoordinatePolygonInclusionExclusionProof extends Struct({
   insidePolygonCommitment: Field,
@@ -195,7 +226,7 @@ function isPointOnEdgeProvable(point: NoncedGeographicalPoint, vertice1: Geograp
   );
 
   return withinXBounds.and(withinYBounds).and(onLine);
-  
+
 }
 
 function isPointIn3PointPolygon(
@@ -244,16 +275,16 @@ function isPointIn3PointPolygon(
     Provable.log('y.sub(yi):', rightOperand, rightOperand.magnitude, rightOperand.sgn);
 
     const magnitudeProduct: UInt64 = leftOperand.magnitude.mul(rightOperand.magnitude);
-    const signProduct: Sign = leftOperand.sgn.mul(rightOperand.sgn); 
+    const signProduct: Sign = leftOperand.sgn.mul(rightOperand.sgn);
 
     Provable.log('magnitudeProduct:', magnitudeProduct);
     Provable.log('signProduct:', signProduct, signProduct.value, signProduct.isPositive());
 
     const numerator: Int64 = leftOperand.mul(rightOperand);
-   
+
     Provable.log('numerator: ', numerator);
     let denominator: Int64 = yj.sub(yi);
-    Provable.log('denominator: ', denominator);  
+    Provable.log('denominator: ', denominator);
 
 
     // Horizontal Edge case: ensure that division by zero does not occur
@@ -272,9 +303,9 @@ function isPointIn3PointPolygon(
       jointCondition1.and(jointCondition2),
       Bool(true),
       Bool(false)
-    ); 
+    );
     inside = Provable.if(isIntersect, inside.not(), inside);
-    
+
     Provable.log('------------------')
     Provable.log('i: ', i, ' j: ', j);
     Provable.log('x: ', x, ' y: ', y, 'result: ', result, ' inside: ', inside);
