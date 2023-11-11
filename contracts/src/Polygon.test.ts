@@ -1,5 +1,8 @@
 import { Bool, Empty, Field, Int64, Proof } from "o1js";
-import { CoordinateProofState, CoordinatesInPolygon, GeographicalPoint, NoncedGeographicalPoint, ThreePointPolygon } from "./Polygon";
+import { CoordinatesInPolygon } from './zkprogram/Geography';
+import { CoordinateProofState } from './model/Commitment';
+import { NoncedGeographicalPoint, ThreePointPolygon } from './model/Geography';
+import { GeographicalPoint } from './model/Geography';
 
 class InternalStructuresInterface {
 
@@ -294,7 +297,7 @@ describe('CoordinatesInPolygon', () => {
             andProoForInsideOutsideC1 = await CoordinatesInPolygon.AND(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon1,
-            );
+            )
             
             andProofForInsideInsideC1 = await CoordinatesInPolygon.AND(
                 proofInsideCoordinate1InInsidePolygon1,
