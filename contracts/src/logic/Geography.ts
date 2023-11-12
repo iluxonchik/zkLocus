@@ -1,12 +1,12 @@
 import { Bool, Provable, Int64 } from "o1js";
 import { Int64Prover } from "../math/Provers.js";
-import { NoncedGeographicalPoint, GeographicalPoint } from '../model/Geography';
+import { GeoPointWithNonce, GeographicalPoint } from '../model/Geography';
 
 
 /** Main Circuits */
 
 
-export function isPointOnEdgeProvable(point: NoncedGeographicalPoint, vertice1: GeographicalPoint, vertice2: GeographicalPoint) {
+export function isPointOnEdgeProvable(point: GeoPointWithNonce, vertice1: GeographicalPoint, vertice2: GeographicalPoint) {
     const x: Int64 = point.point.latitude;
     const y: Int64 = point.point.longitude;
     const x1: Int64 = vertice1.latitude; // edge start
