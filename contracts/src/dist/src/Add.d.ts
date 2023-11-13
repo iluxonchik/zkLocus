@@ -1,5 +1,4 @@
-import { Field, SmartContract, state, State, method } from 'o1js';
-
+import { SmartContract, State } from 'o1js';
 /**
  * Basic Example
  * See https://docs.minaprotocol.com/zkapps for more info.
@@ -9,17 +8,8 @@ import { Field, SmartContract, state, State, method } from 'o1js';
  *
  * This file is safe to delete and replace with your own contract.
  */
-export class Add extends SmartContract {
-  @state(Field) num = State<Field>();
-
-  init() {
-    super.init();
-    this.num.set(Field(1));
-  }
-
-  @method update() {
-    const currentState = this.num.getAndAssertEquals();
-    const newState = currentState.add(2);
-    this.num.set(newState);
-  }
+export declare class Add extends SmartContract {
+    num: State<import("o1js/dist/node/lib/field").Field>;
+    init(): void;
+    update(): void;
 }

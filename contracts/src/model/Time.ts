@@ -1,21 +1,21 @@
-import { Field, Struct, Poseidon } from "o1js";
+import { Field, Struct, Poseidon, UInt64 } from "o1js";
 
 
-export class IntervalTimestamp extends Struct({
-  start: Field,
-  end: Field,
+export class TimestampInterval extends Struct({
+  start: UInt64,
+  end: UInt64,
 }) {
   hash() {
-    return Poseidon.hash([this.start, this.end]);
+    return Poseidon.hash([this.start.value, this.end.value]);
+  }
+
+  toString(): string {
+    return `Start: ${this.start.toString()}\nEnd: ${this.end.toString()}`;
   }
 
   assertIsValid(): void {
-    this.start.assertLessThanOrEqual(this.end);
+    this.end.assertLessThanOrEqual(this.start);
   }
 }
 ;
-class IntervalTimeStamp extends Struct({
-    start: Field,
-    end: Field,
-  }) { }
-   
+  

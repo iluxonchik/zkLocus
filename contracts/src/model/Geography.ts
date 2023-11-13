@@ -1,5 +1,5 @@
 import { Struct, Poseidon, Int64, UInt64, Field } from "o1js";
-import { IntervalTimestamp } from './Time';
+import { TimestampInterval } from './Time';
 
 
 /** Data Structures */
@@ -12,9 +12,9 @@ import { IntervalTimestamp } from './Time';
  * 7 decimal points. The latitude and longitude values are scaled by multiplying them with 10^7.
  * 10^7 is the scale factor. `factor` is used instead of percision to optimize the efficency, as it prevent
   the need to perform exponentiation computations
- */
+ */ 
 
-export class GeographicalPoint extends Struct({
+export class GeoPoint extends Struct({
   latitude: Int64,
   longitude: Int64,
   factor: Int64, // see note in docs
@@ -34,9 +34,13 @@ export class GeographicalPoint extends Struct({
     this.factor.magnitude.assertLessThanOrEqual(UInt64.from(10n ** 7n)); // maximum percions is 7 decimal points
   }
 }
-export class GeographicalPointWithTimestamp extends Struct({
-  point: GeographicalPoint,
-  timestamp: IntervalTimestamp,
+
+/**
+ * Represents a geographical point, with a timestamp.
+ */
+export class GeoPointWithTimestamp extends Struct({
+  point: GeoPoint,
+  timestamp: TimestampInterval,
 }) {
   hash() {
     return Poseidon.hash([
@@ -46,23 +50,10 @@ export class GeographicalPointWithTimestamp extends Struct({
   }
 }
 
-export class NoncedGeographicalPoint extends Struct({
-  point: GeographicalPoint,
-  nonce: Field,
-}) {
-  hash() {
-    return Poseidon.hash([this.point.hash(), this.nonce]);
-  }
-
-  assertIsValid(): void {
-    this.point.assertIsValid();
-  }
-}
-
 export class ThreePointPolygon extends Struct({
-  vertice1: GeographicalPoint,
-  vertice2: GeographicalPoint,
-  vertice3: GeographicalPoint,
+  vertice1: GeoPoint,
+  vertice2: GeoPoint,
+  vertice3: GeoPoint,
 }) {
   hash() {
     return Poseidon.hash([
@@ -92,13 +83,3 @@ export class ThreePointPolygon extends Struct({
     // TODO: assert that the points in the polygon are correcly ordered
   }
 }
-
-class IntervalTimeStamp extends Struct({
-  start: Field,
-  end: Field,
-}) { }
-
-class LiteralCoordinatesAndTimeStamp extends Struct({
-  point: NoncedGeographicalPoint,
-  timestamp: IntervalTimeStamp,
-}) { }

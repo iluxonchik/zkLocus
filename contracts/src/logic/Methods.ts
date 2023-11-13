@@ -2,20 +2,21 @@
 import { Poseidon, Bool, SelfProof, Empty, Provable, Int64, UInt64, Sign, Field } from "o1js";
 import { isPointOnEdgeProvable } from './Geography';
 
-import { NoncedGeographicalPoint, ThreePointPolygon, GeographicalPoint } from '../model/Geography';
+import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
-import { CoordinatePolygonInclusionExclusionProof, CoordinateProofState } from "../model/Commitment";
+import { CoordinatePolygonInclusionExclusionProof, GeoPointInPolygonCommitment, GeoPointWithTimestampIntervalInPolygonCommitment } from "../model/private/Commitment";
+import { TimestampInterval } from "../model/Time";
 
 
 
 function isPointIn3PointPolygon(
-  point: NoncedGeographicalPoint,
+  point: GeoPoint,
   polygon: ThreePointPolygon
 ): Bool {
-  const x: Int64 = point.point.latitude;
-  const y: Int64 = point.point.longitude;
+  const x: Int64 = point.latitude;
+  const y: Int64 = point.longitude;
 
-  let vertices: Array<GeographicalPoint> = [
+  let vertices: Array<GeoPoint> = [
     polygon.vertice1,
     polygon.vertice2,
     polygon.vertice3,
@@ -100,9 +101,9 @@ function isPointIn3PointPolygon(
 }
 
 export function proveCoordinatesIn3PointPolygon(
-  point: NoncedGeographicalPoint,
+  point: GeoPoint,
   polygon: ThreePointPolygon
-): CoordinateProofState {
+): GeoPointInPolygonCommitment {
   // TODO: IT IS CRUCIAL TO VERIFY THAT THE FACTOR OF THE POINT IS THE SAME
   // AS THE FACTOR OF ALL OF THE POINTS OF THE POLYGON. Oterwise, the math
   // will fail. Consider implementing this check as another proof.
@@ -123,12 +124,61 @@ export function proveCoordinatesIn3PointPolygon(
   Provable.log('Coordinates Commitment: ', coordinatesCommitment);
   Provable.log('Is In Polygon: ', isInPolygon);
 
-  return new CoordinateProofState({
+  return new GeoPointInPolygonCommitment({
     polygonCommitment: polygonCommitment,
     coordinatesCommitment: coordinatesCommitment,
     isInPolygon: isInPolygon,
   });
 }
+
+/**
+ * Proves that a GeoPoint is inside or outside of a polygon with source-attested coordinate source.
+ * This provides the foundational framework and a dynamic interface for the creation of proof with
+ * verified coordinate source. This coordinate source could be the result of a request to an API,
+ * the zero-knowledge proof from a hardware device, or a signature by some private key. This allows
+ * for the dynamic creation of proofs with the source of coordinate verified by arbitrary logic.
+ * This interface can be connected to through the use of proof recursion.
+ * 
+ * Wether or not to trust the source is up to the verifier of the proof. They will be able to verify exactly which
+ * set of circuits created that proof.
+ *  
+ * @param sourcedGeoPointProof - the proof that the GeoPoint is sourced from a specific source
+ * @param polygon 
+ * @returns 
+ */
+export function proveSourcedCoordinatesIn3PointPolygon(
+  sourcedGeoPointProof: SelfProof<Empty, GeoPoint>,
+  polygon: ThreePointPolygon,
+): GeoPointInPolygonCommitment {
+  sourcedGeoPointProof.verify();
+  const point: GeoPoint = sourcedGeoPointProof.publicOutput;
+  return proveCoordinatesIn3PointPolygon(point, polygon);
+}
+
+function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygonCommitment) {
+  // ensure that the proof is for the same coordinates
+  first.coordinatesCommitment.assertEquals(
+    second.coordinatesCommitment
+  );
+
+  // NOTE: see note below on .OR
+  // ensure that the proof is not done for the same polygon
+  //proof1.publicOutput.polygonCommitment.assertNotEquals(
+  // proof2.publicOutput.polygonCommitment
+  //);
+  // ensure that the proofs are either both for isInPolygon, or both not for isInPolygon
+  const isInPolygon: Bool = first.isInPolygon.and(second.isInPolygon);
+  return new GeoPointInPolygonCommitment({
+    polygonCommitment: Poseidon.hash([
+      first.polygonCommitment,
+      second.polygonCommitment,
+    ]),
+    coordinatesCommitment: first.coordinatesCommitment,
+    isInPolygon: isInPolygon,
+  });
+
+}
+
 /**
  * Given two proofs, it combines them into a single proof that is the AND of the two proofs.
  * The AND operand is applied to the `isInPolygon` field of the two proofs. The proof is computed
@@ -140,9 +190,9 @@ export function proveCoordinatesIn3PointPolygon(
  */
 
 export function AND(
-  proof1: SelfProof<Empty, CoordinateProofState>,
-  proof2: SelfProof<Empty, CoordinateProofState>
-): CoordinateProofState {
+  proof1: SelfProof<Empty, GeoPointInPolygonCommitment>,
+  proof2: SelfProof<Empty, GeoPointInPolygonCommitment>
+): GeoPointInPolygonCommitment {
   // IMPORTANT: this has an issue. If I give proof1, which asserts that the user is in Spain, and proof2 that
   // asserts that the user is not in Romania, then the resulting proof from .AND will say that the user is
   // neither in Spain, nor Romania. This is because the AND operation is applied to the `isInPolygon` field
@@ -168,47 +218,19 @@ export function AND(
   proof1.verify();
   proof2.verify();
 
-  // ensure that the proof is for the same coordinates
-  proof1.publicOutput.coordinatesCommitment.assertEquals(
-    proof2.publicOutput.coordinatesCommitment
-  );
+  const proof1PublicOuput: GeoPointInPolygonCommitment = proof1.publicOutput;
+  const proof2PublicOuput: GeoPointInPolygonCommitment = proof2.publicOutput;
 
-  // NOTE: see note below on .OR
-  // ensure that the proof is not done for the same polygon
-  //proof1.publicOutput.polygonCommitment.assertNotEquals(
-  // proof2.publicOutput.polygonCommitment
-  //);
-  // ensure that the proofs are either both for isInPolygon, or both not for isInPolygon
-  const isInPolygon: Bool = proof1.publicOutput.isInPolygon.and(proof2.publicOutput.isInPolygon);
-  return new CoordinateProofState({
-    polygonCommitment: Poseidon.hash([
-      proof1.publicOutput.polygonCommitment,
-      proof2.publicOutput.polygonCommitment,
-    ]),
-    coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
-    isInPolygon: isInPolygon,
-  });
+  return ANDLiteral(proof1PublicOuput, proof2PublicOuput);
 }
-/**
- * Given two proofs, it combines them into a single proof that is the OR of the two proofs.
- * The OR operand is applied to the `isInPolygon` field of the two proofs. The proof is computed
- * even if neither of the proofs have `isInPolygon` set to true. The proof verifies that the
- * `coordinatesCommitment` are the same, and that the `polygonCommitment` are different.
- * @param proof1 - the first proof
- * @param proof2 - the second proof
- * @returns CoordinateProofState
- */
 
-export function OR(
-  proof1: SelfProof<Empty, CoordinateProofState>,
-  proof2: SelfProof<Empty, CoordinateProofState>
-): CoordinateProofState {
-  proof1.verify();
-  proof2.verify();
-
+function ORLiteral(
+  first: GeoPointInPolygonCommitment,
+  second: GeoPointInPolygonCommitment
+) {
   // ensure that the proof is for the same coordinates
-  proof1.publicOutput.coordinatesCommitment.assertEquals(
-    proof2.publicOutput.coordinatesCommitment
+  first.coordinatesCommitment.assertEquals(
+    second.coordinatesCommitment
   );
 
   // NOTE: I have decided to forego for this check, as there could be a use-case for combining
@@ -225,19 +247,44 @@ export function OR(
   //);
   // logic of OR
   let isInPolygon = Provable.if(
-    proof1.publicOutput.isInPolygon.or(proof2.publicOutput.isInPolygon),
+    first.isInPolygon.or(second.isInPolygon),
     Bool(true),
     Bool(false)
   );
 
-  return new CoordinateProofState({
+  return new GeoPointInPolygonCommitment({
     polygonCommitment: Poseidon.hash([
-      proof1.publicOutput.polygonCommitment,
-      proof2.publicOutput.polygonCommitment,
+      first.polygonCommitment,
+      second.polygonCommitment,
     ]),
-    coordinatesCommitment: proof1.publicOutput.coordinatesCommitment,
+    coordinatesCommitment: first.coordinatesCommitment,
     isInPolygon: isInPolygon,
   });
+}
+
+/**
+ * Given two proofs, it combines them into a single proof that is the OR of the two proofs.
+ * The OR operand is applied to the `isInPolygon` field of the two proofs. The proof is computed
+ * even if neither of the proofs have `isInPolygon` set to true. The proof verifies that the
+ * `coordinatesCommitment` are the same, and that the `polygonCommitment` are different.
+ * @param proof1 - the first proof
+ * @param proof2 - the second proof
+ * @returns CoordinateProofState
+ */
+
+export function OR(
+  proof1: SelfProof<Empty, GeoPointInPolygonCommitment>,
+  proof2: SelfProof<Empty, GeoPointInPolygonCommitment>
+): GeoPointInPolygonCommitment {
+  proof1.verify();
+  proof2.verify();
+
+  const first: GeoPointInPolygonCommitment = proof1.publicOutput;
+  const second: GeoPointInPolygonCommitment = proof2.publicOutput;
+
+  return ORLiteral(first, second);
+
+
 } export function combine(
   proof1: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>,
   proof2: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>
@@ -369,11 +416,11 @@ export function OR(
   });
 }
 export function fromCoordinatesInPolygonProof(
-  proof: SelfProof<Empty, CoordinateProofState>
+  proof: SelfProof<Empty, GeoPointInPolygonCommitment>
 ): CoordinatePolygonInclusionExclusionProof {
   proof.verify();
 
-  const coodinatesInPolygonProof: CoordinateProofState = proof.publicOutput;
+  const coodinatesInPolygonProof: GeoPointInPolygonCommitment = proof.publicOutput;
   const insideCommitment = Provable.if(
     coodinatesInPolygonProof.isInPolygon,
     coodinatesInPolygonProof.polygonCommitment,
@@ -392,3 +439,112 @@ export function fromCoordinatesInPolygonProof(
   });
 }
 
+export function proofGeoPointInPolygonCommitmentFromOutput(
+  output: GeoPointInPolygonCommitment
+): GeoPointInPolygonCommitment {
+  return output;
+}
+
+/**
+ * Attach interval timestamp to the proof that the coordinates are in a polygon. 
+ * @param geoPointInPolygonProof Proof that the coordinates are in a polygon
+ * @param timestampIntervralProof Proof of source of timestamp interval
+ * @returns GeoPoint with inclusion in polygon and time stamp interval information
+ */
+export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: SelfProof<Empty, GeoPointInPolygonCommitment>, timestampIntervralProof: SelfProof<Empty, TimestampInterval>): GeoPointWithTimestampIntervalInPolygonCommitment {
+  geoPointInPolygonProof.verify();
+  timestampIntervralProof.verify();
+
+  const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = geoPointInPolygonProof.publicOutput;
+  const timestampInterval: TimestampInterval = timestampIntervralProof.publicOutput;
+
+  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+    geoPointInPolygonCommitment: geoPointInPolygonCommitment,
+    timestamp: timestampInterval,
+  });
+}
+
+/**
+ * Given two sources GeoPointWithTimestampIntervalInPolygonCommitment proofs, it combines them into a single proof that is the AND of the two proofs. 
+ * This method requires for the time intervals to be equal in both proofs. A set of utility methods is provided to compress or extend a time interval,
+ * and they can be used to adapt the time intervals to be equal, as long as they are compatible with one another.s 
+ * @param firstProof first proof
+ * @param secondProof second proof
+ * @returns combination of both proofs
+ */
+export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>): GeoPointWithTimestampIntervalInPolygonCommitment {
+  firstProof.verify();
+  secondProof.verify();
+
+  const firstProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = firstProof.publicOutput;
+  const secondProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = secondProof.publicOutput;
+
+  const firstProofTimeStampInterval: TimestampInterval = firstProofPublicOutput.timestamp;
+  const secondProofTimeStampInterval: TimestampInterval = secondProofPublicOutput.timestamp;
+
+  // Ensure that time intervals are equal. A set of utility methods is provided to compress or extend a time interval
+  firstProofTimeStampInterval.hash().assertEquals(secondProofTimeStampInterval.hash());
+
+  // Combine the polygon commitments
+  const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = ANDLiteral(firstProofPublicOutput.geoPointInPolygonCommitment, secondProofPublicOutput.geoPointInPolygonCommitment);
+
+
+  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+    geoPointInPolygonCommitment: geoPointInPolygonCommitment,
+    timestamp: firstProofTimeStampInterval,
+  });
+}
+
+export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>): GeoPointWithTimestampIntervalInPolygonCommitment {
+  firstProof.verify();
+  secondProof.verify();
+
+  const firstProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = firstProof.publicOutput;
+  const secondProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = secondProof.publicOutput;
+
+  const firstProofTimeStampInterval: TimestampInterval = firstProofPublicOutput.timestamp;
+  const secondProofTimeStampInterval: TimestampInterval = secondProofPublicOutput.timestamp;
+
+  // Ensure that time intervals are equal. A set of utility methods is provided to compress or extend a time interval
+  firstProofTimeStampInterval.hash().assertEquals(secondProofTimeStampInterval.hash());
+
+  // Combine the polygon commitments
+  const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = ORLiteral(firstProofPublicOutput.geoPointInPolygonCommitment, secondProofPublicOutput.geoPointInPolygonCommitment);
+
+  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+    geoPointInPolygonCommitment: geoPointInPolygonCommitment,
+    timestamp: firstProofTimeStampInterval,
+  });
+}
+
+/**
+ * Expand the time interval of a GeoPointWithTimestampIntervalInPolygonCommitment proof. This method is useful for adapting time intervals for AND and OR operations.
+ * This method only succeeds if the provided time interval is a super set of the original time interval.
+ * @param commitment - the proof to expand
+ * @param newTimestampInterval  - the new time interval
+ */
+export function expandTimeStampInterval(commitment: GeoPointWithTimestampIntervalInPolygonCommitment, newTimestampInterval: TimestampInterval): GeoPointWithTimestampIntervalInPolygonCommitment {
+  commitment.timestamp.start.assertLessThanOrEqual(newTimestampInterval.start);
+  commitment.timestamp.end.assertGreaterThanOrEqual(newTimestampInterval.end);
+
+  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+    geoPointInPolygonCommitment: commitment.geoPointInPolygonCommitment,
+    timestamp: newTimestampInterval,
+  });
+
+}
+
+/**
+ * Recurvisevely expand the time interval of a GeoPointWithTimestampIntervalInPolygonCommitment proof on the GeoPointWithTimestampIntervalInPolygonCommitment. 
+ * This method is useful for adapting time intervals for AND and OR operations. 
+ * @param proof - Recursive proof with GeoPointWithTimestampIntervalInPolygonCommitment as public output to expand
+ * @param newTimestampInterval  - the new and expanded time stamp interval.
+ * @returns 
+ */
+export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, newTimestampInterval: TimestampInterval): GeoPointWithTimestampIntervalInPolygonCommitment {
+  proof.verify();
+
+  const proofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = proof.publicOutput;
+
+  return expandTimeStampInterval(proofPublicOutput, newTimestampInterval);
+}

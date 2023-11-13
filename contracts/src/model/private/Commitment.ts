@@ -1,8 +1,9 @@
 import { Field, Struct, Bool } from "o1js";
-import { GeographicalPoint, ThreePointPolygon } from './Geography.js';
+import { GeoPoint, ThreePointPolygon } from '../Geography.js';
+import { TimestampInterval } from "../Time.js";
 
 
-export class CoordinateProofState extends Struct({
+export class GeoPointInPolygonCommitment extends Struct({
   polygonCommitment: Field,
   // TODO: consider including outSidePolygonCommitment proofs, in order to inlcude the "inner" and "outer" polygon definitions of GeoJSON
   //outsidePolygonCommitment: Field,
@@ -14,11 +15,6 @@ export class CoordinateProofState extends Struct({
   }
 }
 
-export class CoordinateProofStateWithMetadata extends Struct({
-  coordinateProofState: CoordinateProofState,
-  metadata: Field,
-}) {
-}
 ;
 export class CoordinatePolygonInclusionExclusionProof extends Struct({
   insidePolygonCommitment: Field,
@@ -30,7 +26,16 @@ export class CoordinatePolygonInclusionExclusionProof extends Struct({
   }
 }
 export class ProoveCoordinatesIn3dPolygonArgumentsValues extends Struct({
-  point: GeographicalPoint,
+  point: GeoPoint,
   polygon: ThreePointPolygon,
 }) {
+}
+
+export class GeoPointWithTimestampIntervalInPolygonCommitment extends Struct({
+  geoPointInPolygonCommitment: GeoPointInPolygonCommitment,
+  timestamp: TimestampInterval, 
+}){
+  toString(): string {
+    return `Coordinate In Polygon Commitment State: ${this.geoPointInPolygonCommitment.toString()}\nT imestamp: ${this.timestamp.toString()}`;
+  }
 }
