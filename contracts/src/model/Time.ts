@@ -1,7 +1,7 @@
 import { Field, Struct, Poseidon, UInt64 } from "o1js";
 
 
-export class TimestampInterval extends Struct({
+export class TimeStampInterval extends Struct({
   start: UInt64,
   end: UInt64,
 }) {
@@ -17,5 +17,6 @@ export class TimestampInterval extends Struct({
     this.end.assertLessThanOrEqual(this.start);
   }
 }
-;
+
+
   

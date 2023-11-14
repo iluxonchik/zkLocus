@@ -1,6 +1,6 @@
 import { Field, Struct, Bool } from "o1js";
 import { GeoPoint, ThreePointPolygon } from '../Geography.js';
-import { TimestampInterval } from "../Time.js";
+import { TimeStampInterval } from "../Time.js";
 
 
 export class GeoPointInPolygonCommitment extends Struct({
@@ -33,7 +33,7 @@ export class ProoveCoordinatesIn3dPolygonArgumentsValues extends Struct({
 
 export class GeoPointWithTimestampIntervalInPolygonCommitment extends Struct({
   geoPointInPolygonCommitment: GeoPointInPolygonCommitment,
-  timestamp: TimestampInterval, 
+  timestamp: TimeStampInterval, 
 }){
   toString(): string {
     return `Coordinate In Polygon Commitment State: ${this.geoPointInPolygonCommitment.toString()}\nT imestamp: ${this.timestamp.toString()}`;

@@ -548,3 +548,11 @@ export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPoin
 
   return expandTimeStampInterval(proofPublicOutput, newTimestampInterval);
 }
+
+export function geoPointFromLiteral(point: GeoPoint): GeoPoint {
+  return point;
+}
+
+export function timeStampIntervalFromLiteral(interval: TimestampInterval): TimestampInterval {
+  return interval;
+}

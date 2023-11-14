@@ -1,5 +1,5 @@
 import { Struct, Poseidon, Int64, UInt64, Field } from "o1js";
-import { TimestampInterval } from './Time';
+import { TimeStampInterval } from './Time';
 
 
 /** Data Structures */
@@ -40,7 +40,7 @@ export class GeoPoint extends Struct({
  */
 export class GeoPointWithTimestamp extends Struct({
   point: GeoPoint,
-  timestamp: TimestampInterval,
+  timestamp: TimeStampInterval,
 }) {
   hash() {
     return Poseidon.hash([
@@ -83,3 +83,4 @@ export class ThreePointPolygon extends Struct({
     // TODO: assert that the points in the polygon are correcly ordered
   }
 }
+
