@@ -1,7 +1,7 @@
 import { SelfProof, Empty } from "o1js";
 import { NoncedGeographicalPoint, ThreePointPolygon } from '../model/Geography';
 import { CoordinatePolygonInclusionExclusionProof, CoordinateInPolygonCommitment } from "../model/Commitment";
-export declare function proveCoordinatesIn3PointPolygon(point: NoncedGeographicalPoint, polygon: ThreePointPolygon): CoordinateInPolygonCommitment;
+export declare function proveGeoPointIn3PointPolygon(point: NoncedGeographicalPoint, polygon: ThreePointPolygon): CoordinateInPolygonCommitment;
 /**
  * Given two proofs, it combines them into a single proof that is the AND of the two proofs.
  * The AND operand is applied to the `isInPolygon` field of the two proofs. The proof is computed

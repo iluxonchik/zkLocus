@@ -24,7 +24,7 @@ export declare const CoordinatesInPolygon: {
     publicInputType: import("o1js/dist/node/lib/circuit_value").ProvablePureExtended<undefined, null>;
     publicOutputType: typeof CoordinateInPolygonCommitment;
 } & {
-    proveCoordinatesIn3PointPolygon: (...args: [NoncedGeographicalPoint, ThreePointPolygon] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
+    proveGeoPointIn3PointPolygon: (...args: [NoncedGeographicalPoint, ThreePointPolygon] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
     AND: (...args: [SelfProof<undefined, CoordinateInPolygonCommitment>, SelfProof<undefined, CoordinateInPolygonCommitment>] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
     OR: (...args: [SelfProof<undefined, CoordinateInPolygonCommitment>, SelfProof<undefined, CoordinateInPolygonCommitment>] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
 };
@@ -48,7 +48,7 @@ export declare const CoordinatesWithTimestampInPolygon: {
     publicInputType: import("o1js/dist/node/lib/circuit_value").ProvablePureExtended<undefined, null>;
     publicOutputType: typeof CoordinateInPolygonCommitment;
 } & {
-    proveCoordinatesIn3PointPolygon: (...args: [NoncedGeographicalPoint, ThreePointPolygon] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
+    proveGeoPointIn3PointPolygon: (...args: [NoncedGeographicalPoint, ThreePointPolygon] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
     AND: (...args: [SelfProof<undefined, CoordinateInPolygonCommitment>, SelfProof<undefined, CoordinateInPolygonCommitment>] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
     OR: (...args: [SelfProof<undefined, CoordinateInPolygonCommitment>, SelfProof<undefined, CoordinateInPolygonCommitment>] & any[]) => Promise<import("o1js/dist/node/lib/proof_system").Proof<undefined, CoordinateInPolygonCommitment>>;
 };

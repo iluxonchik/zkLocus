@@ -130,7 +130,7 @@
 // // NOTE: manually verified the coordintes for this example on maps
 // console.log('###### Proving that point in Brasov Center is inside of Brasov Center Polygon... ######');
 // const proofBrasovCenterCoordinatesInBrasovCenterPolygon =
-//   await GeoPointInPolygon.proveCoordinatesIn3PointPolygon(
+//   await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
 //     brasovCenterCoordinates1,
 //     brasovCenterPolygon
 //   );
@@ -142,7 +142,7 @@
 
 // console.log('#####Proving that point NOT in Brasov Center is inside of Brasov Center Polygon...');
 // const proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = 
-//     await GeoPointInPolygon.proveCoordinatesIn3PointPolygon(
+//     await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
 //         notBrasovCenterCoordinates1,
 //         brasovCenterPolygon
 //     );
@@ -153,28 +153,28 @@
 
 // // console.log('Proving small coordinates not in medium polygon...');
 // // const proofSmallCoordinatesNotInMediumPolygon =
-// //   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+// //   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 // //     smallLatitudeCoords,
 // //     mockedPolygonMediumVertice
 // //   );
 
 // // console.log('Proving small coordinates in large polygon...');
 // // const proofSmallCoordinatesInLargePolygon =
-// //   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+// //   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 // //     smallLatitudeCoords,
 // //     mockedPolygonLargeVertice
 // //   );
 
 // // console.log('Proving large coordintes in small polygon...');
 // // const proofLargeCoordinatesInSmallPolygon =
-// //   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+// //   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 // //     largeLatitudeCoords,
 // //     mockedPolygonSmallVertice
 // //   );
 
 // // console.log('Proving large coordintes in medium polygon...');
 // // const proofLargeCoordinatesInMediumPolygon =
-// //   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+// //   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 // //     largeLatitudeCoords,
 // //     mockedPolygonMediumVertice
 // //   );

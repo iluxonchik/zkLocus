@@ -25,17 +25,26 @@ export class CoordinatePolygonInclusionExclusionProof extends Struct({
     return `Inside Polygon Commitment: ${this.insidePolygonCommitment.toString()}\nOutside Polygon Commitment: ${this.outsidePolygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}`;
   }
 }
+
 export class ProoveCoordinatesIn3dPolygonArgumentsValues extends Struct({
   point: GeoPoint,
   polygon: ThreePointPolygon,
 }) {
 }
 
-export class GeoPointWithTimestampIntervalInPolygonCommitment extends Struct({
+export class GeoPointWithTimeStampIntervalInPolygonCommitment extends Struct({
   geoPointInPolygonCommitment: GeoPointInPolygonCommitment,
-  timestamp: TimeStampInterval, 
-}){
+  timestamp: TimeStampInterval,
+}) {
   toString(): string {
     return `Coordinate In Polygon Commitment State: ${this.geoPointInPolygonCommitment.toString()}\nT imestamp: ${this.timestamp.toString()}`;
+  }
+}
+
+export class GeoPointCommitment extends Struct({
+  geoPoint: GeoPoint,
+}) {
+  toString(): string {
+    return `GeoPoint: ${this.geoPoint.toString()}`;
   }
 }

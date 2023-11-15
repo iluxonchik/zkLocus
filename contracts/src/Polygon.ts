@@ -7,7 +7,7 @@ import {
 } from 'o1js';
 import { ThreePointPolygon, GeoPoint } from './model/Geography.js';
 
-function proveCoordinatesIn3PointPolygon2(
+function proveGeoPointIn3PointPolygon2(
   input: LiteralCoordinatesAndTimeStamp,
 ): GeoPoint {
   return input.point;
@@ -27,9 +27,9 @@ export const CoordinateSourceFromGoogle = Experimental.ZkProgram({
   publicOutput: GeoPoint,
 
   methods: {
-    proveCoordinatesIn3PointPolygon2: {
+    proveGeoPointIn3PointPolygon2: {
       privateInputs: [LiteralCoordinatesAndTimeStamp],
-      method: proveCoordinatesIn3PointPolygon2,
+      method: proveGeoPointIn3PointPolygon2,
     },
   }
 });
@@ -42,7 +42,7 @@ function demoMethod(coordinates: SelfProof<Empty, GeoPoint>, polygon: ThreePoint
 export const CoordinateUsage = Experimental.ZkProgram({
 
   methods: {
-    proveCoordinatesIn3PointPolygon: {
+    proveGeoPointIn3PointPolygon: {
       privateInputs: [SelfProof<Empty, GeoPoint>, ThreePointPolygon],
       method: demoMethod,
     },

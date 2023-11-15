@@ -4,8 +4,8 @@ import { isPointOnEdgeProvable } from './Geography';
 
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
-import { CoordinatePolygonInclusionExclusionProof, GeoPointInPolygonCommitment, GeoPointWithTimestampIntervalInPolygonCommitment } from "../model/private/Commitment";
-import { TimestampInterval } from "../model/Time";
+import { CoordinatePolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
+import { TimeStampInterval } from "../model/Time";
 
 
 
@@ -100,7 +100,7 @@ function isPointIn3PointPolygon(
   return inside;
 }
 
-export function proveCoordinatesIn3PointPolygon(
+export function proveGeoPointIn3PointPolygon(
   point: GeoPoint,
   polygon: ThreePointPolygon
 ): GeoPointInPolygonCommitment {
@@ -152,7 +152,7 @@ export function proveSourcedCoordinatesIn3PointPolygon(
 ): GeoPointInPolygonCommitment {
   sourcedGeoPointProof.verify();
   const point: GeoPoint = sourcedGeoPointProof.publicOutput;
-  return proveCoordinatesIn3PointPolygon(point, polygon);
+  return proveGeoPointIn3PointPolygon(point, polygon);
 }
 
 function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygonCommitment) {
@@ -451,36 +451,36 @@ export function proofGeoPointInPolygonCommitmentFromOutput(
  * @param timestampIntervralProof Proof of source of timestamp interval
  * @returns GeoPoint with inclusion in polygon and time stamp interval information
  */
-export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: SelfProof<Empty, GeoPointInPolygonCommitment>, timestampIntervralProof: SelfProof<Empty, TimestampInterval>): GeoPointWithTimestampIntervalInPolygonCommitment {
+export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: SelfProof<Empty, GeoPointInPolygonCommitment>, timestampIntervralProof: SelfProof<Empty, TimeStampInterval>): GeoPointWithTimeStampIntervalInPolygonCommitment {
   geoPointInPolygonProof.verify();
   timestampIntervralProof.verify();
 
   const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = geoPointInPolygonProof.publicOutput;
-  const timestampInterval: TimestampInterval = timestampIntervralProof.publicOutput;
+  const timestampInterval: TimeStampInterval = timestampIntervralProof.publicOutput;
 
-  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+  return new GeoPointWithTimeStampIntervalInPolygonCommitment({
     geoPointInPolygonCommitment: geoPointInPolygonCommitment,
     timestamp: timestampInterval,
   });
 }
 
 /**
- * Given two sources GeoPointWithTimestampIntervalInPolygonCommitment proofs, it combines them into a single proof that is the AND of the two proofs. 
+ * Given two sources GeoPointWithTimeStampIntervalInPolygonCommitment proofs, it combines them into a single proof that is the AND of the two proofs. 
  * This method requires for the time intervals to be equal in both proofs. A set of utility methods is provided to compress or extend a time interval,
  * and they can be used to adapt the time intervals to be equal, as long as they are compatible with one another.s 
  * @param firstProof first proof
  * @param secondProof second proof
  * @returns combination of both proofs
  */
-export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>): GeoPointWithTimestampIntervalInPolygonCommitment {
+export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): GeoPointWithTimeStampIntervalInPolygonCommitment {
   firstProof.verify();
   secondProof.verify();
 
-  const firstProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = firstProof.publicOutput;
-  const secondProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = secondProof.publicOutput;
+  const firstProofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = firstProof.publicOutput;
+  const secondProofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = secondProof.publicOutput;
 
-  const firstProofTimeStampInterval: TimestampInterval = firstProofPublicOutput.timestamp;
-  const secondProofTimeStampInterval: TimestampInterval = secondProofPublicOutput.timestamp;
+  const firstProofTimeStampInterval: TimeStampInterval = firstProofPublicOutput.timestamp;
+  const secondProofTimeStampInterval: TimeStampInterval = secondProofPublicOutput.timestamp;
 
   // Ensure that time intervals are equal. A set of utility methods is provided to compress or extend a time interval
   firstProofTimeStampInterval.hash().assertEquals(secondProofTimeStampInterval.hash());
@@ -489,21 +489,21 @@ export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, G
   const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = ANDLiteral(firstProofPublicOutput.geoPointInPolygonCommitment, secondProofPublicOutput.geoPointInPolygonCommitment);
 
 
-  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+  return new GeoPointWithTimeStampIntervalInPolygonCommitment({
     geoPointInPolygonCommitment: geoPointInPolygonCommitment,
     timestamp: firstProofTimeStampInterval,
   });
 }
 
-export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>): GeoPointWithTimestampIntervalInPolygonCommitment {
+export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): GeoPointWithTimeStampIntervalInPolygonCommitment {
   firstProof.verify();
   secondProof.verify();
 
-  const firstProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = firstProof.publicOutput;
-  const secondProofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = secondProof.publicOutput;
+  const firstProofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = firstProof.publicOutput;
+  const secondProofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = secondProof.publicOutput;
 
-  const firstProofTimeStampInterval: TimestampInterval = firstProofPublicOutput.timestamp;
-  const secondProofTimeStampInterval: TimestampInterval = secondProofPublicOutput.timestamp;
+  const firstProofTimeStampInterval: TimeStampInterval = firstProofPublicOutput.timestamp;
+  const secondProofTimeStampInterval: TimeStampInterval = secondProofPublicOutput.timestamp;
 
   // Ensure that time intervals are equal. A set of utility methods is provided to compress or extend a time interval
   firstProofTimeStampInterval.hash().assertEquals(secondProofTimeStampInterval.hash());
@@ -511,48 +511,54 @@ export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, Ge
   // Combine the polygon commitments
   const geoPointInPolygonCommitment: GeoPointInPolygonCommitment = ORLiteral(firstProofPublicOutput.geoPointInPolygonCommitment, secondProofPublicOutput.geoPointInPolygonCommitment);
 
-  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+  return new GeoPointWithTimeStampIntervalInPolygonCommitment({
     geoPointInPolygonCommitment: geoPointInPolygonCommitment,
     timestamp: firstProofTimeStampInterval,
   });
 }
 
 /**
- * Expand the time interval of a GeoPointWithTimestampIntervalInPolygonCommitment proof. This method is useful for adapting time intervals for AND and OR operations.
+ * Expand the time interval of a GeoPointWithTimeStampIntervalInPolygonCommitment proof. This method is useful for adapting time intervals for AND and OR operations.
  * This method only succeeds if the provided time interval is a super set of the original time interval.
  * @param commitment - the proof to expand
- * @param newTimestampInterval  - the new time interval
+ * @param newTimeStampInterval  - the new time interval
  */
-export function expandTimeStampInterval(commitment: GeoPointWithTimestampIntervalInPolygonCommitment, newTimestampInterval: TimestampInterval): GeoPointWithTimestampIntervalInPolygonCommitment {
-  commitment.timestamp.start.assertLessThanOrEqual(newTimestampInterval.start);
-  commitment.timestamp.end.assertGreaterThanOrEqual(newTimestampInterval.end);
+export function expandTimeStampInterval(commitment: GeoPointWithTimeStampIntervalInPolygonCommitment, newTimeStampInterval: TimeStampInterval): GeoPointWithTimeStampIntervalInPolygonCommitment {
+  commitment.timestamp.start.assertLessThanOrEqual(newTimeStampInterval.start);
+  commitment.timestamp.end.assertGreaterThanOrEqual(newTimeStampInterval.end);
 
-  return new GeoPointWithTimestampIntervalInPolygonCommitment({
+  return new GeoPointWithTimeStampIntervalInPolygonCommitment({
     geoPointInPolygonCommitment: commitment.geoPointInPolygonCommitment,
-    timestamp: newTimestampInterval,
+    timestamp: newTimeStampInterval,
   });
 
 }
 
 /**
- * Recurvisevely expand the time interval of a GeoPointWithTimestampIntervalInPolygonCommitment proof on the GeoPointWithTimestampIntervalInPolygonCommitment. 
+ * Recurvisevely expand the time interval of a GeoPointWithTimeStampIntervalInPolygonCommitment proof on the GeoPointWithTimeStampIntervalInPolygonCommitment. 
  * This method is useful for adapting time intervals for AND and OR operations. 
- * @param proof - Recursive proof with GeoPointWithTimestampIntervalInPolygonCommitment as public output to expand
- * @param newTimestampInterval  - the new and expanded time stamp interval.
+ * @param proof - Recursive proof with GeoPointWithTimeStampIntervalInPolygonCommitment as public output to expand
+ * @param newTimeStampInterval  - the new and expanded time stamp interval.
  * @returns 
  */
-export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPointWithTimestampIntervalInPolygonCommitment>, newTimestampInterval: TimestampInterval): GeoPointWithTimestampIntervalInPolygonCommitment {
+export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, newTimeStampInterval: TimeStampInterval): GeoPointWithTimeStampIntervalInPolygonCommitment {
   proof.verify();
 
-  const proofPublicOutput: GeoPointWithTimestampIntervalInPolygonCommitment = proof.publicOutput;
+  const proofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = proof.publicOutput;
 
-  return expandTimeStampInterval(proofPublicOutput, newTimestampInterval);
+  return expandTimeStampInterval(proofPublicOutput, newTimeStampInterval);
 }
 
 export function geoPointFromLiteral(point: GeoPoint): GeoPoint {
   return point;
 }
 
-export function timeStampIntervalFromLiteral(interval: TimestampInterval): TimestampInterval {
+export function timeStampIntervalFromLiteral(interval: TimeStampInterval): TimeStampInterval {
   return interval;
+}
+
+export function proveExactGeoPoint(
+  geoPoint: GeoPoint,
+): GeoPointCommitment {
+  return new GeoPointCommitment({geoPoint: geoPoint});
 }
