@@ -1,5 +1,5 @@
 import { Experimental, SelfProof, Empty, Proof, Field, Struct, Provable, Bool} from "o1js";
-import { proveGeoPointIn3PointPolygon, AND, OR, proveSourcedCoordinatesIn3PointPolygon, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint} from '../../logic/Methods';
+import { proveGeoPointIn3PointPolygon, AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint, proveExactGeoPointFromSourceCircuit, proveSourcedGeoPointIn3PointPolygon} from '../../logic/Methods';
 
 import { CoordinatePolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
@@ -52,6 +52,10 @@ export const ExactGeoPoint = Experimental.ZkProgram({
             privateInputs: [GeoPoint],
             method: proveExactGeoPoint,
         },
+        proveExactSourcedGeoPoint: {
+            privateInputs: [Proof<Empty, GeoPoint>],
+            method: proveExactGeoPointFromSourceCircuit,
+        }
     }
 });
 
@@ -65,10 +69,11 @@ export const GeoPointProof = Experimental.ZkProgram({
     publicOutput: GeoPoint,
 
     methods: {
-        fromLiteral: {
+        fromLiteralGeoPoint: {
             privateInputs: [GeoPoint],
             method: geoPointFromLiteral,
         },
+
     },
 });
 
@@ -87,9 +92,9 @@ export const GeoPointInPolygon = Experimental.ZkProgram({
             method: proveGeoPointIn3PointPolygon,
         },
         
-        proveSourcedCoordinatesIn3PointPolygon: {
+        proveSourcedGeoPointIn3PointPolygon: {
             privateInputs: [SelfProof<Empty, GeoPoint>, ThreePointPolygon],
-            method: proveSourcedCoordinatesIn3PointPolygon,
+            method: proveSourcedGeoPointIn3PointPolygon,
         },
         
         proofFromPublicOutput: {

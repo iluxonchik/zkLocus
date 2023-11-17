@@ -1,5 +1,5 @@
 
-import { Poseidon, Bool, SelfProof, Empty, Provable, Int64, UInt64, Sign, Field } from "o1js";
+import { Poseidon, Bool, SelfProof, Empty, Provable, Int64, UInt64, Sign, Field, Proof } from "o1js";
 import { isPointOnEdgeProvable } from './Geography';
 
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
@@ -146,7 +146,7 @@ export function proveGeoPointIn3PointPolygon(
  * @param polygon 
  * @returns 
  */
-export function proveSourcedCoordinatesIn3PointPolygon(
+export function proveSourcedGeoPointIn3PointPolygon(
   sourcedGeoPointProof: SelfProof<Empty, GeoPoint>,
   polygon: ThreePointPolygon,
 ): GeoPointInPolygonCommitment {
@@ -561,4 +561,13 @@ export function proveExactGeoPoint(
   geoPoint: GeoPoint,
 ): GeoPointCommitment {
   return new GeoPointCommitment({geoPoint: geoPoint});
+}
+
+export function proveExactGeoPointFromSourceCircuit(geoPointProof: Proof<Empty, GeoPoint>): GeoPointCommitment{
+  geoPointProof.verify();
+  return new GeoPointCommitment(
+    {
+      geoPoint: geoPointProof.publicOutput
+    }
+  )
 }
