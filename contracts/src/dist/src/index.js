@@ -105,37 +105,37 @@ let brasovCenterPolygon = new ThreePointPolygon({
 });
 // NOTE: manually verified the coordintes for this example on maps
 console.log('###### Proving that point in Brasov Center is inside of Brasov Center Polygon... ######');
-const proofBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(brasovCenterCoordinates1, brasovCenterPolygon);
+const proofBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(brasovCenterCoordinates1, brasovCenterPolygon);
 console.log('\tProving Coordinates in Polygon successful ✅');
 console.log('\tResults:');
 console.log('\tProof Brasov Center Coordinates in Brasov Center Polygon:');
 console.log('\t', proofBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
 console.log('#####Proving that point NOT in Brasov Center is inside of Brasov Center Polygon...');
-const proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(notBrasovCenterCoordinates1, brasovCenterPolygon);
+const proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(notBrasovCenterCoordinates1, brasovCenterPolygon);
 console.log('\tResults:');
 console.log('\tProof NOT Brasov Center Coordinates are not inside Brasov Center Polygon:');
 console.log('\t', proofBrasovCenterCoordinatesInBrasovCenterPolygon.publicOutput.toString());
 // console.log('Proving small coordinates not in medium polygon...');
 // const proofSmallCoordinatesNotInMediumPolygon =
-//   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+//   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 //     smallLatitudeCoords,
 //     mockedPolygonMediumVertice
 //   );
 // console.log('Proving small coordinates in large polygon...');
 // const proofSmallCoordinatesInLargePolygon =
-//   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+//   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 //     smallLatitudeCoords,
 //     mockedPolygonLargeVertice
 //   );
 // console.log('Proving large coordintes in small polygon...');
 // const proofLargeCoordinatesInSmallPolygon =
-//   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+//   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 //     largeLatitudeCoords,
 //     mockedPolygonSmallVertice
 //   );
 // console.log('Proving large coordintes in medium polygon...');
 // const proofLargeCoordinatesInMediumPolygon =
-//   await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(
+//   await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(
 //     largeLatitudeCoords,
 //     mockedPolygonMediumVertice
 //   );

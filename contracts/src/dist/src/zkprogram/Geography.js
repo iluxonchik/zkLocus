@@ -1,5 +1,5 @@
 import { Experimental, SelfProof } from "o1js";
-import { proveCoordinatesIn3PointPolygon, AND, OR } from '../logic/Methods';
+import { proveGeoPointIn3PointPolygon, AND, OR } from '../logic/Methods';
 import { CoordinatePolygonInclusionExclusionProof, CoordinateInPolygonCommitment } from '../model/Commitment';
 import { NoncedGeographicalPoint, ThreePointPolygon } from '../model/Geography';
 import { fromCoordinatesInPolygonProof } from '../logic/Methods';
@@ -13,9 +13,9 @@ import { combine } from '../logic/Methods';
 export const CoordinatesInPolygon = Experimental.ZkProgram({
     publicOutput: CoordinateInPolygonCommitment,
     methods: {
-        proveCoordinatesIn3PointPolygon: {
+        proveGeoPointIn3PointPolygon: {
             privateInputs: [NoncedGeographicalPoint, ThreePointPolygon],
-            method: proveCoordinatesIn3PointPolygon,
+            method: proveGeoPointIn3PointPolygon,
         },
         AND: {
             privateInputs: [
@@ -39,9 +39,9 @@ export const CoordinatesInPolygon = Experimental.ZkProgram({
 export const CoordinatesWithTimestampInPolygon = Experimental.ZkProgram({
     publicOutput: CoordinateInPolygonCommitment,
     methods: {
-        proveCoordinatesIn3PointPolygon: {
+        proveGeoPointIn3PointPolygon: {
             privateInputs: [NoncedGeographicalPoint, ThreePointPolygon],
-            method: proveCoordinatesIn3PointPolygon,
+            method: proveGeoPointIn3PointPolygon,
         },
         AND: {
             privateInputs: [

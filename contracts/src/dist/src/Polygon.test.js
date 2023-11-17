@@ -98,9 +98,9 @@ describe('CoordinatesInPolygon', () => {
             }),
             nonce: Field(Math.floor(Math.random() * 1000000)),
         });
-        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(brasovCenterCoordinates, brasovCenterPolygon);
-        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(notBrasovCenterCoordinates, brasovCenterPolygon);
-        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(notInRomaniaCoordinates, brasovCenterPolygon);
+        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(brasovCenterCoordinates, brasovCenterPolygon);
+        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(notBrasovCenterCoordinates, brasovCenterPolygon);
+        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(notInRomaniaCoordinates, brasovCenterPolygon);
     });
     describe('isPointIn3PointPolygon', () => {
         describe('when the point is inside the polygon', () => {
@@ -168,18 +168,18 @@ describe('CoordinatesInPolygon', () => {
                 vertice2: InternalStructuresInterface.geographicalPointFromNumber(25.61112, 45.65210),
                 vertice3: InternalStructuresInterface.geographicalPointFromNumber(25.61132, 45.65235),
             });
-            proofInsideCoordinate1InInsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate1, insidePolygon1);
-            proofInsideCoordinate2InInsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate2, insidePolygon1);
-            proofInsideCoordinate3InInsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate3, insidePolygon1);
-            proofInsideCoordinate1InInsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate1, insidePolygon2);
-            proofInsideCoordinate2InInsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate2, insidePolygon2);
-            proofInsideCoordinate3InInsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate3, insidePolygon2);
-            proofInsideCoordinate1NotInOutsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate1, outsidePolygon1);
-            proofInsideCoordinate2NotInOutsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate2, outsidePolygon1);
-            proofInsideCoordinate3NotInOutsidePolygon1 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate3, outsidePolygon1);
-            proofInsideCoordinate1NotInOutsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate1, outsidePolygon2);
-            proofInsideCoordinate2NotInOutsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate2, outsidePolygon2);
-            proofInsideCoordinate3NotInOutsidePolygon2 = await CoordinatesInPolygon.proveCoordinatesIn3PointPolygon(insideCoordinate3, outsidePolygon2);
+            proofInsideCoordinate1InInsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate1, insidePolygon1);
+            proofInsideCoordinate2InInsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate2, insidePolygon1);
+            proofInsideCoordinate3InInsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate3, insidePolygon1);
+            proofInsideCoordinate1InInsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate1, insidePolygon2);
+            proofInsideCoordinate2InInsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate2, insidePolygon2);
+            proofInsideCoordinate3InInsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate3, insidePolygon2);
+            proofInsideCoordinate1NotInOutsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate1, outsidePolygon1);
+            proofInsideCoordinate2NotInOutsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate2, outsidePolygon1);
+            proofInsideCoordinate3NotInOutsidePolygon1 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate3, outsidePolygon1);
+            proofInsideCoordinate1NotInOutsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate1, outsidePolygon2);
+            proofInsideCoordinate2NotInOutsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate2, outsidePolygon2);
+            proofInsideCoordinate3NotInOutsidePolygon2 = await CoordinatesInPolygon.proveGeoPointIn3PointPolygon(insideCoordinate3, outsidePolygon2);
             orProofForInsideOutsideC1 = await CoordinatesInPolygon.OR(proofInsideCoordinate1InInsidePolygon1, proofInsideCoordinate1NotInOutsidePolygon1);
             orProofForInsideInsideC1 = await CoordinatesInPolygon.OR(proofInsideCoordinate1InInsidePolygon1, proofInsideCoordinate1InInsidePolygon2);
             orProofForOutsideOutsideC1 = await CoordinatesInPolygon.OR(proofInsideCoordinate1NotInOutsidePolygon1, proofInsideCoordinate1NotInOutsidePolygon2);

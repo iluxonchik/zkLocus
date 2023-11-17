@@ -60,7 +60,7 @@ function isPointIn3PointPolygon(point, polygon) {
     inside = Provable.if(isPointLocatedOnEdge, Bool(true), inside);
     return inside;
 }
-export function proveCoordinatesIn3PointPolygon(point, polygon) {
+export function proveGeoPointIn3PointPolygon(point, polygon) {
     // TODO: IT IS CRUCIAL TO VERIFY THAT THE FACTOR OF THE POINT IS THE SAME
     // AS THE FACTOR OF ALL OF THE POINTS OF THE POLYGON. Oterwise, the math
     // will fail. Consider implementing this check as another proof.
