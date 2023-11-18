@@ -1,12 +1,12 @@
 
-import { Poseidon, Bool, SelfProof, Empty, Provable, Int64, UInt64, Sign, Field, Proof } from "o1js";
+import { Poseidon, Bool, SelfProof, Empty, Provable, Int64, UInt64, Sign, Field, Proof, Experimental } from "o1js";
 import { isPointOnEdgeProvable } from './Geography';
 
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
 import { CoordinatePolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
-
+import { GeoPointCircuitProof } from "../zkprogram/private/Geography";
 
 
 function isPointIn3PointPolygon(
@@ -147,7 +147,7 @@ export function proveGeoPointIn3PointPolygon(
  * @returns 
  */
 export function proveSourcedGeoPointIn3PointPolygon(
-  sourcedGeoPointProof: SelfProof<Empty, GeoPoint>,
+  sourcedGeoPointProof: GeoPointCircuitProof,
   polygon: ThreePointPolygon,
 ): GeoPointInPolygonCommitment {
   sourcedGeoPointProof.verify();
@@ -563,7 +563,7 @@ export function proveExactGeoPoint(
   return new GeoPointCommitment({geoPoint: geoPoint});
 }
 
-export function proveExactGeoPointFromSourceCircuit(geoPointProof: Proof<Empty, GeoPoint>): GeoPointCommitment{
+export function proveExactGeoPointFromSourceCircuit(geoPointProof: SelfProof<Empty, GeoPoint>): GeoPointCommitment{
   geoPointProof.verify();
   return new GeoPointCommitment(
     {

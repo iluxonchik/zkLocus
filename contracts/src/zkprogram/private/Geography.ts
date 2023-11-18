@@ -53,7 +53,7 @@ export const ExactGeoPoint = Experimental.ZkProgram({
             method: proveExactGeoPoint,
         },
         proveExactSourcedGeoPoint: {
-            privateInputs: [Proof<Empty, GeoPoint>],
+            privateInputs: [SelfProof<Empty, GeoPoint>],
             method: proveExactGeoPointFromSourceCircuit,
         }
     }
@@ -65,7 +65,7 @@ export const ExactGeoPoint = Experimental.ZkProgram({
  * 
  * The output of this should be as an input to GeoPointInPolygon.
  */
-export const GeoPointProof = Experimental.ZkProgram({
+export const GeoPointCircuit = Experimental.ZkProgram({
     publicOutput: GeoPoint,
 
     methods: {
@@ -76,6 +76,8 @@ export const GeoPointProof = Experimental.ZkProgram({
 
     },
 });
+
+export class GeoPointCircuitProof extends Experimental.ZkProgram.Proof(GeoPointCircuit) {}
 
 /**
  * Set of ZK circuts responsible for verifying that a geographical point is within a polygon,
@@ -93,7 +95,7 @@ export const GeoPointInPolygon = Experimental.ZkProgram({
         },
         
         proveSourcedGeoPointIn3PointPolygon: {
-            privateInputs: [SelfProof<Empty, GeoPoint>, ThreePointPolygon],
+            privateInputs: [GeoPointCircuitProof, ThreePointPolygon],
             method: proveSourcedGeoPointIn3PointPolygon,
         },
         
@@ -119,6 +121,7 @@ export const GeoPointInPolygon = Experimental.ZkProgram({
         },
     },
 });
+
 
 /**
  * Set of ZK circuits that allow for the creation of a proof attesting to the validity of a timestamp interval.

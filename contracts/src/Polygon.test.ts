@@ -1,5 +1,5 @@
 import { Bool, Empty, Field, Int64, Proof } from "o1js";
-import { GeoPointInPolygon } from './zkprogram/private/Geography';
+import { GeoPointCircuit, GeoPointInPolygon } from './zkprogram/private/Geography';
 import { GeoPointInPolygonCommitment } from './model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from './model/Geography';
 
@@ -61,7 +61,10 @@ describe('CoordinatesInPolygon', () => {
 
     beforeAll(async () => {
 
-        if (isProofsEnabled) await GeoPointInPolygon.compile();
+        if (isProofsEnabled) {
+            await GeoPointCircuit.compile();
+            await GeoPointInPolygon.compile();
+        }
 
         brasovCenterPolygon = new ThreePointPolygon({
             vertice1: new GeoPoint({
