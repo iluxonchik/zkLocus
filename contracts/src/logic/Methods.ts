@@ -4,9 +4,9 @@ import { isPointOnEdgeProvable } from './Geography';
 
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
-import { CoordinatePolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
+import { GeoPointPolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
-import { GeoPointCircuitProof } from "../zkprogram/private/Geography";
+import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
 
 
 function isPointIn3PointPolygon(
@@ -146,8 +146,8 @@ export function proveGeoPointIn3PointPolygon(
  * @param polygon 
  * @returns 
  */
-export function proveSourcedGeoPointIn3PointPolygon(
-  sourcedGeoPointProof: GeoPointCircuitProof,
+export function proveProvidedGeoPointIn3PointPolygon(
+  sourcedGeoPointProof: GeoPointProviderCircuitProof,
   polygon: ThreePointPolygon,
 ): GeoPointInPolygonCommitment {
   sourcedGeoPointProof.verify();
@@ -286,14 +286,14 @@ export function OR(
 
 
 } export function combine(
-  proof1: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>,
-  proof2: SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>
-): CoordinatePolygonInclusionExclusionProof {
+  proof1: SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>,
+  proof2: SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>
+): GeoPointPolygonInclusionExclusionProof {
   proof1.verify();
   proof2.verify();
 
-  const proof1PublicOutput: CoordinatePolygonInclusionExclusionProof = proof1.publicOutput;
-  const proof2PublicOutput: CoordinatePolygonInclusionExclusionProof = proof2.publicOutput;
+  const proof1PublicOutput: GeoPointPolygonInclusionExclusionProof = proof1.publicOutput;
+  const proof2PublicOutput: GeoPointPolygonInclusionExclusionProof = proof2.publicOutput;
 
   // ensure that the proof is for the same coordinates
   proof1.publicOutput.coordinatesCommitment.assertEquals(
@@ -409,7 +409,7 @@ export function OR(
     newOutsideCommitment
   );
 
-  return new CoordinatePolygonInclusionExclusionProof({
+  return new GeoPointPolygonInclusionExclusionProof({
     insidePolygonCommitment: newInsideCommitment,
     outsidePolygonCommitment: newOutsideCommitment,
     coordinatesCommitment: proof1PublicOutput.coordinatesCommitment,
@@ -417,7 +417,7 @@ export function OR(
 }
 export function fromCoordinatesInPolygonProof(
   proof: SelfProof<Empty, GeoPointInPolygonCommitment>
-): CoordinatePolygonInclusionExclusionProof {
+): GeoPointPolygonInclusionExclusionProof {
   proof.verify();
 
   const coodinatesInPolygonProof: GeoPointInPolygonCommitment = proof.publicOutput;
@@ -432,7 +432,7 @@ export function fromCoordinatesInPolygonProof(
     coodinatesInPolygonProof.polygonCommitment
   );
 
-  return new CoordinatePolygonInclusionExclusionProof({
+  return new GeoPointPolygonInclusionExclusionProof({
     insidePolygonCommitment: insideCommitment,
     outsidePolygonCommitment: outsideCommitment,
     coordinatesCommitment: coodinatesInPolygonProof.coordinatesCommitment,
@@ -451,7 +451,7 @@ export function proofGeoPointInPolygonCommitmentFromOutput(
  * @param timestampIntervralProof Proof of source of timestamp interval
  * @returns GeoPoint with inclusion in polygon and time stamp interval information
  */
-export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: SelfProof<Empty, GeoPointInPolygonCommitment>, timestampIntervralProof: SelfProof<Empty, TimeStampInterval>): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: GeoPointInPolygonCircuitProof, timestampIntervralProof: TimeStampIntervalProviderCircuitProof): GeoPointWithTimeStampIntervalInPolygonCommitment {
   geoPointInPolygonProof.verify();
   timestampIntervralProof.verify();
 
