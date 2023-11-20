@@ -1,7 +1,7 @@
 import { Experimental, SelfProof, Empty, Proof, Field, Struct, Provable, Bool} from "o1js";
-import { proveGeoPointIn3PointPolygon, AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint, proveExactGeoPointFromSourceCircuit, proveSourcedGeoPointIn3PointPolygon} from '../../logic/Methods';
+import { proveGeoPointIn3PointPolygon, AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint, proveExactGeoPointFromSourceCircuit, proveProvidedGeoPointIn3PointPolygon} from '../../logic/Methods';
 
-import { CoordinatePolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
+import { GeoPointPolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
 import { fromCoordinatesInPolygonProof } from '../../logic/Methods';
 import { combine } from '../../logic/Methods';
@@ -53,7 +53,7 @@ export const ExactGeoPoint = Experimental.ZkProgram({
             method: proveExactGeoPoint,
         },
         proveExactSourcedGeoPoint: {
-            privateInputs: [Proof<Empty, GeoPoint>],
+            privateInputs: [SelfProof<Empty, GeoPoint>],
             method: proveExactGeoPointFromSourceCircuit,
         }
     }
@@ -65,7 +65,7 @@ export const ExactGeoPoint = Experimental.ZkProgram({
  * 
  * The output of this should be as an input to GeoPointInPolygon.
  */
-export const GeoPointProof = Experimental.ZkProgram({
+export const GeoPointProviderCircuit = Experimental.ZkProgram({
     publicOutput: GeoPoint,
 
     methods: {
@@ -77,13 +77,15 @@ export const GeoPointProof = Experimental.ZkProgram({
     },
 });
 
+export class GeoPointProviderCircuitProof extends Experimental.ZkProgram.Proof(GeoPointProviderCircuit) {}
+
 /**
  * Set of ZK circuts responsible for verifying that a geographical point is within a polygon,
  * and contains the logic for combining multiple proofs into a single one.
  * 
  * The source of the geographical point is attested by the proof from where the point is sourced.
  */
-export const GeoPointInPolygon = Experimental.ZkProgram({
+export const GeoPointInPolygonCircuit = Experimental.ZkProgram({
     publicOutput: GeoPointInPolygonCommitment,
 
     methods: {
@@ -92,9 +94,9 @@ export const GeoPointInPolygon = Experimental.ZkProgram({
             method: proveGeoPointIn3PointPolygon,
         },
         
-        proveSourcedGeoPointIn3PointPolygon: {
-            privateInputs: [SelfProof<Empty, GeoPoint>, ThreePointPolygon],
-            method: proveSourcedGeoPointIn3PointPolygon,
+        proveProvidedGeoPointIn3PointPolygon: {
+            privateInputs: [GeoPointProviderCircuitProof, ThreePointPolygon],
+            method: proveProvidedGeoPointIn3PointPolygon,
         },
         
         proofFromPublicOutput: {
@@ -120,12 +122,15 @@ export const GeoPointInPolygon = Experimental.ZkProgram({
     },
 });
 
+export class GeoPointInPolygonCircuitProof extends Experimental.ZkProgram.Proof(GeoPointInPolygonCircuit) {}
+
+
 /**
  * Set of ZK circuits that allow for the creation of a proof attesting to the validity of a timestamp interval.
  * 
  * The output of this should be as an input to `GeoPointWithTimestampInPolygon`.
  */
-export const TimeStampIntervalProof = Experimental.ZkProgram({
+export const TimeStampIntervalProviderCircuit = Experimental.ZkProgram({
     publicOutput: TimeStampInterval,
 
     methods: {
@@ -136,6 +141,8 @@ export const TimeStampIntervalProof = Experimental.ZkProgram({
     },
 });
 
+export class TimeStampIntervalProviderCircuitProof extends Experimental.ZkProgram.Proof(TimeStampIntervalProviderCircuit) {}
+
 /**
  * Set of ZK circuits responsible for attaching a timestamp to a GeoPoint in Polygon proof.
  * The source of the timestamp is attested by the proof from where the timestamp is sourced.
@@ -145,12 +152,12 @@ export const TimeStampIntervalProof = Experimental.ZkProgram({
  * architectural approach that I have developed as a part of developing zkLocus, and it consists 
  * of "attaching" data to a proof.
  */
-export const GeoPointWithTimestampInPolygon = Experimental.ZkProgram({
+export const GeoPointWithTimestampInPolygonCircuit = Experimental.ZkProgram({
     publicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment,
 
     methods: {
-        proofAttachSourcedTimestampinterval: {
-            privateInputs: [SelfProof<Empty, GeoPointInPolygonCommitment>, SelfProof<Empty, TimeStampInterval>],
+        proofAttachProvidedTimestampinterval: {
+            privateInputs: [GeoPointInPolygonCircuitProof, TimeStampIntervalProviderCircuitProof],
             method: proofAttachSourcedTimestampinterval,
         }, 
 
@@ -182,9 +189,9 @@ export const GeoPointWithTimestampInPolygon = Experimental.ZkProgram({
     },
 });
 
-
-export const CoordinatesInOrOutOfPolygon = Experimental.ZkProgram({
-    publicOutput: CoordinatePolygonInclusionExclusionProof,
+// TODO: review if below is needed, and delete if not
+export const GeoPointInOrOutOfPolygonCircuit = Experimental.ZkProgram({
+    publicOutput: GeoPointPolygonInclusionExclusionProof,
 
     methods: {
         fromCoordinatesInPolygonProof: {
@@ -193,8 +200,8 @@ export const CoordinatesInOrOutOfPolygon = Experimental.ZkProgram({
         },
         combine: {
             privateInputs: [
-                (SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>),
-                (SelfProof<Empty, CoordinatePolygonInclusionExclusionProof>),
+                (SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>),
+                (SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>),
             ],
             method: combine,
         },

@@ -1,5 +1,5 @@
 import { Bool, Empty, Field, Int64, Proof } from "o1js";
-import { GeoPointInPolygon } from './zkprogram/private/Geography';
+import { GeoPointProviderCircuit, GeoPointInPolygonCircuit } from './zkprogram/private/Geography';
 import { GeoPointInPolygonCommitment } from './model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from './model/Geography';
 
@@ -61,7 +61,10 @@ describe('CoordinatesInPolygon', () => {
 
     beforeAll(async () => {
 
-        if (isProofsEnabled) await GeoPointInPolygon.compile();
+        if (isProofsEnabled) {
+            await GeoPointProviderCircuit.compile();
+            await GeoPointInPolygonCircuit.compile();
+        }
 
         brasovCenterPolygon = new ThreePointPolygon({
             vertice1: new GeoPoint({
@@ -99,17 +102,17 @@ describe('CoordinatesInPolygon', () => {
                 factor: Int64.from(10n ** 5n),
         });
 
-        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             brasovCenterCoordinates,
             brasovCenterPolygon
         );
 
-        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             notBrasovCenterCoordinates,
             brasovCenterPolygon
         );
 
-        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             notInRomaniaCoordinates,
             brasovCenterPolygon,
         );
@@ -201,86 +204,86 @@ describe('CoordinatesInPolygon', () => {
             });
 
 
-            proofInsideCoordinate1InInsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate1InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate2InInsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate2InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate3InInsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate3InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate1InInsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate1InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate2InInsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate2InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate3InInsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate3InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate1NotInOutsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate1NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate2NotInOutsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate2NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate3NotInOutsidePolygon1 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate3NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate1NotInOutsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate1NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1,
                 outsidePolygon2,
             );
             
-            proofInsideCoordinate2NotInOutsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate2NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2,
                 outsidePolygon2,
             );
 
-            proofInsideCoordinate3NotInOutsidePolygon2 = await GeoPointInPolygon.proveGeoPointIn3PointPolygon(
+            proofInsideCoordinate3NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3,
                 outsidePolygon2,
             );
 
-            orProofForInsideOutsideC1 = await GeoPointInPolygon.OR(
+            orProofForInsideOutsideC1 = await GeoPointInPolygonCircuit.OR(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon1,
             );
 
-            orProofForInsideInsideC1 = await GeoPointInPolygon.OR(
+            orProofForInsideInsideC1 = await GeoPointInPolygonCircuit.OR(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1InInsidePolygon2,
             );
-            orProofForOutsideOutsideC1 = await GeoPointInPolygon.OR(
+            orProofForOutsideOutsideC1 = await GeoPointInPolygonCircuit.OR(
                 proofInsideCoordinate1NotInOutsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon2,
             );
 
-            andProoForInsideOutsideC1 = await GeoPointInPolygon.AND(
+            andProoForInsideOutsideC1 = await GeoPointInPolygonCircuit.AND(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon1,
             )
             
-            andProofForInsideInsideC1 = await GeoPointInPolygon.AND(
+            andProofForInsideInsideC1 = await GeoPointInPolygonCircuit.AND(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1InInsidePolygon2,
             );
@@ -371,7 +374,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ANDed with a proof outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );
@@ -384,7 +387,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ANDed with a proof outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
                     andProoForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );
@@ -397,7 +400,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ANDed with a proof inside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1InInsidePolygon1,
                 );
@@ -410,7 +413,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ORed with a proof inside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1InInsidePolygon1,
                 );
@@ -423,7 +426,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ORed with OR inside/outside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
                     andProoForInsideOutsideC1,
                     orProofForInsideOutsideC1,
                 );
@@ -436,7 +439,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ORed with a OR outside/outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
                     andProoForInsideOutsideC1,
                     orProofForOutsideOutsideC1,
                 );
@@ -449,7 +452,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ORed with a proof outside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygon.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );

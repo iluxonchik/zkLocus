@@ -16,7 +16,7 @@ export class GeoPointInPolygonCommitment extends Struct({
 }
 
 ;
-export class CoordinatePolygonInclusionExclusionProof extends Struct({
+export class GeoPointPolygonInclusionExclusionProof extends Struct({
   insidePolygonCommitment: Field,
   outsidePolygonCommitment: Field,
   coordinatesCommitment: Field,
