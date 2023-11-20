@@ -1,64 +1,56 @@
 <script>
-	import Navbar from '../components/Navbar.svelte';
-    import Drawer from '../components/Drawer.svelte';
-    import MapDisplay from '../components/MapDisplay.svelte';
-    import CoordinateForm from '../components/CoordinateForm.svelte';
-    import useCurrentLocation from '../components/useCurrentLocation.svelte';
-    import PolygonTool from '../components/PolygonTool.svelte';
-    import ProofGenerator from '../components/ProofGenerator.svelte';
-    import ProofDisplay from '../components/ProofDisplay.svelte';
-  
-    let drawerOpen = false;
-    let currentCoordinates;
-    let polygonPoints = [];
-    let proof;
-  
-    // Event handlers
-    function handleLocationSet(event) {
-      currentCoordinates = event.detail;
-      // You'll need to add functionality to place a marker on the map with these coordinates
+  import MapComponent from '../components/MapComponent.svelte';
+  import LocationInput from '../components/LocationInput.svelte';
+  import ProofGeneration from '../components/ProofGeneration.svelte';
+	import LocateMe from '../components/LocateMe.svelte';
+  import PolygonPointsDisplay from '../components/PolygonPointsDisplay.svelte';
+
+  let latitude = 45.65136267101511.toFixed(7); // Default latitude
+  let longitude = 25.612004326029343.toFixed(7); // Default longitude
+  let polygonPoints = [];
+  let proofGenerated = false;
+
+  // Example generateProof function
+  function generateProof() {
+    // Mock proof generation logic
+    proofGenerated = true;
+    return { proof: 'Some proof data' };
+  }
+
+  function setPolygonPoints(newPoints) {
+    polygonPoints = newPoints.map(point => ({
+      lat: point.lat,
+      lng: point.lng
+    }));
+  }
+
+  export function locateUser() {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        let latitudeRaw = position.coords.latitude;
+        let longitudeRaw = position.coords.longitude;
+        latitude = latitudeRaw.toFixed(7);
+        longitude = longitudeRaw.toFixed(7);
+      });
+    } else {
+      console.error('Geolocation is not available.');
     }
-  
-    function handleCurrentLocationFound(event) {
-      currentCoordinates = event.detail;
-      // Same here for placing a marker
-    }
-  
-    function handlePolygonUpdated(event) {
-      polygonPoints = event.detail.points;
-      // Logic to update the polygon on the map goes here
-    }
-  
-    function handleProofGenerated(event) {
-      proof = event.detail.proof;
-    }
-  
-    // Drawer control functions
-    function toggleDrawer() {
-      drawerOpen = !drawerOpen;
-    }
-  
-    function closeDrawer() {
-      drawerOpen = false;
-    }
-  </script>
-  
-  <Navbar on:toggleDrawer={toggleDrawer} />
-  <Drawer {drawerOpen} closeDrawer={closeDrawer} />
-  <MapDisplay {currentCoordinates} {polygonPoints} />
-  <div class="p-4">
-    <CoordinateForm on:locationSet={handleLocationSet} />
-    <useCurrentLocation on:currentLocationFound={handleCurrentLocationFound} />
-    <PolygonTool on:polygonUpdated={handlePolygonUpdated} />
-    {#if polygonPoints.length === 3 && currentCoordinates}
-      <ProofGenerator {currentCoordinates} {polygonPoints} on:proofGenerated={handleProofGenerated} />
-    {/if}
-    {#if proof}
-      <ProofDisplay {proof} />
-    {/if}
-  </div>
-  
-  <style>
-    /* Additional styles can go here */
-  </style>
-  
+  }
+
+  function handleUpdateCoords(event) {
+    latitude = event.detail.latitude;
+    longitude = event.detail.longitude;
+  }
+
+  $: canGenerateProof = latitude !== undefined && longitude !== undefined && polygonPoints.length === 3;
+
+
+  // Call locateUser on component mount or based on some user action
+</script>
+
+<LocationInput bind:latitude bind:longitude />
+<MapComponent {latitude} {longitude} {setPolygonPoints} {proofGenerated} on:updateCoords={handleUpdateCoords} />
+<LocateMe handler={locateUser}/>
+<PolygonPointsDisplay points={polygonPoints} />
+<ProofGeneration {generateProof} {canGenerateProof} />
+
