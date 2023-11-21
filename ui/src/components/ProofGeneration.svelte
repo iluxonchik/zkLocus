@@ -4,8 +4,8 @@
   
     let proof;
   
-    function handleClick() {
-      proof = generateProof();
+    async function handleClick() {
+      proof = await generateProof();
     }
   </script>
   <button on:click={handleClick} disabled={!canGenerateProof}>Generate Proof</button>
