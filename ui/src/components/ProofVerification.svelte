@@ -4,9 +4,10 @@
 	import { GeoPointInPolygonCommitment } from '../../../contracts/src/model/private/Commitment';
 	let L;
 
-	let jsonInput = '';
+	let jsonInput: string = '';
 	let map;
 	let polygonLayer;
+  let proofVerificationStatus: string = "Waiting for JSON input..."
 
 	onMount(async () => {
 		L = await import('leaflet');
@@ -53,8 +54,11 @@
 
 	async function verifyProof() {
 		try {
+      proofVerificationStatus = "Parsing JSON..."
 			const proofObject = JSON.parse(jsonInput);
+      proofVerificationStatus = "Verifying proof..."
       const isOk: Boolean = await verify(proofObject.proof, proofObject.geoPointInPolygonCircuitVerificationKey)
+      proofVerificationStatus = "Proof verified!"
 			if (isOk) {
 				polygonLayer.setStyle({ color: 'green' });
 				L.popup()
@@ -72,10 +76,10 @@
 	}
 
 </script>
-
-<textarea bind:value={jsonInput} on:input={handleJsonInput} />
-<button on:click={verifyProof} disabled={!jsonInput}>Verify Proof</button>
+<p><b>Status: </b>{proofVerificationStatus}</p>
 <div id="proof-map" style="height: 400px;" />
+<textarea placeholder="Paste the JSON proof here and click on 'Verify Proof'" bind:value={jsonInput} on:input={handleJsonInput} />
+<button class="btn btn-primary" on:click={verifyProof} disabled={!jsonInput}>Verify Proof</button>
 
 <style>
 	.leaflet-popup-content {

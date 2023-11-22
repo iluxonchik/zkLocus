@@ -43,6 +43,8 @@
 		geoPointInPolygonIsCompiling: false
 	};
 
+	let proof: str;
+
 	async function compileProofs() {
 		compilationInProgress = true;
 		try {
@@ -64,11 +66,13 @@
 			appStatus = 'Compiling GeoPointProviderCircuit...';
 
 			({ verificationKey } = await GeoPointInPolygonCircuit.compile());
+			console.log('\tCompilation complete ✅');
+			appStatus = 'All compilations complete ✅';
+			
 			geoPointInPolygonCircuitVerificationKey = verificationKey;
 
 			compilationStatus = { ...compilationStatus, geoPointInPolygonCompiled: true };
 
-			console.log('\tCompilation complete ✅');
 		} catch (error) {
 			console.error('Error during compilation:', error);
 		} finally {
@@ -129,12 +133,13 @@
 		appStatus = 'Proof generated ✅';
 
 		proofGenerated = true;
-		return {
+		proof = {
 			proof: proofInJson,
 			polygon: polygon,
 			geoPointProviderCircuitVerificatoinKey: geoPointProviderCircuitVerificatoinKey,
 			geoPointInPolygonCircuitVerificationKey: geoPointInPolygonCircuitVerificationKey
 		};
+		return proof;
 	}
 
 	function setPolygonPoints(newPoints: Array<LatLng>) {
@@ -173,21 +178,82 @@
 	// Call locateUser on component mount or based on some user action
 </script>
 
-<StatusDisplay status={appStatus} />
-<LocationInput bind:latitude bind:longitude />
+<div class="container mx-auto p-4">
+
+<!-- Header and Status Display -->
+<div class="navbar mb-2 shadow-lg bg-neutral text-neutral-content">
+  <div class="flex-1 px-2 mx-2">
+    <span class="text-lg font-bold">zkLocus - Privacy-Preserving GeoLocation</span>
+  </div>
+  <div class="flex-none">
+    <StatusDisplay status={appStatus} />
+  </div>
+</div>
+
+<div class="card lg:card-side bg-base-100 shadow-xl mb-4">
+  <div class="card-body">
 <MapComponent
 	{latitude}
 	{longitude}
 	{setPolygonPoints}
 	{proofGenerated}
 	on:updateCoords={handleUpdateCoords}
+	mapId="gen-map"
 />
-<LocateMe handler={locateUser} />
-<PolygonPointsDisplay points={polygonPoints} />
-<ProofGeneration {generateProof} {canGenerateProof} />
-<button on:click={compileProofs} disabled={compilationInProgress || canGenerateProof}
-	>Compile Proofs</button
->
-<CompilationProgress status={compilationStatus} />
+    <h2 class="card-title">Proof Generation</h2>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">Latitude:</span>
+      </label>
+      <input type="text" placeholder="Latitude" class="input input-bordered" bind:value={latitude} />
+      <label class="label">
+        <span class="label-text">Longitude:</span>
+      </label>
+      <input type="text" placeholder="Longitude" class="input input-bordered" bind:value={longitude} />
+    </div>
+    <div class="card-actions justify-start">
+      <LocateMe handler={locateUser} />
+      <button class="btn btn-primary" on:click={async (e) => {await generateProof()}} disabled={!canGenerateProof}>Generate Proof</button>
+      <button class="btn btn-secondary" on:click={async (e) => {await compileProofs()}} disabled={compilationInProgress || canGenerateProof}>Compile Proofs</button>
+    </div>
+  </div>
+  <MapComponent {latitude} {longitude} {setPolygonPoints} {proofGenerated} on:updateCoords={handleUpdateCoords} /> 
+</div>
+<div>
+{#if proof}
+    <style>
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            white-space: pre;
+            overflow: auto;
+        }
+    </style>
+	<div class="card-actions">
+			
+    <h2 class="card-title">Generated Proof:</h2>
+    <textarea readonly>{JSON.stringify(proof, null, 2)}</textarea>
 
-<ProofVerification />
+	</div>
+  {/if}
+</div>
+
+<PolygonPointsDisplay points={polygonPoints} />
+
+<div class="divider">OR</div>
+
+
+<div class="card bg-base-200 shadow-xl">
+  <div class="card-body">
+    <h2 class="card-title">Proof Verification</h2>
+    <ProofVerification />
+  </div>
+</div>
+
+
+<div class="p-4">
+<CompilationProgress status={compilationStatus} />
+</div>
+
+</div>

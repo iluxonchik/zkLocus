@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
     import { createEventDispatcher } from 'svelte'
     let L;
@@ -7,6 +7,7 @@
     export let longitude;
     export let setPolygonPoints;
     export let proofGenerated = false;
+    export let mapId: string = 'map';
 
     
     let map;
@@ -32,7 +33,7 @@
 }
 
     function initializeMap() {
-        map = L.map('map').setView([latitude, longitude], 13);
+        map = L.map(mapId).setView([latitude, longitude], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
@@ -75,7 +76,7 @@
     }
 </script>
 
-<div id="map" style="height: 400px;"></div>
+<div id="{mapId}" style="height: 400px;"></div>
 
 <style>
     .leaflet-dot-icon {
