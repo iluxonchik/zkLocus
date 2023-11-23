@@ -36,7 +36,7 @@
   "type": "module",
   "dependencies": {
     "leaflet": "^1.9.4",
-    "o1js": "^0.13.1",
+    "o1js": "^0.14.2",
     "zklocus": "file:../contracts"
   }
 }
