@@ -1,15 +1,35 @@
 {
   "name": "zklocus",
   "version": "0.1.0",
-  "description": "",
-  "author": "",
-  "license": "Apache-2.0",
+  "description": "Blockchain-agnostic, private geolocation verification via zero-knowledge proofs using recursive zk-SNARKs.",
+  "author": "Illya Gerasymchuk",
+  "license": "MIT",
   "keywords": [
+    "blockchain",
+    "geolocation",
+    "privacy",
+    "zero-knowledge",
+    "EVM",
+    "off-chain",
+    "web",
+    "mobile",
     "mina-zkapp",
+    "zkapp",
     "mina-zk-app",
     "mina-dapp",
-    "zkapp"
+    "zkapp",
+    "zkSNARK",
+    "zk-SNARK",
+    "zk"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iluxonchik/zkLocus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iluxonchik/zkLocus/issues"
+  },
+  "homepage": "https://zklocus.dev",
   "type": "module",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
