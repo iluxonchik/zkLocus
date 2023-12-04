@@ -210,6 +210,22 @@ class ZKGeoPoint {
 
 }
 
+function ZKThreePointPolygonToThreePointPolygon<T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {
+    return class extends Base {
+        to_zkValue(): ThreePointPolygon {
+            const vertices = this.vertices.map(vertex => vertex.to_zkValue());
+            const threePointPolygon = new ThreePointPolygon({
+                vertice1: vertices[0],
+                vertice2: vertices[1],
+                vertice3: vertices[2]
+            });
+
+            // Assuming that ThreePointPolygon's constructor handles the struct creation and validation
+            return threePointPolygon;
+        }
+    };
+}
+
 
 /*
 Interface for the ThreePointPolygon zkLocus class. It represents a three point polygon, also refered to as a "geogrpahical area".
