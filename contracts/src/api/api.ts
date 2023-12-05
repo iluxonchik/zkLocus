@@ -22,6 +22,16 @@ interface RawCoordinates {
     longitude: numberType;
 }
 
+/*
+    Represents interface that converts a type into a zkLocus value. 
+    This is used to convert TypeScript types into zkLocus-supported types.
+*/
+interface ZKInterface<R, N, Z> {
+    rawValue(): R;
+    normalizedValue(): N;
+    toZKValue(): Z;
+}
+
 
 /*
     This is the parent abstraction class for all zkLocus proofs. Any zkLocus proof is interpertable and abstractble by
@@ -39,7 +49,7 @@ class ZKLocusProof {
     }
 
     static fromJson(jsonProof: string): ZKLocusProof {
-        // TODO: Implementation details...
+        // TODO: Implementation details
         return new ZKLocusProof(/* parameters */);
     }
 
@@ -61,7 +71,7 @@ function ZKGeoPointToGeoPointInterface<T extends new (...args: any[]) => ZKGeoPo
             Converts value from TypeScript's ZkLocusGeoPoint, into O1JS GeoPoint. It uses the properties of the ZkLocusGeoPoint
             to perform the conversion into O1JS GeoPoint.
         */
-        to_zkValue(): GeoPoint {
+        toZKValue(): GeoPoint {
             const latitude: ZKLatitude = this.latitude;
             const longitude: ZKLongitude = this.longitude;
             const factor: number = this.latitude.num_decimals;
@@ -75,20 +85,34 @@ function ZKGeoPointToGeoPointInterface<T extends new (...args: any[]) => ZKGeoPo
                 factor: Int64.from(factor),
             });
         }
+
+
     };
 }
 
 
-function ZKNumberToInt64Interface<T extends new (...args: any[]) => ZKNumber>(Base: T) {
-    return class extends Base {
-        to_zkValue(): Int64 {
+function ZKNumberToInt64Interface<T extends new (...args: any[]) => { raw: numberType, normalized: number }>(Base: T) {
+    return class extends Base implements ZKInterface<numberType, number, Int64> {
+
+        /*
+            Returns the raw value of the number. This is the value that the user provided.
+        */
+        rawValue(): numberType {
+            return this.raw;
+        }
+    /*
+         Returns the normalized value of the number. This is the value that will be used in the zkSNARK.
+    */
+        normalizedValue(): number {
+            return this.normalized;
+        }
+
+        toZKValue(): Int64 {
             // Assuming Int64 is a valid type or class in the provided zkLocus code
-            // Convert the normalized number value to an Int64 zkLocus value
-            return Int64.from(Math.round(this.normalized_value));
+            return Int64.from(this.normalizedValue());
         }
     };
 }
-
 
 /*
 Represents a number that will be converted to the Fields of a zkSNARK in zkLocus.
@@ -101,20 +125,15 @@ class ZKNumber {
 
     constructor(value: numberType) {
         this._raw_value = value;
-        this._normalized_value = Number(value);
+        this._normalized_value = Math.round(Number(value));
         this._num_decimals = this._count_num_decimals();
     }
 
-    /*
-        Returns the raw value of the number. This is the value that the user provided.
-    */
-    get raw_value(): numberType {
+    get raw(): numberType {
         return this._raw_value;
     }
-    /*
-         Returns the normalized value of the number. This is the value that will be used in the zkSNARK.
-    */
-    get normalized_value(): number {
+
+    get normalized(): number {
         return this._normalized_value;
     }
 
