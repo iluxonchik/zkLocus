@@ -25,13 +25,45 @@ interface RawCoordinates {
 /*
     Represents interface that converts a type into a zkLocus value. 
     This is used to convert TypeScript types into zkLocus-supported types.
+
+    Any type that implements ZKLocusAdopter becomes a type that "adopts" to zkLocus's internal types. Its ultimate purpose is to be used
+    as a class decorator. Any class that gets decorated ZKLocusAdopter will be augmented with the additional properties and methods of the
+    ZKLocusAdopter interface. As such, any class that gets decorated with with a function that returns a class that implements ZKLocusAdopter
+    becomes an "adopter" of zkLocus, as it provides a way to convert the types into zkLocus types.
+
+    The values are converted in the following order:
+    1. rawValue: The value that the user provided. This value can be either an API type or a TypeScript native type. It gets converted into a normalized value.
+    2. normalizedValue: The normalized value of the type. This value is the normalized raw value. This value is an
+        API type, and should not be a TypeScript native type. It gets converted into a zkLocus value.
+    3. toZKValue: The zkLocus value of the type. This is the value that will be used in zkLocus. This value must be of type
+
+    Raw, normalized and ZK are the different states of the same value. The value begins as a raw value, and then it gets normalized, and then it gets converted into a zkLocus value.
 */
-interface ZKInterface<R, N, Z> {
+interface ZKLocusAdopter<R, N, Z> {
+    /*
+        Returns the raw value of the type. This is the value that the user provided. This value can be either
+        an API type or a TypeScript native type.
+    */
     rawValue(): R;
+
+    /*
+        Returns the normalized value of the type. This value is the normalized raw value. This value is an
+        API type, and should not be a TypeScript native type.
+
+        A normalized value is easily convertible into a zkLocus value.
+    */
     normalizedValue(): N;
+
+    /*
+        Returns the zkLocus value of the type. This is the value that will be used in zkLocus. This value must be of type
+        the zkLocus implentation operats upon. For example, if the zkLocus implementation operates on Int64, then this
+        value must be of type Int64.
+
+        In practice, these value types are directly compatile the types used inside the recursive zkSNARKs circuits of zkLocus.
+
+    */ 
     toZKValue(): Z;
 }
-
 
 /*
     This is the parent abstraction class for all zkLocus proofs. Any zkLocus proof is interpertable and abstractble by
@@ -48,8 +80,8 @@ class ZKLocusProof {
         return JSON.stringify({});
     }
 
-    static fromJson(jsonProof: string): ZKLocusProof {
-        // TODO: Implementation details
+    static fromJson(jsonProof: string): ZKLocusProof { 
+        // TODO: Implementation details...
         return new ZKLocusProof(/* parameters */);
     }
 
@@ -61,38 +93,40 @@ class ZKLocusProof {
     // Additional methods...
 }
 
+function ZKGeoPointToGeoPointAdopter<T extends new (...args: any[]) => ZKGeoPoint>(Base: T) {
+    return class extends Base implements ZKLocusAdopter<{ latitude: numberType | ZKLongitude, longitude: numberType | ZKLongitude }, {latitude: ZKLatitude, longitude: ZKLongitude, factor: ZKNumber}, GeoPoint> {
+        
+        rawValue(): { latitude: numberType | ZKLatitude, longitude: numberType | ZKLongitude } {
+            return this.toRawValue;
+        }
 
-/*
-    Concrete implementation of ZKInterface that converts ZKNumbers into Int64.
-*/
-function ZKGeoPointToGeoPointInterface<T extends new (...args: any[]) => ZKGeoPoint>(Base: T) {
-    return class extends Base {
-        /*
-            Converts value from TypeScript's ZkLocusGeoPoint, into O1JS GeoPoint. It uses the properties of the ZkLocusGeoPoint
-            to perform the conversion into O1JS GeoPoint.
-        */
+        normalizedValue(): { latitude: ZKLatitude, longitude: ZKLongitude, factor: ZKNumber} {
+            const factorAsNumber: number = 10 ** this.latitude.num_decimals;
+            const factorAsZKNumber: ZKNumber = new ZKNumber(factorAsNumber);
+            return {
+                latitude: this.latitude,
+                longitude: this.longitude,
+                factor: factorAsZKNumber,
+            };
+        }
+
         toZKValue(): GeoPoint {
-            const latitude: ZKLatitude = this.latitude;
-            const longitude: ZKLongitude = this.longitude;
-            const factor: number = this.latitude.num_decimals;
+            const scaledLatitude = this.latitude.normalized * Math.pow(10, 7);
+            const scaledLongitude = this.longitude.normalized * Math.pow(10, 7);
 
-
-            const scaledLatitude = latitude.normalized_value * Math.pow(10, 7);
-            const scaledLongitude = longitude.normalized_value * Math.pow(10, 7);
             return new GeoPoint({
                 latitude: Int64.from(scaledLatitude),
                 longitude: Int64.from(scaledLongitude),
-                factor: Int64.from(factor),
+                factor: Int64.from(this.latitude.num_decimals)
             });
         }
-
-
     };
 }
 
 
-function ZKNumberToInt64Interface<T extends new (...args: any[]) => { raw: numberType, normalized: number }>(Base: T) {
-    return class extends Base implements ZKInterface<numberType, number, Int64> {
+
+function ZKNumberToInt64Adopter<T extends new (...args: any[]) => { raw: numberType, normalized: number }>(Base: T) {
+    return class extends Base implements ZKLocusAdopter<numberType, number, Int64> {
 
         /*
             Returns the raw value of the number. This is the value that the user provided.
@@ -117,7 +151,7 @@ function ZKNumberToInt64Interface<T extends new (...args: any[]) => { raw: numbe
 /*
 Represents a number that will be converted to the Fields of a zkSNARK in zkLocus.
 */
-@ZKNumberToInt64Interface
+@ZKNumberToInt64Adopter
 class ZKNumber {
     protected _raw_value: numberType;
     protected _normalized_value: number;
@@ -150,6 +184,10 @@ class ZKNumber {
     }
 }
 
+// Declaration merging to augment the ZKNumber class with the additional properties and methods of the ZKInterface
+interface ZKNumber extends ZKLocusAdopter<numberType, number, Int64> {}
+
+
 /*
  Represents a coordinate that will be converted to the Fields of a zkSNARK in zkLocus.
 
@@ -163,6 +201,14 @@ class ZKCoordinate extends ZKNumber {
         if (valueAsInteger > 180 || this.num_decimals > 7) {
             throw new Error("Invalid coordinate value");
         }
+    }
+
+    /*
+        Returns the factor of the coordinate. This is the factor that the coordinate will be multiplied by
+        to get the zkLocus value. The factor is a power of 10, and it's equal to 10 ^ num_decimals.
+    */
+    get factor(): number {
+        return 10 ** this.num_decimals;
     }
 }
 
@@ -204,14 +250,20 @@ class ZKLongitude extends ZKCoordinate {
     1. Proving wether a point is in polygon
     2. Proving the exact location.
 */
-@ZKGeoPointToGeoPointInterface
+@ZKGeoPointToGeoPointAdopter
 class ZKGeoPoint {
     private _latitude: ZKLatitude;
     private _longitude: ZKLongitude;
+    private _rawValue: { latitude: numberType | ZKLatitude, longitude: numberType | ZKLongitude};
 
-    constructor(latitude: ZKLatitude, longitude: ZKLongitude) {
-        this._latitude = latitude;
-        this._longitude = longitude;
+    constructor(latitude: numberType | ZKLatitude, longitude: numberType | ZKLongitude) {
+        this._rawValue = { 
+            latitude: latitude,
+            longitude: longitude,
+        };
+
+        this._latitude = latitude instanceof ZKLatitude ? latitude : new ZKLatitude(latitude);
+        this._longitude = longitude instanceof ZKLongitude ? longitude : new ZKLongitude(longitude);
     }
 
     get latitude(): ZKLatitude {
@@ -222,17 +274,37 @@ class ZKGeoPoint {
         return this._longitude;
     }
 
-    async proveInPolygon(polygon: ZKThreePointPolygon): Promise<ZKLocusProof> {
-        // TODO: implement
-        return new ZKLocusProof(/* parameters */);
+    get toRawValue(): { latitude: numberType | ZKLatitude, longitude: numberType | ZKLongitude } {
+        return this._rawValue;
     }
 
+    async proveInPolygon(polygon: ZKThreePointPolygon): Promise<ZKLocusProof> {
+        // TODO: Implement
+        return new ZKLocusProof(/* parameters */);
+    }
 }
 
-function ZKThreePointPolygonToThreePointPolygon<T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {
-    return class extends Base {
-        to_zkValue(): ThreePointPolygon {
-            const vertices = this.vertices.map(vertex => vertex.to_zkValue());
+// Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface
+interface ZKGeoPoint extends ZKLocusAdopter<{ latitude: numberType | ZKLatitude, longitude: numberType | ZKLongitude }, {latitude: ZKLatitude, longitude: ZKLongitude, factor: ZKNumber}, GeoPoint> {}
+
+
+
+function ZKThreePointPolygonToThreePointPolygonAdopter<T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {
+    return class extends Base implements ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> {
+        rawValue(): [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint] {
+            return this.vertices;
+        }
+
+        normalizedValue(): [GeoPoint, GeoPoint, GeoPoint] {
+            return [
+                this.vertices[0].toZKValue(),
+                this.vertices[1].toZKValue(),
+                this.vertices[2].toZKValue()
+            ];
+        }
+
+        toZKValue(): ThreePointPolygon {
+            const vertices = this.vertices.map(vertex => vertex.toZKValue());
             const threePointPolygon = new ThreePointPolygon({
                 vertice1: vertices[0],
                 vertice2: vertices[1],
@@ -245,10 +317,10 @@ function ZKThreePointPolygonToThreePointPolygon<T extends new (...args: any[]) =
     };
 }
 
-
 /*
 Interface for the ThreePointPolygon zkLocus class. It represents a three point polygon, also refered to as a "geogrpahical area".
 */
+@ZKThreePointPolygonToThreePointPolygonAdopter
 class ZKThreePointPolygon {
     private _vertices: [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint];
 
