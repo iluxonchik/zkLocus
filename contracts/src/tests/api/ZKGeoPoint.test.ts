@@ -46,4 +46,5 @@ describe('ZKGeoPoint Class Tests', () => {
         const geoPoint = zkGeoPoint.toZKValue();
         expect(geoPoint).toBeInstanceOf(GeoPoint);
     });
+    
 });
