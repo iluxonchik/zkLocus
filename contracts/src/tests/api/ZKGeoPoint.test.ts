@@ -1,5 +1,4 @@
-import { Int64 } from "o1js";
-import { ZKGeoPoint, ZKLatitude, ZKLongitude } from "../../api/api";
+import { ZKGeoPoint, ZKLatitude, ZKLongitude } from "../../api/Models";
 import { GeoPoint } from "../../model/Geography";
 
 describe('ZKGeoPoint Class Tests', () => {

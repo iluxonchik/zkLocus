@@ -1,5 +1,5 @@
 import { Int64 } from "o1js";
-import { ZKNumber } from "../../api/api";
+import { ZKNumber } from "../../api/Models";
 
 describe('ZKNumber Class Tests', () => {
     it('testZKNumberConstructionWithValueTypeNumber', () => {
@@ -34,3 +34,4 @@ describe('ZKNumber Class Tests', () => {
         expect(zkNumber.toZKValue()).toEqual(Int64.from(Math.round(value)));
     });
 });
+    
