@@ -1,16 +1,17 @@
 import { Int64 } from "o1js";
-import { ZKGeoPointToGeoPointAdopter, ZKLocusAdopter, ZKNumberToInt64Adopter } from "./Adopters";
 import { RawCoordinates, InputNumber } from "./Types";
-import { ZKLocusProof } from "./api";
 
 import { GeoPoint, ThreePointPolygon } from "../model/Geography";
-import ZKThreePointPolygonToThreePointPolygonAdopter from "./internal/adopters/ZKThreePointPolygonToThreePointPolygonAdopter";
+import ZKThreePointPolygonToThreePointPolygonAdopter from "./adopters/ZKThreePointPolygonToThreePointPolygonAdopter";
+import ZKNumberToInt64Adopter from "./adopters/ZKNumberToInt64Adopter";
+import { ZKLocusAdopter } from "./adopters/Interfaces";
+import ZKGeoPointToGeoPointAdopter from "./adopters/ZKGeoPointToGeoPointAdopter";
+import { IZKGeoPointProver } from "./provers/ZKGeoPointProver";
 
 
 /*
 Represents a number that will be converted to the Fields of a zkSNARK in zkLocus.
 */
-
 @ZKNumberToInt64Adopter
 export class ZKNumber {
     protected _raw_value: InputNumber;
@@ -111,6 +112,7 @@ export class ZKLongitude extends ZKCoordinate {
     2. Proving the exact location.
 */
 
+@ZKGeoPointProver
 @ZKGeoPointToGeoPointAdopter
 export class ZKGeoPoint {
     protected _latitude: ZKLatitude;
@@ -139,20 +141,13 @@ export class ZKGeoPoint {
         return this._rawValue;
     }
 
-    async proveInPolygon(polygon: ZKThreePointPolygon): Promise<ZKLocusProof> {
-        // TODO: Implement
-        return new ZKLocusProof( /* parameters */);
-    }
 }
 // Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface
+export interface ZKGeoPoint extends ZKLocusAdopter<{ latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint>, IZKGeoPointProver { }
 
-export interface ZKGeoPoint extends ZKLocusAdopter<{ latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint> { }
 /*
 Interface for the ThreePointPolygon zkLocus class. It represents a three point polygon, also refered to as a "geogrpahical area".
 */
-
-
-
 @ZKThreePointPolygonToThreePointPolygonAdopter
 export class ZKThreePointPolygon {
     private _vertices: [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint];
@@ -182,3 +177,7 @@ export class ZKThreePointPolygon {
 }
 
 export interface ZKThreePointPolygon extends ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> { }
+function ZKGeoPointProver(target: typeof ZKGeoPoint): void | typeof ZKGeoPoint {
+    throw new Error("Function not implemented.");
+}
+

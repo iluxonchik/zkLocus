@@ -8,9 +8,9 @@
     See: https://github.com/microsoft/TypeScript/issues/30355
 */
 
-import { GeoPoint, ThreePointPolygon } from "../../../model/Geography";
-import { ZKLocusAdopter } from "../../Adopters";
-import { ZKGeoPoint, ZKThreePointPolygon } from "../../Models";
+import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
+import { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
+import { ZKLocusAdopter } from "./Interfaces";
 
 
 export default function <T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {
@@ -39,4 +39,3 @@ export default function <T extends new (...args: any[]) => ZKThreePointPolygon>(
         }
     };
 }
-

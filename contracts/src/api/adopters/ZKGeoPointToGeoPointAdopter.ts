@@ -9,10 +9,10 @@
 */
 
 import { Int64 } from "o1js";
-import { GeoPoint } from "../../../model/Geography";
-import { ZKLocusAdopter } from "../../Adopters";
-import { ZKGeoPoint, ZKLatitude, ZKLongitude, ZKNumber } from "../../Models";
-import { InputNumber } from "../../Types";
+import { GeoPoint } from "../../model/Geography";
+import { ZKGeoPoint, ZKLatitude, ZKLongitude, ZKNumber } from "../Models";
+import { InputNumber } from "../Types";
+import { ZKLocusAdopter } from "./Interfaces";
 
 export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 
