@@ -7,11 +7,11 @@ export class GeoPointInPolygonCommitment extends Struct({
   polygonCommitment: Field,
   // TODO: consider including outSidePolygonCommitment proofs, in order to inlcude the "inner" and "outer" polygon definitions of GeoJSON
   //outsidePolygonCommitment: Field,
-  coordinatesCommitment: Field,
+  geoPointCommitment: Field,
   isInPolygon: Bool,
 }) {
   toString(): string {
-    return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.coordinatesCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
+    return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.geoPointCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
   }
 }
 

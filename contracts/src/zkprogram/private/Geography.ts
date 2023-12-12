@@ -1,4 +1,4 @@
-import { Experimental, SelfProof, Empty, Proof, Field, Struct, Provable, Bool} from "o1js";
+import { Experimental, SelfProof, Empty, Proof, Field, Struct, Provable, Bool, ZkProgram} from "o1js";
 import { proveGeoPointIn3PointPolygon, AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint, proveExactGeoPointFromSourceCircuit, proveProvidedGeoPointIn3PointPolygon} from '../../logic/Methods';
 
 import { GeoPointPolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
@@ -65,7 +65,9 @@ export const ExactGeoPoint = Experimental.ZkProgram({
  * 
  * The output of this should be as an input to GeoPointInPolygon.
  */
-export const GeoPointProviderCircuit = Experimental.ZkProgram({
+export const GeoPointProviderCircuit = ZkProgram({
+    name: "GeoPointProviderCircuit",
+
     publicOutput: GeoPoint,
 
     methods: {
@@ -77,7 +79,7 @@ export const GeoPointProviderCircuit = Experimental.ZkProgram({
     },
 });
 
-export class GeoPointProviderCircuitProof extends Experimental.ZkProgram.Proof(GeoPointProviderCircuit) {}
+export class GeoPointProviderCircuitProof extends ZkProgram.Proof(GeoPointProviderCircuit) {}
 
 /**
  * Set of ZK circuts responsible for verifying that a geographical point is within a polygon,
@@ -85,15 +87,11 @@ export class GeoPointProviderCircuitProof extends Experimental.ZkProgram.Proof(G
  * 
  * The source of the geographical point is attested by the proof from where the point is sourced.
  */
-export const GeoPointInPolygonCircuit = Experimental.ZkProgram({
+export const GeoPointInPolygonCircuit = ZkProgram({
+    name: "Geo Point In Polygon Circuit",
     publicOutput: GeoPointInPolygonCommitment,
 
-    methods: {
-        proveGeoPointIn3PointPolygon: {
-            privateInputs: [GeoPoint, ThreePointPolygon],
-            method: proveGeoPointIn3PointPolygon,
-        },
-        
+    methods: { 
         proveProvidedGeoPointIn3PointPolygon: {
             privateInputs: [GeoPointProviderCircuitProof, ThreePointPolygon],
             method: proveProvidedGeoPointIn3PointPolygon,
@@ -122,7 +120,7 @@ export const GeoPointInPolygonCircuit = Experimental.ZkProgram({
     },
 });
 
-export class GeoPointInPolygonCircuitProof extends Experimental.ZkProgram.Proof(GeoPointInPolygonCircuit) {}
+export class GeoPointInPolygonCircuitProof extends ZkProgram.Proof(GeoPointInPolygonCircuit) {}
 
 
 /**
@@ -141,7 +139,7 @@ export const TimeStampIntervalProviderCircuit = Experimental.ZkProgram({
     },
 });
 
-export class TimeStampIntervalProviderCircuitProof extends Experimental.ZkProgram.Proof(TimeStampIntervalProviderCircuit) {}
+export class TimeStampIntervalProviderCircuitProof extends ZkProgram.Proof(TimeStampIntervalProviderCircuit) {}
 
 /**
  * Set of ZK circuits responsible for attaching a timestamp to a GeoPoint in Polygon proof.

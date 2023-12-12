@@ -126,7 +126,7 @@ export function proveGeoPointIn3PointPolygon(
 
   return new GeoPointInPolygonCommitment({
     polygonCommitment: polygonCommitment,
-    coordinatesCommitment: coordinatesCommitment,
+    geoPointCommitment: coordinatesCommitment,
     isInPolygon: isInPolygon,
   });
 }
@@ -157,8 +157,8 @@ export function proveProvidedGeoPointIn3PointPolygon(
 
 function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygonCommitment) {
   // ensure that the proof is for the same coordinates
-  first.coordinatesCommitment.assertEquals(
-    second.coordinatesCommitment
+  first.geoPointCommitment.assertEquals(
+    second.geoPointCommitment
   );
 
   // NOTE: see note below on .OR
@@ -173,7 +173,7 @@ function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygo
       first.polygonCommitment,
       second.polygonCommitment,
     ]),
-    coordinatesCommitment: first.coordinatesCommitment,
+    geoPointCommitment: first.geoPointCommitment,
     isInPolygon: isInPolygon,
   });
 
@@ -229,8 +229,8 @@ function ORLiteral(
   second: GeoPointInPolygonCommitment
 ) {
   // ensure that the proof is for the same coordinates
-  first.coordinatesCommitment.assertEquals(
-    second.coordinatesCommitment
+  first.geoPointCommitment.assertEquals(
+    second.geoPointCommitment
   );
 
   // NOTE: I have decided to forego for this check, as there could be a use-case for combining
@@ -257,7 +257,7 @@ function ORLiteral(
       first.polygonCommitment,
       second.polygonCommitment,
     ]),
-    coordinatesCommitment: first.coordinatesCommitment,
+    geoPointCommitment: first.geoPointCommitment,
     isInPolygon: isInPolygon,
   });
 }
@@ -435,7 +435,7 @@ export function fromCoordinatesInPolygonProof(
   return new GeoPointPolygonInclusionExclusionProof({
     insidePolygonCommitment: insideCommitment,
     outsidePolygonCommitment: outsideCommitment,
-    coordinatesCommitment: coodinatesInPolygonProof.coordinatesCommitment,
+    coordinatesCommitment: coodinatesInPolygonProof.geoPointCommitment,
   });
 }
 

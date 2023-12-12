@@ -89,7 +89,6 @@ export class ZKLatitude extends ZKCoordinate {
 /*
     Represents a longitude that will be converted to the Fields of a zkSNARK in zkLocus.
 */
-
 export class ZKLongitude extends ZKCoordinate {
 
     constructor(value: InputNumber) {
