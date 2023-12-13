@@ -1,6 +1,5 @@
-import { Bool, InferProvable, JsonProof} from "o1js";
+import { Bool, JsonProof} from "o1js";
 
-import {Proof } from "o1js/src/lib/proof_system"
 
 type Subclass<Class extends new (...args: any) => any> = (new (...args: any) => InstanceType<Class>) & {
     [K in keyof Class]: Class[K];

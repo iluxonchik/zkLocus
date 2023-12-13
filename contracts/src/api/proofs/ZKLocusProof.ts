@@ -1,10 +1,10 @@
-import { Field, JsonProof, Poseidon, ZkProgram } from "o1js";
+import { Field, JsonProof} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
 import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/Geography";
 import { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
-import { IO1JSProof, IO1JSProofConstructor } from "./Types";
+import { IO1JSProof} from "./Types";
 
 
 export abstract class ZKCommitment{
@@ -48,14 +48,6 @@ class ZKGeoPointInPolygonCommitment extends ZKCommitment {
         }
     }
 }
-
-
-interface IProofState {
-    verify(context: ZKGeoPointInPolygonProof): void;
-    verifyIf(context: ZKGeoPointInPolygonProof, condition: Bool): void;
-}
-
-
 
 
 /*
