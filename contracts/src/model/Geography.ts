@@ -27,6 +27,14 @@ export class GeoPoint extends Struct({
     ]);
   }
 
+  toFields(): Field[] {
+    return [
+      this.latitude.toField(),
+      this.longitude.toField(),
+      this.factor.toField(),
+    ];
+  }
+
   assertIsValid(): void {
     // First, asser that the provided latidude and logitude values are within the accepted range
     this.latitude.div(this.factor).magnitude.assertLessThanOrEqual(UInt64.from(90));
