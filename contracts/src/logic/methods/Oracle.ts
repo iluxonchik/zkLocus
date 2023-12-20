@@ -1,8 +1,8 @@
 import { Bool, Poseidon, PublicKey, Signature } from "o1js";
-import { GeoPoint } from "../../model/Geography";
 import { OracleAuthenticatedGeoPoint } from "../../model/private/Oracle";
+import { GeoPoint } from "../../model/Geography";
 
-export function extractGeoPointFromSignature(signature: Signature, publicKey: PublicKey, geoPoint: GeoPoint) {
+export function extractGeoPointFromSignature(publicKey: PublicKey, signature: Signature, geoPoint: GeoPoint) {
     // Verify if the signature is made by the provided public key over the GeoPoint.
     const isValidSignature: Bool = signature.verify(publicKey, geoPoint.toFields());
     isValidSignature.assertTrue();

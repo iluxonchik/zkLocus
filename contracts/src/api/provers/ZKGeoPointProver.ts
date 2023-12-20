@@ -1,7 +1,4 @@
-
-import { Int64 } from "o1js";
-import { InputNumber } from "../Types";
-import { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
+import type { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
 import { IZKProver } from "./Interfaces";
 import { GeoPointInPolygonCircuit, GeoPointInPolygonCircuitProof, GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import { ZKGeoPointInPolygonProof, ZKLocusProof } from "../proofs/ZKLocusProof";

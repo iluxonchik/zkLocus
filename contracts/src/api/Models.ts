@@ -6,7 +6,7 @@ import ZKThreePointPolygonToThreePointPolygonAdopter from "./adopters/ZKThreePoi
 import ZKNumberToInt64Adopter from "./adopters/ZKNumberToInt64Adopter";
 import { ZKLocusAdopter } from "./adopters/Interfaces";
 import ZKGeoPointToGeoPointAdopter from "./adopters/ZKGeoPointToGeoPointAdopter";
-import { IZKGeoPointProver } from "./provers/ZKGeoPointProver";
+import ZKGeoPointProver, { IZKGeoPointProver } from "./provers/ZKGeoPointProver";
 
 
 /*
@@ -176,7 +176,4 @@ export class ZKThreePointPolygon {
 }
 
 export interface ZKThreePointPolygon extends ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> { }
-function ZKGeoPointProver(target: typeof ZKGeoPoint): void | typeof ZKGeoPoint {
-    throw new Error("Function not implemented.");
-}
 

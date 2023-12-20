@@ -1,7 +1,7 @@
 import { Field, JsonProof} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
 import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/Geography";
-import { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
+import type { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { IO1JSProof} from "./Types";
