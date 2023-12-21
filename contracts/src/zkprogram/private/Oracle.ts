@@ -1,6 +1,6 @@
-import { PublicKey, Signature, Struct, Int64, ZkProgram, Poseidon, Bool } from "o1js";
+import { PublicKey, Signature, ZkProgram} from "o1js";
 import { GeoPoint } from "../../model/Geography";
-import { OracleAuthenticatedGeoPoint } from "../../model/private/Oracle";
+import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { extractGeoPointFromSignature } from "../../logic/methods/Oracle";
 
 /**
@@ -21,7 +21,7 @@ import { extractGeoPointFromSignature } from "../../logic/methods/Oracle";
  */
 export const OracleGeoPointProviderCircuit = ZkProgram({
   name: "GeoPointSignatureVerificationCircuit",
-  publicOutput: OracleAuthenticatedGeoPoint,
+  publicOutput: OracleAuthenticatedGeoPointCommitment,
 
   methods: {
     fromSignature: {

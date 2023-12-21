@@ -6,7 +6,7 @@ import { Field, Poseidon, Struct } from "o1js";
  * the GeoPoint whose hash is included in the commitment was indeed signed by the private key of the public key
  * included in the commitment.
  */
-export class OracleAuthenticatedGeoPoint extends Struct({
+export class OracleAuthenticatedGeoPointCommitment extends Struct({
   publicKeyHash: Field,
   geoPointHash: Field
 }) {

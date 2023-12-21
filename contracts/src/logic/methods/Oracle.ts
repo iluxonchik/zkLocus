@@ -1,5 +1,5 @@
 import { Bool, Poseidon, PublicKey, Signature } from "o1js";
-import { OracleAuthenticatedGeoPoint } from "../../model/private/Oracle";
+import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { GeoPoint } from "../../model/Geography";
 
 export function extractGeoPointFromSignature(publicKey: PublicKey, signature: Signature, geoPoint: GeoPoint) {
@@ -14,7 +14,7 @@ export function extractGeoPointFromSignature(publicKey: PublicKey, signature: Si
     const geoPointHash = geoPoint.hash();
 
     // Return the commitment the public key hash and the GeoPoint hash.
-    return new OracleAuthenticatedGeoPoint({
+    return new OracleAuthenticatedGeoPointCommitment({
       publicKeyHash,
       geoPointHash
     });
