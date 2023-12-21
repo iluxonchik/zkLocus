@@ -1,4 +1,4 @@
-import { Int64 } from "o1js";
+import { Field, Int64, Poseidon, PrivateKey, PublicKey, Signature } from "o1js";
 import { RawCoordinates, InputNumber } from "./Types";
 
 import { GeoPoint, ThreePointPolygon } from "../model/Geography";
@@ -7,6 +7,9 @@ import ZKNumberToInt64Adopter from "./adopters/ZKNumberToInt64Adopter";
 import { ZKLocusAdopter } from "./adopters/Interfaces";
 import ZKGeoPointToGeoPointAdopter from "./adopters/ZKGeoPointToGeoPointAdopter";
 import ZKGeoPointProver, { IZKGeoPointProver } from "./provers/ZKGeoPointProver";
+import ZKPublicKeyToPublicKeyAdopter from "./adopters/ZKPublicKeyToPublicKeyAdopter";
+import ZKPrivateKeyToPrivateKeyAdopter from "./adopters/ZKPrivateKeyToPrivateKeyAdopter";
+import ZKSignatureToSignatureAdopter from "./adopters/ZKSignatureToSignatureAdopter";
 
 
 /*
@@ -177,3 +180,126 @@ export class ZKThreePointPolygon {
 
 export interface ZKThreePointPolygon extends ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> { }
 
+export class ZKKeyPair<T extends PrivateKey | PublicKey> {
+    protected key: T;
+
+    hash(): Field {
+        const keyAsFields: Field[] = this.key.toFields();
+        return Poseidon.hash(keyAsFields);
+    }
+
+    toBase58(): string {
+        return this.key.toBase58();
+    }
+}
+
+@ZKPublicKeyToPublicKeyAdopter
+export class ZKPublicKey extends ZKKeyPair<PublicKey> {
+    protected _raw: PublicKey | string;
+    
+
+    constructor(publicKeyOrBase58: PublicKey | string) {
+        super();
+        if (typeof publicKeyOrBase58 === "string") {
+            this.key = PublicKey.fromBase58(publicKeyOrBase58);
+        } else {
+            this.key = publicKeyOrBase58;
+        }
+        this._raw = publicKeyOrBase58;
+    }
+
+    hash(): Field {
+        const pubKeyAsFields: Field[] = this.key.toFields();
+        return Poseidon.hash(pubKeyAsFields);
+    }
+
+    get raw(): PublicKey | string {
+        return this._raw;
+    }
+
+    get normalized(): PublicKey {
+        return this.key;
+    }
+
+    verifyPrivateKey(zkPrivateKey: ZKPrivateKey): boolean {
+        return this.key.toBase58() === zkPrivateKey.toPublicKey().toBase58();
+    }
+
+}
+
+// Declaration merging for ZKPublicKey with the adopter's methods
+export interface ZKPublicKey extends ZKLocusAdopter<PublicKey, PublicKey, PublicKey> { }
+
+
+@ZKPrivateKeyToPrivateKeyAdopter
+export class ZKPrivateKey extends ZKKeyPair<PrivateKey> {
+    protected _raw: PrivateKey | string;
+
+    constructor(privateKeyOrBase58: PrivateKey | string) {
+        super();
+        if (typeof privateKeyOrBase58 === "string") {
+            this.key = PrivateKey.fromBase58(privateKeyOrBase58);
+        } else {
+            this.key = privateKeyOrBase58;
+        }
+        this._raw = privateKeyOrBase58;
+    }
+
+    get raw(): PrivateKey | string {
+        return this._raw;
+    }
+
+    get normalized(): PrivateKey {
+        return this.key;
+    } 
+    
+    /**
+     * Derives the associated public key.
+     * @returns a {@link ZKPublicKey}.
+     */
+    toPublicKey(): ZKPublicKey {
+        return new ZKPublicKey(this.key.toPublicKey());
+    }
+
+    verifyPublicKey(zkPublicKey: ZKPublicKey): boolean {
+        return this.key.toPublicKey().toBase58() === zkPublicKey.toBase58();
+    }
+}
+
+// Declaration merging for ZKPrivateKey with the adopter's methods
+export interface ZKPrivateKey extends ZKLocusAdopter<PrivateKey | string, PrivateKey, PrivateKey> { }
+
+
+@ZKSignatureToSignatureAdopter
+export class ZKSignature {
+    protected signature: Signature;
+    protected _raw: Signature | string;
+
+    constructor(signatureOrBase58: Signature | string) {
+        if (typeof signatureOrBase58 === "string") {
+            this.signature = Signature.fromBase58(signatureOrBase58);
+        } else {
+            this.signature = signatureOrBase58;
+        }
+        this._raw = signatureOrBase58;
+    }
+
+    get raw(): Signature | string {
+        return this._raw;
+    }
+
+    get normalized(): Signature {
+        return this.signature;
+    }
+
+    toBase58(): string {
+        return this.signature.toBase58();
+    }
+
+    verify(publicKey: PublicKey, msg: Field[]): boolean {
+        return this.signature.verify(publicKey, msg).toBoolean();
+    }
+}
+
+// Declaration merging for ZKSignature with the adopter's methods
+export interface ZKSignature extends ZKLocusAdopter<Signature | string, Signature, Signature> { }

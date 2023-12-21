@@ -1,10 +1,12 @@
-import { Field, JsonProof} from "o1js";
+import { Field, JsonProof, PublicKey, Signature} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
 import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/Geography";
-import type { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
+import type { ZKGeoPoint, ZKPublicKey, ZKSignature, ZKThreePointPolygon } from "../Models";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { IO1JSProof} from "./Types";
+import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
+import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/private/Oracle";
 
 
 export abstract class ZKCommitment{
@@ -13,11 +15,11 @@ export abstract class ZKCommitment{
     //protected isVerified: boolean; 
 }
 
+/**
+ * This class represents a commitment to a ZKGeoPoint being inside or outside a ZKThreePointPolygon.
+ * It's an abstraction over the GeoPointInPolygonCommitment class, which is the actual zero-knowledge commitment.
+ */
 class ZKGeoPointInPolygonCommitment extends ZKCommitment {
-    /**
-     * 
-     */
-
     protected commitment: GeoPointInPolygonCommitment;
     protected geoPoint: ZKGeoPoint;
     protected polygon: ZKThreePointPolygon;
@@ -50,6 +52,44 @@ class ZKGeoPointInPolygonCommitment extends ZKCommitment {
 }
 
 
+class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
+    protected commitment: OracleAuthenticatedGeoPointCommitment;
+    protected geoPoint: ZKGeoPoint;
+    protected publicKey: ZKPublicKey;
+
+    constructor(geoPoint: ZKGeoPoint, publicKey: ZKPublicKey, commitment: OracleAuthenticatedGeoPointCommitment) {
+        super();
+        this.geoPoint = geoPoint;
+        this.publicKey = publicKey;
+        this.commitment = commitment;
+    }
+
+    /**
+     * Verify that the commitment is valid. 
+     */
+    verify(): void {
+        // Oracle commitment data
+        const publicKeyHash: Field = this.commitment.publicKeyHash;
+        const geoPointHash: Field = this.commitment.geoPointHash;
+
+        // Claimed data
+        const claimedPublicKeyHash: Field = this.publicKey.hash();
+
+        const claimedGeoPoint: GeoPoint = this.geoPoint.toZKValue();
+        const claimedGeoPointHash: Field = claimedGeoPoint.hash();
+
+        // Verify that the claimed data matches the commitment data
+        if (claimedPublicKeyHash !== publicKeyHash) {
+            throw new Error(`Public Key Hash does not match the claimed one. Claimed: ${claimedPublicKeyHash.toString()}. Actual: ${publicKeyHash.toString()}`);
+        }
+
+        if (claimedGeoPointHash !== geoPointHash) {
+            throw new Error(`GeoPoint Hash does not match the claimed one. Claimed: ${claimedGeoPointHash.toString()}. Actual: ${geoPointHash.toString()}`);
+        }
+    }
+}
+
+
 /*
     This is the parent abstraction class for all zkLocus proofs. Any zkLocus proof is interpertable and abstractble by
     this type. It can load and convert proofs to JSON, combine proofs together, and verify them.
@@ -57,9 +97,9 @@ class ZKGeoPointInPolygonCommitment extends ZKCommitment {
     Internally, it uses the zkLocus API to perform the operations. It also contains properties based on the
     proof structure.
 */
-export abstract class ZKLocusProof implements IO1JSProof {
+export abstract class ZKLocusProof implements IO1JSProof{
     // TODO: this class is being iteratively defined
-    protected abstract proof: IO1JSProof;
+    protected proof: IO1JSProof;
 
     verify(): void {
         return this.proof.verify();
@@ -75,8 +115,13 @@ export abstract class ZKLocusProof implements IO1JSProof {
     
 }
 
-function ZKGeoPointInPolygonProofVerificationMiddleware(constructor: typeof ZKGeoPointInPolygonProof) {
-    return class extends constructor {
+/**
+ * This is a middleware that adds caching to the verification of a proof. It should be used as a decorator on a class that extends ZKLocusProof.
+ * @param Base - The base class to extend 
+ * @returns A class that extends the base class and adds caching to the verification of the proof 
+ */
+function CachingProofVerificationMiddleware<T extends new (...args: any[]) => ZKLocusProof>(Base: T) {
+    return class extends Base {
         private isVerified = false;
 
         verify() {
@@ -99,7 +144,7 @@ function ZKGeoPointInPolygonProofVerificationMiddleware(constructor: typeof ZKGe
  * This class represents a proof that a ZKGeoPoint is inside a ZKThreePointPolygon.
  * A 
  */
-@ZKGeoPointInPolygonProofVerificationMiddleware
+@CachingProofVerificationMiddleware
 export class ZKGeoPointInPolygonProof extends ZKLocusProof {
 
     protected proof: GeoPointInPolygonCircuitProof;
@@ -132,4 +177,51 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof {
         this.assertVerifyCoordinatesAndPolygonAreTheClaimedOnes();
         super.verify();
     }
+}
+
+@CachingProofVerificationMiddleware
+export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
+    protected proof: GeoPointSignatureVerificationCircuitProof;
+
+    constructor(protected zkPublicKey: ZKPublicKey, protected zkSignature: ZKSignature, protected zkGeoPoint: ZKGeoPoint, proof: GeoPointSignatureVerificationCircuitProof) {
+        super();
+        this.proof = proof;
+    }
+
+    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+        return GeoPointSignatureVerificationCircuitProof.fromJSON(jsonProof);
+    }
+
+    /**
+     * Verify that the commitment output by the zero-knowlede circuit matches the claimed GeoPoint and PublicKey.
+     */
+    assertGeoPointIsTheClaimedOne(): void {
+        const commitment: OracleAuthenticatedGeoPointCommitment = this.proof.publicOutput;
+        const commitmentVerifier: ZKOracleAuthenticatedGeoPointCommitment = new ZKOracleAuthenticatedGeoPointCommitment(this.zkGeoPoint, this.zkPublicKey, commitment);
+        commitmentVerifier.verify();
+    }
+
+    verify(): void {
+        super.verify();
+        this.assertGeoPointIsTheClaimedOne();
+    }
+
+    verifyIf(condition: Bool): void {
+        if (condition) {
+            this.verify();
+        }
+    }
+
+    /**
+     * The geopoint that was signed by the Oracle.
+     */
+    get geoPoint(): ZKGeoPoint {
+        this.verify();
+        return this.zkGeoPoint;
+    }
+
+    toJSON(): JsonProof {
+        return this.proof.toJSON();
+    }
+
 }
