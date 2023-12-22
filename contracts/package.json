@@ -52,13 +52,14 @@
   "devDependencies": {
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
-    "@types/jest": "^27.0.3",
+    "@types/jest": "^27.5.2",
     "@typescript-eslint/eslint-plugin": "^5.5.0",
     "@typescript-eslint/parser": "^5.5.0",
+    "axios": "^1.6.2",
     "eslint": "^8.7.0",
     "eslint-plugin-o1js": "^0.4.0",
     "husky": "^7.0.1",
-    "jest": "^27.3.1",
+    "jest": "^27.5.1",
     "lint-staged": "^11.0.1",
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.7",
@@ -66,5 +67,8 @@
   },
   "peerDependencies": {
     "o1js": "^0.14.2"
+  },
+  "dependencies": {
+    "@types/node": "^20.10.5"
   }
 }
