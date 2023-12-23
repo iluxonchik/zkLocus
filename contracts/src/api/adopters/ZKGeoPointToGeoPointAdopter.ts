@@ -23,9 +23,8 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
             return this.asRawValue;
         }
         
-
         normalizedValue(): { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; } {
-            const factorAsNumber: number = 10 ** this.latitude.num_decimals;
+            const factorAsNumber: number = 10 ** this.latitude.factor;
             const factor: ZKNumber = new ZKNumber(factorAsNumber);
             const latitude: ZKLatitude = new ZKLatitude(this.latitude.normalized);
             const longitude: ZKLongitude = new ZKLongitude(this.longitude.normalized);
@@ -37,13 +36,10 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
         }
 
         toZKValue(): GeoPoint {
-            const scaledLatitude = this.latitude.normalized * Math.pow(10, 7);
-            const scaledLongitude = this.longitude.normalized * Math.pow(10, 7);
-
             return new GeoPoint({
-                latitude: Int64.from(scaledLatitude),
-                longitude: Int64.from(scaledLongitude),
-                factor: Int64.from(this.latitude.num_decimals)
+                latitude: Int64.from(this.latitude.scaled),
+                longitude: Int64.from(this.longitude.scaled),
+                factor: Int64.from(this.latitude.factor)
             });
         }
     };

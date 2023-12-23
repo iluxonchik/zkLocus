@@ -12,6 +12,7 @@ export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 export interface IZKGeoPointProver extends IZKProver {
     Prove: {
         inPolygon: (polygon: ZKThreePointPolygon) => Promise<ZKLocusProof>;
+        authenticateFromIntegrationOracle: (publicKey: ZKPublicKey, signature: ZKSignature) => Promise<ZKGeoPointSignatureVerificationCircuitProof>;
     };
 }
 
@@ -24,9 +25,9 @@ export default function<T extends ZKGeoPointConstructor>(Base: T) {
                     const geoPointInPolygonProof: GeoPointInPolygonCircuitProof = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(geoPointProof, polygon.toZKValue());
                     return new ZKGeoPointInPolygonProof(this, polygon, geoPointInPolygonProof);
             },
-            fromIntegrationOracleSignature: async (publicKey: ZKPublicKey, signature: ZKSignature, geoPoint: ZKGeoPoint): Promise<ZKGeoPointSignatureVerificationCircuitProof> => {
+            authenticateFromIntegrationOracle: async (publicKey: ZKPublicKey, signature: ZKSignature): Promise<ZKGeoPointSignatureVerificationCircuitProof> => {
                 const plainPublicKey: PublicKey = publicKey.toZKValue();
-                const plainGeoPoint: GeoPoint = geoPoint.toZKValue();
+                const plainGeoPoint: GeoPoint = this.toZKValue();
                 const plainSignature: Signature = signature.toZKValue();
                 const proof: GeoPointSignatureVerificationCircuitProof = await OracleGeoPointProviderCircuit.fromSignature(
                     plainPublicKey,
@@ -34,7 +35,7 @@ export default function<T extends ZKGeoPointConstructor>(Base: T) {
                     plainGeoPoint
                 );
 
-                return new ZKGeoPointSignatureVerificationCircuitProof(publicKey, signature, geoPoint, proof);
+                return new ZKGeoPointSignatureVerificationCircuitProof(publicKey, signature, this, proof);
             },
         }
 

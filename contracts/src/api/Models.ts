@@ -23,8 +23,8 @@ export class ZKNumber {
 
     constructor(value: InputNumber) {
         this._raw_value = value;
-        this._normalized_value = Math.round(Number(value));
-        this._num_decimals = this._count_num_decimals();
+        this._normalized_value = Number(value);
+        this._num_decimals = this.countNumDecimals();
     }
 
     get raw(): InputNumber {
@@ -35,14 +35,21 @@ export class ZKNumber {
         return this._normalized_value;
     }
 
-    /*
-    Returns the number of decimals in the number.
-    */
-    get num_decimals(): number {
-        return this._num_decimals;
+    get scaled(): number {
+        return Math.round(this._normalized_value * Math.pow(10, this._num_decimals));
     }
 
-    protected _count_num_decimals(): number {
+    /*
+        Returns the factor of the coordinate. This is the factor that the coordinate will be multiplied by
+        to get the zkLocus value. The factor is a power of 10, and it's equal to 10 ^ num_decimals.
+
+        For numbers without decimals (i.e. integers), the factor is 1.
+    */
+    get factor(): number {
+        return Math.max(1, 10 ** this._num_decimals);
+    }
+
+    protected countNumDecimals(): number {
         const decimalPart = this._normalized_value.toString().split('.')[1];
         return decimalPart ? decimalPart.length : 0;
     }
@@ -58,23 +65,13 @@ export interface ZKNumber extends ZKLocusAdopter<InputNumber, number, Int64> { }
 */
 
 export class ZKCoordinate extends ZKNumber {
+    MAX_FACTOR: number = 10 ** 7;
     constructor(value: InputNumber) {
         super(value);
-        const valueAsInteger = Math.abs(Number(value));
-        if (valueAsInteger > 180 || this.num_decimals > 7) {
-            throw new Error("Invalid coordinate value");
+        if (this.factor > this.MAX_FACTOR) {
+            throw new Error(`Invalid factor. The maximum factor is 7. The provided value is ${this.factor}`);
         }
-    }
-
-    /*
-        Returns the factor of the coordinate. This is the factor that the coordinate will be multiplied by
-        to get the zkLocus value. The factor is a power of 10, and it's equal to 10 ^ num_decimals.
-
-        For numbers without decimals (i.e. integers), the factor is 1.
-    */
-    get factor(): number {
-        return Math.max(1, 10 ** this.num_decimals);
-    }
+    } 
 }
 /*
 Represents a latitude that will be converted to the Fields of a zkSNARK in zkLocus.
@@ -143,6 +140,10 @@ export class ZKGeoPoint {
         return this._rawValue;
     }
 
+    hash(): Field {
+        return this.toZKValue().hash();
+    }
+
 }
 // Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface
 export interface ZKGeoPoint extends ZKLocusAdopter<{ latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint>, IZKGeoPointProver { }
@@ -168,9 +169,9 @@ export class ZKThreePointPolygon {
     }
 
     protected _ensure_same_factor_in_vertices(): void {
-        const first_factor: number = this._vertices[0].latitude.num_decimals;
+        const first_factor: number = this._vertices[0].latitude.factor;
         for (let i = 1; i < this._vertices.length; i++) {
-            if (this._vertices[i].latitude.num_decimals !== first_factor) {
+            if (this._vertices[i].latitude.factor !== first_factor) {
                 throw new Error("Invalid polygon vertices");
             }
         }

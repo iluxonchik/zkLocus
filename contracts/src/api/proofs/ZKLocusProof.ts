@@ -51,21 +51,26 @@ class ZKGeoPointInPolygonCommitment extends ZKCommitment {
     }
 }
 
-
+/**
+ * Commitment to a GeoPoint being authenticated by an Oracle.
+ * This class represents a commitment to a ZKGeoPoint being signed by a ZKPublicKey.
+ */
 class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
     protected commitment: OracleAuthenticatedGeoPointCommitment;
-    protected geoPoint: ZKGeoPoint;
-    protected publicKey: ZKPublicKey;
+    protected zkGeoPoint: ZKGeoPoint;
+    protected zkkPublicKey: ZKPublicKey;
 
     constructor(geoPoint: ZKGeoPoint, publicKey: ZKPublicKey, commitment: OracleAuthenticatedGeoPointCommitment) {
         super();
-        this.geoPoint = geoPoint;
-        this.publicKey = publicKey;
+        this.zkGeoPoint = geoPoint;
+        this.zkkPublicKey = publicKey;
         this.commitment = commitment;
     }
 
     /**
-     * Verify that the commitment is valid. 
+     * Verify that the commitment corresponds to the claimed GeoPoint and PublicKey.
+     * In zkLocus, a commitment to a GeoPoint is the Poseidon hash of the GeoPoint's latitude, longitude and factor, 
+     * while a commitment to a PublicKey is the Poseidon hash of the PublicKey's field array.
      */
     verify(): void {
         // Oracle commitment data
@@ -73,17 +78,15 @@ class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
         const geoPointHash: Field = this.commitment.geoPointHash;
 
         // Claimed data
-        const claimedPublicKeyHash: Field = this.publicKey.hash();
-
-        const claimedGeoPoint: GeoPoint = this.geoPoint.toZKValue();
-        const claimedGeoPointHash: Field = claimedGeoPoint.hash();
+        const claimedPublicKeyHash: Field = this.zkkPublicKey.hash();
+        const claimedGeoPointHash: Field = this.zkGeoPoint.hash();
 
         // Verify that the claimed data matches the commitment data
-        if (claimedPublicKeyHash !== publicKeyHash) {
+        if (!claimedPublicKeyHash.equals(publicKeyHash)) {
             throw new Error(`Public Key Hash does not match the claimed one. Claimed: ${claimedPublicKeyHash.toString()}. Actual: ${publicKeyHash.toString()}`);
         }
 
-        if (claimedGeoPointHash !== geoPointHash) {
+        if (!claimedGeoPointHash.equals(geoPointHash)) {
             throw new Error(`GeoPoint Hash does not match the claimed one. Claimed: ${claimedGeoPointHash.toString()}. Actual: ${geoPointHash.toString()}`);
         }
     }
@@ -183,7 +186,7 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof {
 export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
     protected proof: GeoPointSignatureVerificationCircuitProof;
 
-    constructor(protected zkPublicKey: ZKPublicKey, protected zkSignature: ZKSignature, protected zkGeoPoint: ZKGeoPoint, proof: GeoPointSignatureVerificationCircuitProof) {
+    constructor(protected zkPublicKey: ZKPublicKey, protected zkSignature: ZKSignature, protected _zkGeoPoint: ZKGeoPoint, proof: GeoPointSignatureVerificationCircuitProof) {
         super();
         this.proof = proof;
     }
@@ -197,7 +200,7 @@ export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
      */
     assertGeoPointIsTheClaimedOne(): void {
         const commitment: OracleAuthenticatedGeoPointCommitment = this.proof.publicOutput;
-        const commitmentVerifier: ZKOracleAuthenticatedGeoPointCommitment = new ZKOracleAuthenticatedGeoPointCommitment(this.zkGeoPoint, this.zkPublicKey, commitment);
+        const commitmentVerifier: ZKOracleAuthenticatedGeoPointCommitment = new ZKOracleAuthenticatedGeoPointCommitment(this._zkGeoPoint, this.zkPublicKey, commitment);
         commitmentVerifier.verify();
     }
 
@@ -215,9 +218,9 @@ export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
     /**
      * The geopoint that was signed by the Oracle.
      */
-    get geoPoint(): ZKGeoPoint {
+    get zkGeoPoint(): ZKGeoPoint {
         this.verify();
-        return this.zkGeoPoint;
+        return this._zkGeoPoint;
     }
 
     toJSON(): JsonProof {

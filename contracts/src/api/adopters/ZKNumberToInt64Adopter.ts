@@ -2,7 +2,7 @@ import { Int64 } from "o1js";
 import { InputNumber } from "../Types";
 import { ZKLocusAdopter } from "./Interfaces";
 
-export default function<T extends new (...args: any[]) => { raw: InputNumber; normalized: number; }>(Base: T) {
+export default function<T extends new (...args: any[]) => { raw: InputNumber; normalized: number; scaled: number}>(Base: T) {
     return class extends Base implements ZKLocusAdopter<InputNumber, number, Int64> {
 
         /*
@@ -20,7 +20,7 @@ export default function<T extends new (...args: any[]) => { raw: InputNumber; no
 
         toZKValue(): Int64 {
             // Assuming Int64 is a valid type or class in the provided zkLocus code
-            return Int64.from(this.normalizedValue());
+            return Int64.from(this.scaled);
         }
     };
 }
