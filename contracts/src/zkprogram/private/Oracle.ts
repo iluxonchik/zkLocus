@@ -1,7 +1,7 @@
 import { PublicKey, Signature, ZkProgram} from "o1js";
 import { GeoPoint } from "../../model/Geography";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
-import { extractGeoPointFromSignature } from "../../logic/methods/Oracle";
+import { extractGeoPointFromSignature } from "../../logic/private/Oracle";
 
 /**
  * An implementation of an authenticted GeoPoint source that uses an Oracle. The Oracle can run arbitrary code,

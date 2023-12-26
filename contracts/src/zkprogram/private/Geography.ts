@@ -1,5 +1,5 @@
-import { Experimental, SelfProof, Empty, Proof, Field, Struct, Provable, Bool, ZkProgram} from "o1js";
-import { proveGeoPointIn3PointPolygon, AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveExactGeoPoint, proveExactGeoPointFromSourceCircuit, proveProvidedGeoPointIn3PointPolygon} from '../../logic/Methods';
+import { Experimental, SelfProof, Empty, ZkProgram} from "o1js";
+import { AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveProvidedGeoPointIn3PointPolygon, exactGeoPointFromOracle} from '../../logic/Methods';
 
 import { GeoPointPolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
@@ -7,6 +7,7 @@ import { fromCoordinatesInPolygonProof } from '../../logic/Methods';
 import { combine } from '../../logic/Methods';
 import { TimeStampInterval } from "../../model/Time";
 import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, proofAttachSourcedTimestampinterval } from "../../logic/Methods";
+import { GeoPointSignatureVerificationCircuitProof } from "./Oracle";
 
 
 /**
@@ -44,22 +45,6 @@ import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, pr
  */
 
 
-export const ExactGeoPoint = Experimental.ZkProgram({
-    publicOutput: GeoPointCommitment,
-
-    methods: {
-        proveExactGeoPoint: {
-            privateInputs: [GeoPoint],
-            method: proveExactGeoPoint,
-        },
-        proveExactSourcedGeoPoint: {
-            privateInputs: [SelfProof<Empty, GeoPoint>],
-            method: proveExactGeoPointFromSourceCircuit,
-        }
-    }
-});
-
-
 /**
  * Set of ZK circuits that allow for the creation of a proof attesting to the validity of a geographical point. 
  * 
@@ -74,6 +59,11 @@ export const GeoPointProviderCircuit = ZkProgram({
         fromLiteralGeoPoint: {
             privateInputs: [GeoPoint],
             method: geoPointFromLiteral,
+        },
+
+        fromOracle: {
+            privateInputs: [GeoPointSignatureVerificationCircuitProof, GeoPoint],
+            method: exactGeoPointFromOracle,
         },
 
     },
