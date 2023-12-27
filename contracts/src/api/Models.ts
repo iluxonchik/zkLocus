@@ -140,6 +140,35 @@ export class ZKGeoPoint {
         return this._rawValue;
     }
 
+    /*
+    * Create a ZKGeoPoint from a GeoPoint.
+    */
+    static fromGeoPoint(geoPoint: GeoPoint): ZKGeoPoint {
+        const latitude: Int64 = geoPoint.latitude;
+        const longitude: Int64 = geoPoint.longitude;
+        const factor: Int64 = geoPoint.factor;
+
+        const longitudeAsBigInt: BigInt = longitude.toField().toBigInt();
+        const latitudeAsBigInt: BigInt = latitude.toField().toBigInt();
+        const factorAsBigInt: BigInt = factor.toField().toBigInt();
+
+        const latitudeAsNumber: number = Number(latitudeAsBigInt);
+        const longitudeAsNumber: number = Number(longitudeAsBigInt);
+        const factorAsNumber: number = Number(factorAsBigInt);
+
+        const latitudeDecimal: number = latitudeAsNumber / factorAsNumber;
+        const longitudeDecimal: number = longitudeAsNumber / factorAsNumber;
+
+        return new ZKGeoPoint(latitudeDecimal, longitudeDecimal);
+    }
+
+    /*
+    * Obtain the GeoPoint representation of this ZKGeoPoint.
+    */
+    toGeoPoint(): GeoPoint {
+        return this.toZKValue();
+    }
+
     hash(): Field {
         return this.toZKValue().hash();
     }

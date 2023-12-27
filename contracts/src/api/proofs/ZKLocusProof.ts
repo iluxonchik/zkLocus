@@ -1,12 +1,14 @@
 import { Field, JsonProof, PublicKey, Signature} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
-import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/Geography";
+import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import type { ZKGeoPoint, ZKPublicKey, ZKSignature, ZKThreePointPolygon } from "../Models";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { IO1JSProof} from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/private/Oracle";
+import { ExactGeoPointCircuitProof } from "../../zkprogram/public/GeoPoint";
+import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
 
 
 export abstract class ZKCommitment{
@@ -119,31 +121,6 @@ export abstract class ZKLocusProof implements IO1JSProof{
 }
 
 /**
- * This is a middleware that adds caching to the verification of a proof. It should be used as a decorator on a class that extends ZKLocusProof.
- * @param Base - The base class to extend 
- * @returns A class that extends the base class and adds caching to the verification of the proof 
- */
-function CachingProofVerificationMiddleware<T extends new (...args: any[]) => ZKLocusProof>(Base: T) {
-    return class extends Base {
-        private isVerified = false;
-
-        verify() {
-            if (!this.isVerified) {
-                super.verify();
-                this.isVerified = true;
-            }
-        }
-
-        verifyIf(condition: Bool) {
-            if (!this.isVerified && condition) {
-                super.verify();
-                this.isVerified = true;
-            }
-        }
-    }
-}
-
-/**
  * This class represents a proof that a ZKGeoPoint is inside a ZKThreePointPolygon.
  * A 
  */
@@ -226,5 +203,4 @@ export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
     toJSON(): JsonProof {
         return this.proof.toJSON();
     }
-
 }
