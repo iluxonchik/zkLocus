@@ -2,6 +2,7 @@ import { Bool, Empty, Int64, Proof } from "o1js";
 import { ZKGeoPoint, ZKPublicKey, ZKSignature } from "../../api/Models";
 import { OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
 import { ZKGeoPointSignatureVerificationCircuitProof } from "../../api/proofs/ZKLocusProof";
+import { ZKGeoPointProviderCircuitProof } from "../../api/proofs/ZKGeoPointProviderCircuitProof";
 
 const isProofsEnabled: boolean = true;
 
@@ -31,7 +32,7 @@ describe('Integration Oracle', () => {
     
         describe('when valid GeoPoint signature is provided to ZK Circuit', () => {
             it('computes the authenticated geolocation commitment correclty', async () => {
-                const zkGeoPointSource: ZKGeoPointSignatureVerificationCircuitProof = await validZKGeoPoint.Prove.authenticateFromIntegrationOracle(validOracleGeoPoint.zkPublicKey, validOracleGeoPoint.zkSignature);
+                const zkGeoPointSource: ZKGeoPointProviderCircuitProof = await validZKGeoPoint.Prove.authenticateFromIntegrationOracle(validOracleGeoPoint.zkPublicKey, validOracleGeoPoint.zkSignature);
                 zkGeoPointSource.verify();
                 expect(zkGeoPointSource.zkGeoPoint).toEqual(validZKGeoPoint);
             });
