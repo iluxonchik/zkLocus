@@ -5,11 +5,11 @@ import { proveExactGeoPointFromProvider } from "../../logic/public/ExactGeoPoint
 
 /*
 * Set of Zero-Knowledge Circuits for generating an exact GeoPoint proof.
-* 
+*
 * Visibility: Public
 */
 export const ExactGeoPointCircuit = ZkProgram({
-    name: "ExactGeoPointCircuit", 
+    name: "ExactGeoPointCircuit",
     publicOutput: GeoPointCommitment,
     methods: {
         fromGeoPointProvider: {
@@ -17,7 +17,6 @@ export const ExactGeoPointCircuit = ZkProgram({
             method: proveExactGeoPointFromProvider,
         }
     }
-
 });
 
-export class ExactGeoPointCircuitProof extends ZkProgram.Proof(ExactGeoPointCircuit) {}
+export class ExactGeoPointCircuitProof extends ZkProgram.Proof(ExactGeoPointCircuit) { }
