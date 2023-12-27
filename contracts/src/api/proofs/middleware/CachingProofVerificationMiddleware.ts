@@ -6,7 +6,7 @@ import { ZKLocusProof } from "../ZKLocusProof";
  * @param Base - The base class to extend
  * @returns A class that extends the base class and adds caching to the verification of the proof
  */
-export default function <T extends new (...args: any[]) => ZKLocusProof>(Base: T) {
+export default function <T extends new (...args: any[]) => ZKLocusProof<any>>(Base: T) {
     return class extends Base {
         private isVerified = false;
 

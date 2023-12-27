@@ -1,4 +1,4 @@
-import { Field, JsonProof, PublicKey, Signature} from "o1js";
+import { Field, JsonProof, PublicKey, Signature, ZkProgram} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
 import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import type { ZKGeoPoint, ZKPublicKey, ZKSignature, ZKThreePointPolygon } from "../Models";
@@ -7,7 +7,7 @@ import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { IO1JSProof} from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/private/Oracle";
-import { ExactGeoPointCircuitProof } from "../../zkprogram/public/GeoPoint";
+import { ExactGeoPointCircuitProof } from "../../zkprogram/public/ExactGeoPointCircuit";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
 
 
@@ -102,9 +102,9 @@ class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
     Internally, it uses the zkLocus API to perform the operations. It also contains properties based on the
     proof structure.
 */
-export abstract class ZKLocusProof implements IO1JSProof{
+export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkProgram.Proof>>>{
     // TODO: this class is being iteratively defined
-    protected proof: IO1JSProof;
+    protected proof: P;
 
     verify(): void {
         return this.proof.verify();
@@ -117,7 +117,10 @@ export abstract class ZKLocusProof implements IO1JSProof{
     toJSON(): JsonProof {
         return this.proof.toJSON();
     }
-    
+
+    get zkProof(): P {
+        return this.proof;
+    }  
 }
 
 /**
@@ -125,9 +128,7 @@ export abstract class ZKLocusProof implements IO1JSProof{
  * A 
  */
 @CachingProofVerificationMiddleware
-export class ZKGeoPointInPolygonProof extends ZKLocusProof {
-
-    protected proof: GeoPointInPolygonCircuitProof;
+export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCircuitProof> {
     protected geoPoint: ZKGeoPoint;
     protected threePointPolygon: ZKThreePointPolygon;
 
@@ -160,8 +161,7 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof {
 }
 
 @CachingProofVerificationMiddleware
-export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof {
-    protected proof: GeoPointSignatureVerificationCircuitProof;
+export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof<GeoPointSignatureVerificationCircuitProof> {
 
     constructor(protected zkPublicKey: ZKPublicKey, protected zkSignature: ZKSignature, protected _zkGeoPoint: ZKGeoPoint, proof: GeoPointSignatureVerificationCircuitProof) {
         super();
