@@ -1,7 +1,10 @@
-import type { ZKGeoPoint, ZKPublicKey, ZKSignature, ZKThreePointPolygon } from "../Models";
+import type { ZKSignature } from "../models/ZKSignature";
+import type { ZKPublicKey } from "../models/ZKPublicKey";
+import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { IZKProver } from "./Interfaces";
 import { GeoPointInPolygonCircuit, GeoPointInPolygonCircuitProof, GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { ZKGeoPointInPolygonProof, ZKGeoPointSignatureVerificationCircuitProof, ZKLocusProof } from "../proofs/ZKLocusProof";
+import { ZKGeoPointInPolygonProof, ZKLocusProof } from "../proofs/ZKLocusProof";
 import { PublicKey, Signature } from "o1js";
 import { GeoPointSignatureVerificationCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
 import { GeoPoint } from "../../model/Geography";
