@@ -1,6 +1,6 @@
 {
   "name": "zklocus",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Blockchain-agnostic, private geolocation verification via zero-knowledge proofs using recursive zk-SNARKs.",
   "author": "Illya Gerasymchuk",
   "license": "MIT",
