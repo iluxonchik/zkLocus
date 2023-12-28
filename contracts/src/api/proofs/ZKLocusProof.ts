@@ -1,7 +1,10 @@
 import { Field, JsonProof, PublicKey, Signature, ZkProgram} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
 import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import type { ZKGeoPoint, ZKPublicKey, ZKSignature, ZKThreePointPolygon } from "../Models";
+import type { ZKSignature } from "../models/ZKSignature";
+import type { ZKPublicKey } from "../models/ZKPublicKey";
+import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { IO1JSProof} from "./Types";
