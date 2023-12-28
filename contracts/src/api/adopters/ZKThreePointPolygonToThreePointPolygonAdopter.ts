@@ -9,7 +9,8 @@
 */
 
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
-import { ZKGeoPoint, ZKThreePointPolygon } from "../Models";
+import { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
+import { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { ZKLocusAdopter } from "./Interfaces";
 
 

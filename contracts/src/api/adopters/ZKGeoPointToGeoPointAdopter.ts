@@ -9,10 +9,13 @@
 */
 
 import { Int64 } from "o1js";
-import { GeoPoint } from "../../model/Geography";
-import { ZKGeoPoint, ZKLatitude, ZKLongitude, ZKNumber } from "../Models";
 import { InputNumber } from "../Types";
 import { ZKLocusAdopter } from "./Interfaces";
+import { ZKLatitude } from "../models/ZKLatitude";
+import { ZKGeoPoint } from "../models/ZKGeoPoint";
+import { ZKLongitude } from "../models/ZKLongitude";
+import { ZKNumber } from "../models/ZKNumber";
+import { GeoPoint } from "../../model/Geography";
 
 export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 
@@ -36,6 +39,17 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
         }
 
         toZKValue(): GeoPoint {
+            console.log(`this.latitude.scaled: ${this.latitude.scaled}`);
+            console.log(`this.longitude.scaled: ${this.longitude.scaled}`);
+            console.log(`this.latitude.factor: ${this.latitude.factor}`);
+            
+            const latitudeInt64: Int64 = Int64.from(this.latitude.scaled);
+            const longitudeInt64: Int64 = Int64.from(this.longitude.scaled);
+            const factorInt64: Int64 = Int64.from(this.latitude.factor);
+
+            console.log(`latitudeInt64: ${latitudeInt64}`);
+            console.log(`longitudeInt64: ${longitudeInt64}`);
+            console.log(`factorInt64: ${factorInt64}`);
             return new GeoPoint({
                 latitude: Int64.from(this.latitude.scaled),
                 longitude: Int64.from(this.longitude.scaled),
