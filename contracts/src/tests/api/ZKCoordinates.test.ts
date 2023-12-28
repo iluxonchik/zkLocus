@@ -1,4 +1,6 @@
-import { ZKCoordinate, ZKLatitude, ZKLongitude } from "../../api/Models";
+import { ZKLongitude } from "../../api/models/ZKLongitude";
+import { ZKLatitude } from "../../api/models/ZKLatitude";
+import { ZKCoordinate } from "../../api/models/ZKCoordinate";
 
 describe('ZKCoordinate, ZKLatitude, and ZKLongitude Tests', () => {
     it('testZKCoordinateWithValidNumber', () => {

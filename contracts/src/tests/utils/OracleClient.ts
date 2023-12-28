@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { ZKLatitude, ZKLongitude } from '../../api/Models';
+import { ZKLongitude } from "../../api/models/ZKLongitude";
+import { ZKLatitude } from "../../api/models/ZKLatitude";
 
 /**
  * Client for interacting with the HTTP Oracle service.

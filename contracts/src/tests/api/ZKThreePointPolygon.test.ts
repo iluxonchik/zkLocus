@@ -1,5 +1,8 @@
 import { RawCoordinates } from "../../api/Types";
-import { ZKThreePointPolygon, ZKGeoPoint, ZKLatitude, ZKLongitude } from "../../api/Models";
+import { ZKThreePointPolygon } from "../../api/models/ZKThreePointPolygon";
+import { ZKGeoPoint } from "../../api/models/ZKGeoPoint";
+import { ZKLongitude } from "../../api/models/ZKLongitude";
+import { ZKLatitude } from "../../api/models/ZKLatitude";
 import { ThreePointPolygon } from "../../model/Geography";
 
 describe('ZKThreePointPolygon Class Tests', () => {

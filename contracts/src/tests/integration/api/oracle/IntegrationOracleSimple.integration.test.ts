@@ -1,9 +1,12 @@
 
-import { ZKGeoPoint, ZKPublicKey, ZKSignature } from "../../../../api/Models";
-import { ZKGeoPointSignatureVerificationCircuitProof } from "../../../../api/proofs/ZKLocusProof";
+import { ZKSignature } from "../../../../api/models/ZKSignature";
+import { ZKPublicKey } from "../../../../api/models/ZKPublicKey";
+import { ZKGeoPoint } from "../../../../api/models/ZKGeoPoint";
+import { ZKGeoPointProviderCircuitProof } from "../../../../api/proofs/ZKGeoPointProviderCircuitProof";
 import { OracleGeoPointProviderCircuit } from "../../../../zkprogram/private/Oracle";
 import OracleClient from "../../../utils/OracleClient";
 import RandomGeoPointGenerator from "../../../utils/RandomGeoPointGenerator";
+import { GeoPointProviderCircuit } from "../../../../zkprogram/private/Geography";
 
 const isProofsEnabled: boolean = true;
 
@@ -29,7 +32,7 @@ describe('ZK Locus Oracle Integration Tests', () => {
         const zkPublicKey = new ZKPublicKey(publicKey);
 
         // Assuming the existence of a Prove method on ZKGeoPoint or similar object to generate a proof
-        const zkGeoPointSource: ZKGeoPointSignatureVerificationCircuitProof = await randomGeoPoint.Prove.authenticateFromIntegrationOracle(zkPublicKey, zkSignature);
+        const zkGeoPointSource: ZKGeoPointProviderCircuitProof = await randomGeoPoint.Prove.authenticateFromIntegrationOracle(zkPublicKey, zkSignature);
 
         // Verifying the ZKGeoPoint
         zkGeoPointSource.verify();

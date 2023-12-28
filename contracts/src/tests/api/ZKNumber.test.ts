@@ -1,5 +1,5 @@
 import { Int64 } from "o1js";
-import { ZKNumber } from "../../api/Models";
+import { ZKNumber } from "../../api/models/ZKNumber";
 
 describe('ZKNumber Class Tests', () => {
     it('testZKNumberConstructionWithValueTypeNumber', () => {

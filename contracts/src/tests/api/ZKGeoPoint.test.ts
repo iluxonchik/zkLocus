@@ -1,4 +1,6 @@
-import { ZKGeoPoint, ZKLatitude, ZKLongitude } from "../../api/Models";
+import { ZKGeoPoint } from "../../api/models/ZKGeoPoint";
+import { ZKLongitude } from "../../api/models/ZKLongitude";
+import { ZKLatitude } from "../../api/models/ZKLatitude";
 import { GeoPoint } from "../../model/Geography";
 
 describe('ZKGeoPoint Class Tests', () => {
