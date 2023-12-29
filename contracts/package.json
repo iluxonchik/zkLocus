@@ -69,6 +69,7 @@
     "o1js": "^0.14.2"
   },
   "dependencies": {
-    "@types/node": "^20.10.5"
+    "@types/node": "^20.10.5",
+    "sha3": "^2.1.4"
   }
 }
