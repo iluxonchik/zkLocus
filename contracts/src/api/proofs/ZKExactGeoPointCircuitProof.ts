@@ -68,11 +68,6 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
         const claimedGeoPointCommitment: Field = this.claimedZKGeoPoint.hash();
 
         if(!geoPointCommitment.geoPointHash.equals(claimedGeoPointCommitment)) {
-            console.log(`The GeoPoint is not the claimed one. The GeoPoint is ${geoPointCommitment.geoPointHash} and the claimed one is ${claimedGeoPointCommitment}`);
-            const claimed: ZKGeoPoint = this.claimedZKGeoPoint;
-            console.log(`The claimed ZKGeoPoint is ${claimed}`);
-            const claimedZK: GeoPoint = claimed.toZKValue();
-            console.log(`The claimed GeoPoint is ${claimedZK}`);
             throw new Error("The GeoPoint is not the claimed one");
         }
     }
