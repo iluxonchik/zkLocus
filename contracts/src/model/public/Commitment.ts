@@ -7,3 +7,13 @@ export class GeoPointCommitment extends Struct({
     return `GeoPoint: ${this.geoPointHash.toString()}`;
   }
 }
+
+export class MetadataGeoPointCommitment extends Struct({
+  geoPointHash: Field,
+  metadataHash: Field,
+}) {
+  toString(): string {
+    return `GeoPoint ${this.geoPointHash.toString()}. Metadata: ${this.metadataHash.toString()}`;
+  }
+}
+

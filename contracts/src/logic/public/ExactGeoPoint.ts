@@ -1,7 +1,8 @@
-import { Field } from "o1js";
+import { Field, Poseidon } from "o1js";
 import { GeoPoint } from "../../model/Geography";
-import { GeoPointCommitment } from "../../model/public/Commitment";
+import { GeoPointCommitment, MetadataGeoPointCommitment } from "../../model/public/Commitment";
 import { GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
+import { Bytes64, SHA3_512 } from "../../model/public/SHA3";
 
 
 /*
@@ -19,5 +20,18 @@ export function proveExactGeoPointFromProvider(geoPointProviderProof: GeoPointPr
 
     return new GeoPointCommitment({
         geoPointHash: geoPointHash
+    });
+}
+
+
+export function attachMetadataToGeoPoint(geoPointProviderProof: GeoPointProviderCircuitProof, sha3_512: Bytes64): MetadataGeoPointCommitment {
+    geoPointProviderProof.verify();
+    const geoPoint: GeoPoint = geoPointProviderProof.publicOutput;
+    const geoPointHash: Field = geoPoint.hash();
+    const sha3_512PoseidonHash: Field = Poseidon.hash(sha3_512.toFields());
+
+    return new MetadataGeoPointCommitment({
+        geoPointHash: geoPointHash,
+        metadataHash: sha3_512PoseidonHash
     });
 }
