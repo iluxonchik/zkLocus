@@ -1,4 +1,4 @@
-import { SHA3_512 } from "../model/public/SHA3";
+import { SHA3_512 } from "../api/sha3/SHA3";
 
 describe('SHA3_512 Class Tests', () => {
     // Test for initialization and correct hashing

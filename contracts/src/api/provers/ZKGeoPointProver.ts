@@ -13,7 +13,7 @@ import { ExactGeoPointCircuit, ExactGeoPointCircuitProof } from "../../zkprogram
 import { ZKGeoPointProviderCircuitProof } from "../proofs/ZKGeoPointProviderCircuitProof";
 import { ZKExactGeolocationMetadataCircuitProof } from "../proofs/ZKExactGeolocationMetadataCircuitProof";
 import { ExactGeolocationMetadataCircuit, ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
-import { Bytes64, SHA3_512 } from "../../model/public/SHA3";
+import { Bytes64, SHA3_512 } from "../sha3/SHA3";
 
 export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 

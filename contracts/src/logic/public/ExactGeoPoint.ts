@@ -2,7 +2,7 @@ import { Field, Poseidon } from "o1js";
 import { GeoPoint } from "../../model/Geography";
 import { GeoPointCommitment, MetadataGeoPointCommitment } from "../../model/public/Commitment";
 import { GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { Bytes64, SHA3_512 } from "../../model/public/SHA3";
+import { Bytes64, SHA3_512 } from "../../api/sha3/SHA3";
 
 
 /*

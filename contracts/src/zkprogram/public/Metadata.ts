@@ -2,7 +2,7 @@ import { ZkProgram } from "o1js";
 import { MetadataGeoPointCommitment } from "../../model/public/Commitment";
 import { GeoPointProviderCircuitProof } from "../private/Geography";
 import { attachMetadataToGeoPoint} from "../../logic/public/ExactGeoPoint";
-import { SHA3_512 } from "../../model/public/SHA3";
+import { SHA3_512 } from "../../api/sha3/SHA3";
 
 // TODO | IMPORTANT //
 // Add a method to ExactGeolocationMetadataCircuit that takes two recursive proofs as inputs:
