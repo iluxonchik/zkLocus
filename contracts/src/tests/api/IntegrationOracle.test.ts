@@ -1,9 +1,7 @@
-import { Bool, Empty, Int64, Proof } from "o1js";
 import { ZKSignature } from "../../api/models/ZKSignature";
 import { ZKPublicKey } from "../../api/models/ZKPublicKey";
 import { ZKGeoPoint } from "../../api/models/ZKGeoPoint";
 import { OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
-import { ZKGeoPointSignatureVerificationCircuitProof } from "../../api/proofs/ZKLocusProof";
 import { ZKGeoPointProviderCircuitProof } from "../../api/proofs/ZKGeoPointProviderCircuitProof";
 
 const isProofsEnabled: boolean = true;

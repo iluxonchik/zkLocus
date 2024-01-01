@@ -2,13 +2,8 @@
 import { ZKSignature } from "../../../../api/models/ZKSignature";
 import { ZKPublicKey } from "../../../../api/models/ZKPublicKey";
 import { ZKGeoPoint } from "../../../../api/models/ZKGeoPoint";
-import { ZKExactGeoPointCircuitProof } from "../../../../api/proofs/ZKExactGeoPointCircuitProof";
-import { OracleGeoPointProviderCircuit } from "../../../../zkprogram/private/Oracle";
 import OracleClient from "../../../utils/OracleClient";
 import RandomGeoPointGenerator from "../../../utils/RandomGeoPointGenerator";
-import { GeoPointProviderCircuit } from "../../../../zkprogram/private/Geography";
-import { ExactGeoPointCircuit} from "../../../../zkprogram/public/ExactGeoPointCircuit";
-import { ExactGeolocationMetadataCircuit } from "../../../../zkprogram/public/Metadata";
 import { ZKExactGeolocationMetadataCircuitProof } from "../../../../api/proofs/ZKExactGeolocationMetadataCircuitProof";
 
 const isProofsEnabled: boolean = true;
@@ -35,10 +30,11 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
     if (isProofsEnabled) {
       console.log("Compiling circuits...");
       const startTime = Date.now();
-      await OracleGeoPointProviderCircuit.compile();
-      await GeoPointProviderCircuit.compile();
-      await ExactGeoPointCircuit.compile();
-      await ExactGeolocationMetadataCircuit.compile();
+      //await OracleGeoPointProviderCircuit.compile();
+      //await ZKGeoPointProviderCircuitProof.compile();
+      //await ZKExactGeoPointCircuitProof.compile();
+      //await ZKExactGeolocationMetadataCircuitProof.compile();
+      await ZKExactGeolocationMetadataCircuitProof.compile();
       const endTime = Date.now();
       console.log("Compilation complete!");
       console.log(`Proofs compilation took ${endTime - startTime} milliseconds.`);
