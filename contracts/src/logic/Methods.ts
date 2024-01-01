@@ -7,9 +7,8 @@ import { Int64Prover } from "../math/Provers.js";
 import { GeoPointPolygonInclusionExclusionProof, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
 import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
-import { GeoPointSignatureVerificationCircuitProof } from "../zkprogram/private/Oracle";
+import { OracleGeoPointProviderCircuitProof } from "../zkprogram/private/Oracle";
 import { OracleAuthenticatedGeoPointCommitment } from "../model/private/Oracle";
-import { GeoPointCommitment } from "../model/public/Commitment";
 
 
 function isPointIn3PointPolygon(
@@ -565,7 +564,7 @@ export function timeStampIntervalFromLiteral(interval: TimeStampInterval): TimeS
   claimed GeoPoint is the same as the one that was signed.
 */
 export function exactGeoPointFromOracle(
-  oracleProof: GeoPointSignatureVerificationCircuitProof,
+  oracleProof: OracleGeoPointProviderCircuitProof,
   geoPoint: GeoPoint,
 ): GeoPoint {
   oracleProof.verify();

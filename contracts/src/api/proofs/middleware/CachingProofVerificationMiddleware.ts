@@ -25,3 +25,4 @@ export default function <T extends new (...args: any[]) => ZKLocusProof<any>>(Ba
         }
     };
 }
+

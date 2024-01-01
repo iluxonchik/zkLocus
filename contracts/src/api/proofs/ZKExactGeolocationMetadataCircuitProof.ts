@@ -4,8 +4,9 @@ import CachingProofVerificationMiddleware from "./middleware/CachingProofVerific
 import { IO1JSProof } from "./Types";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { MetadataGeoPointCommitment } from "../../model/public/Commitment";
-import { ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
+import { ExactGeolocationMetadataCircuit, ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
 import { SHA3_512 } from "../sha3/SHA3";
+import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 
 /**
  * Abstraction over the Zero-Knowledge proof of an exact GeoPoint with associated metadata.
@@ -13,9 +14,14 @@ import { SHA3_512 } from "../sha3/SHA3";
 @CachingProofVerificationMiddleware
 export class ZKExactGeolocationMetadataCircuitProof extends ZKLocusProof<ExactGeolocationMetadataCircuitProof> {
 
+    protected static _circuit = ExactGeolocationMetadataCircuit;
+    protected static _dependentProofs = [
+        ZKGeoPointProviderCircuitProof,
+    ] 
+
     constructor(protected _zkGeoPoint: ZKGeoPoint, protected _metadata: string, proof: ExactGeolocationMetadataCircuitProof) {
         super();
-        this.proof = proof;
+        this._proof = proof;
     }
  
     static fromJSON(jsonProof: JsonProof): IO1JSProof {

@@ -1,11 +1,12 @@
 import { JsonProof, Sign } from "o1js";
 import { GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import { IO1JSProof } from "./Types";
-import { ZKGeoPointSignatureVerificationCircuitProof, ZKLocusProof } from "./ZKLocusProof";
+import { ZKLocusProof, ZKP } from "./ZKLocusProof";
 import { GeoPoint } from "../../model/Geography";
 import { ZKGeoPoint } from "../models/ZKGeoPoint";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
-import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/private/Oracle";
+import { OracleGeoPointProviderCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
+import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 
 /*
 * Authenticated GeoPoint source proof. This is an abstraction over the set of Zero-Knowledge proof that is used to
@@ -18,11 +19,15 @@ import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/priva
 */
 @CachingProofVerificationMiddleware
 export class ZKGeoPointProviderCircuitProof extends ZKLocusProof<GeoPointProviderCircuitProof> {
-    protected proof: GeoPointProviderCircuitProof;
+    protected _proof: GeoPointProviderCircuitProof;
+    protected static _circuit = GeoPointProviderCircuit; 
+    protected static _dependentProofs = [
+        ZKOracleGeoPointProviderCircuitProof,
+    ]
 
     constructor(proof: GeoPointProviderCircuitProof) {
         super();
-        this.proof = proof;
+        this._proof = proof;
     }
 
     static fromJSON(jsonProof: JsonProof): IO1JSProof {
@@ -31,7 +36,7 @@ export class ZKGeoPointProviderCircuitProof extends ZKLocusProof<GeoPointProvide
 
     get zkGeoPoint(): ZKGeoPoint {
         this.verify();
-        const geoPoint:GeoPoint = this.proof.publicOutput;
+        const geoPoint:GeoPoint = this._proof.publicOutput;
         return ZKGeoPoint.fromGeoPoint(geoPoint);
     }
 
@@ -41,10 +46,10 @@ export class ZKGeoPointProviderCircuitProof extends ZKLocusProof<GeoPointProvide
      * @param zkGeoPoint - The ZKGeoPoint to use in the creation of the ZKGeoPointProviderCircuitProof.
      * @returns A Promise that resolves to a ZKGeoPointProviderCircuitProof.
      */
-    static async fromOracleSignatureProof(proof: ZKGeoPointSignatureVerificationCircuitProof): Promise<ZKGeoPointProviderCircuitProof> {
+    static async fromOracleSignatureProof(proof: ZKOracleGeoPointProviderCircuitProof): Promise<ZKGeoPointProviderCircuitProof> {
         proof.verify();
         const zkGeoPoint: ZKGeoPoint = proof.zkGeoPoint;
-        const sigVerificationProof: GeoPointSignatureVerificationCircuitProof = proof.zkProof;
+        const sigVerificationProof: OracleGeoPointProviderCircuitProof = proof.proof;
         const geoPoint: GeoPoint = zkGeoPoint.toGeoPoint();
         const geoPointProviderProof: GeoPointProviderCircuitProof = await GeoPointProviderCircuit.fromOracle(
             sigVerificationProof,

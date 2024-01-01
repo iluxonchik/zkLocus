@@ -20,7 +20,7 @@ import { extractGeoPointFromSignature } from "../../logic/private/Oracle";
  * Oralces does not complicate the end-user API usage in any manner.
  */
 export const OracleGeoPointProviderCircuit = ZkProgram({
-  name: "GeoPointSignatureVerificationCircuit",
+  name: "OracleGeoPointProviderCircuit",
   publicOutput: OracleAuthenticatedGeoPointCommitment,
 
   methods: {
@@ -31,4 +31,4 @@ export const OracleGeoPointProviderCircuit = ZkProgram({
   }
 });
 
-export class GeoPointSignatureVerificationCircuitProof extends ZkProgram.Proof(OracleGeoPointProviderCircuit) {}
+export class OracleGeoPointProviderCircuitProof extends ZkProgram.Proof(OracleGeoPointProviderCircuit) {}

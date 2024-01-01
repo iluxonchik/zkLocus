@@ -7,7 +7,7 @@ import { fromCoordinatesInPolygonProof } from '../../logic/Methods';
 import { combine } from '../../logic/Methods';
 import { TimeStampInterval } from "../../model/Time";
 import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, proofAttachSourcedTimestampinterval } from "../../logic/Methods";
-import { GeoPointSignatureVerificationCircuitProof } from "./Oracle";
+import { OracleGeoPointProviderCircuitProof } from "./Oracle";
 
 
 /**
@@ -62,7 +62,7 @@ export const GeoPointProviderCircuit = ZkProgram({
         },
 
         fromOracle: {
-            privateInputs: [GeoPointSignatureVerificationCircuitProof, GeoPoint],
+            privateInputs: [OracleGeoPointProviderCircuitProof, GeoPoint],
             method: exactGeoPointFromOracle,
         },
 
@@ -118,7 +118,8 @@ export class GeoPointInPolygonCircuitProof extends ZkProgram.Proof(GeoPointInPol
  * 
  * The output of this should be as an input to `GeoPointWithTimestampInPolygon`.
  */
-export const TimeStampIntervalProviderCircuit = Experimental.ZkProgram({
+export const TimeStampIntervalProviderCircuit = ZkProgram({
+    name: "TimeStampIntervalProviderCircuit",
     publicOutput: TimeStampInterval,
 
     methods: {
@@ -128,6 +129,7 @@ export const TimeStampIntervalProviderCircuit = Experimental.ZkProgram({
         },
     },
 });
+
 
 export class TimeStampIntervalProviderCircuitProof extends ZkProgram.Proof(TimeStampIntervalProviderCircuit) {}
 

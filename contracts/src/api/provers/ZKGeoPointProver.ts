@@ -4,9 +4,10 @@ import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { IZKProver } from "./Interfaces";
 import { GeoPointInPolygonCircuit, GeoPointInPolygonCircuitProof, GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { ZKGeoPointInPolygonProof, ZKLocusProof } from "../proofs/ZKLocusProof";
+import { ZKLocusProof } from "../proofs/ZKLocusProof";
+import { ZKGeoPointInPolygonProof } from "../proofs/ZKGeoPointInPolygonProof";
 import { PublicKey, Signature } from "o1js";
-import { GeoPointSignatureVerificationCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
+import { OracleGeoPointProviderCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
 import { GeoPoint } from "../../model/Geography";
 import { ZKExactGeoPointCircuitProof } from "../proofs/ZKExactGeoPointCircuitProof";
 import { ExactGeoPointCircuit, ExactGeoPointCircuitProof } from "../../zkprogram/public/ExactGeoPointCircuit";
@@ -20,7 +21,7 @@ export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 export interface IZKGeoPointProver extends IZKProver {
 
     Prove: {
-        inPolygon: (polygon: ZKThreePointPolygon) => Promise<ZKLocusProof<any>>;
+        inPolygon: (polygon: ZKThreePointPolygon) => Promise<ZKGeoPointInPolygonProof>;
         authenticateFromIntegrationOracle: (publicKey: ZKPublicKey, signature: ZKSignature) => Promise<ZKGeoPointProviderCircuitProof>;
         exactGeoPoint: () => Promise<ZKExactGeoPointCircuitProof>;
         attachMetadata: (metadata: string) => Promise<ZKExactGeolocationMetadataCircuitProof>;
@@ -75,7 +76,7 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 const plainPublicKey: PublicKey = publicKey.toZKValue();
                 const plainGeoPoint: GeoPoint = this.toZKValue();
                 const plainSignature: Signature = signature.toZKValue();
-                const oracleSignatureVerificationProof: GeoPointSignatureVerificationCircuitProof = await OracleGeoPointProviderCircuit.fromSignature(
+                const oracleSignatureVerificationProof: OracleGeoPointProviderCircuitProof = await OracleGeoPointProviderCircuit.fromSignature(
                     plainPublicKey,
                     plainSignature,
                     plainGeoPoint
@@ -132,7 +133,7 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 }
                 const sha3_512: SHA3_512 = new SHA3_512(metadata);
                 const sha3_512_digest: Bytes64 = sha3_512.digest;
-                const exactGeolocationMetadataProof: ExactGeolocationMetadataCircuitProof = await ExactGeolocationMetadataCircuit.attachMetadataToGeoPoint(this.integrationOracleProof.zkProof, sha3_512_digest);
+                const exactGeolocationMetadataProof: ExactGeolocationMetadataCircuitProof = await ExactGeolocationMetadataCircuit.attachMetadataToGeoPoint(this.integrationOracleProof.proof, sha3_512_digest);
 
                 this.exactGeolocationMetadataProof = new ZKExactGeolocationMetadataCircuitProof(this, metadata, exactGeolocationMetadataProof);
 
@@ -142,7 +143,7 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
 
         private async exactGeoPointForIntegrationOracle(): Promise<ZKExactGeoPointCircuitProof> {
             const oracleProof: ZKGeoPointProviderCircuitProof = this.getIntegrationOracleProofOrError();
-            const rawProof: GeoPointProviderCircuitProof = oracleProof.zkProof;
+            const rawProof: GeoPointProviderCircuitProof = oracleProof.proof;
 
             const rawExactGeoPointProof: ExactGeoPointCircuitProof = await ExactGeoPointCircuit.fromGeoPointProvider(
                 rawProof

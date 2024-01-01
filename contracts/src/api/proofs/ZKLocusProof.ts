@@ -1,17 +1,14 @@
-import { Field, JsonProof, PublicKey, Signature, ZkProgram} from "o1js";
+import { Field, JsonProof, ZkProgram} from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
-import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import type { ZKSignature } from "../models/ZKSignature";
 import type { ZKPublicKey } from "../models/ZKPublicKey";
 import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
-import { IO1JSProof} from "./Types";
+import { ZKProgramCompileResult} from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
-import { GeoPointSignatureVerificationCircuitProof } from "../../zkprogram/private/Oracle";
-import { ExactGeoPointCircuitProof } from "../../zkprogram/public/ExactGeoPointCircuit";
-import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
+import { Cache } from "o1js/dist/node/lib/proof-system/cache";
+
 
 
 export abstract class ZKCommitment{
@@ -24,7 +21,7 @@ export abstract class ZKCommitment{
  * This class represents a commitment to a ZKGeoPoint being inside or outside a ZKThreePointPolygon.
  * It's an abstraction over the GeoPointInPolygonCommitment class, which is the actual zero-knowledge commitment.
  */
-class ZKGeoPointInPolygonCommitment extends ZKCommitment {
+export class ZKGeoPointInPolygonCommitment extends ZKCommitment {
     protected commitment: GeoPointInPolygonCommitment;
     protected geoPoint: ZKGeoPoint;
     protected polygon: ZKThreePointPolygon;
@@ -60,7 +57,7 @@ class ZKGeoPointInPolygonCommitment extends ZKCommitment {
  * Commitment to a GeoPoint being authenticated by an Oracle.
  * This class represents a commitment to a ZKGeoPoint being signed by a ZKPublicKey.
  */
-class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
+export class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
     protected commitment: OracleAuthenticatedGeoPointCommitment;
     protected zkGeoPoint: ZKGeoPoint;
     protected zkkPublicKey: ZKPublicKey;
@@ -98,6 +95,21 @@ class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
 }
 
 
+export type ZKP = {compile: (options?: {
+    cache?: import("/Users/iluxonchik/GitHub/zkLocus/contracts/node_modules/o1js/dist/node/lib/proof-system/cache").Cache;
+    forceRecompile?: boolean;
+}) => Promise<{
+    verificationKey: {
+        data: string;
+        hash: Field;
+    };
+}>;
+}
+
+interface ICompilableZKLocusProof {
+    compile(cache?: Cache, forceRecompile?: boolean): Promise<ZKProgramCompileResult>;
+}
+
 /*
     This is the parent abstraction class for all zkLocus proofs. Any zkLocus proof is interpertable and abstractble by
     this type. It can load and convert proofs to JSON, combine proofs together, and verify them.
@@ -106,104 +118,79 @@ class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
     proof structure.
 */
 export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkProgram.Proof>>>{
-    // TODO: this class is being iteratively defined
-    protected proof: P;
+    // TODO:
+    // - C extends ReturnType<typeof ZkProgram<any, any>> may not be the most elegant way to do this. Subclasess of ZKLocusProof only seem to work when "any" is used as the type for C
+    protected _proof: P;
+    protected static _circuit: ZKP;
+    protected static _compiledCircuit: ZKProgramCompileResult | undefined;
+    /**
+     * The set of dependent proofs that need to be compiled to enable generation and verification of proofs of this type.
+     */
+    protected static _dependentProofs: ICompilableZKLocusProof[];
+
 
     verify(): void {
-        return this.proof.verify();
+        return this._proof.verify();
     }
-
+    
     verifyIf(condition: Bool): void {
-        return this.proof.verifyIf(condition);
+        return this._proof.verifyIf(condition);
     }
 
     toJSON(): JsonProof {
-        return this.proof.toJSON();
+        return this._proof.toJSON();
+    }
+ 
+    /**
+     * Compiles the circuit associated with this proof. A ceche is used to store the compiled circuit & keys, so that it doesn't have to be 
+     * recompiled every time. Once a circuit has been compiled within the scope of an execution, it does not need to be recompiled again.
+     * 
+     * @param cache - The cache to use for compilation. Defaults to Cache.FileSystemDefault.
+     * @param forceRecompile - Whether to force recompilation even if the circuit is already compiled. Defaults to false.
+     * @returns A promise that resolves to an object containing the verification key data and hash.
+     */
+    static async compile(cache: Cache | undefined = Cache.FileSystemDefault, forceRecompile: boolean = false): Promise<ZKProgramCompileResult> {
+        
+        for (const proof of this._dependentProofs) {
+            await proof.compile(cache, forceRecompile);
+        }
+
+
+        if (this.compiledCircuit !== undefined && !forceRecompile) {
+            return this.compiledCircuit;
+        }
+        
+        const result: ZKProgramCompileResult = await this._circuit.compile(
+            {
+                cache: cache,
+                forceRecompile: forceRecompile
+            }
+        );
+        this._compiledCircuit = result;
+        return result;
     }
 
-    get zkProof(): P {
-        return this.proof;
+    static get isCompiled(): boolean {
+        if (this.compiledCircuit === undefined) {
+            return false;
+        }
+        return true;
+    }
+
+    static get compiledCircuit(): ZKProgramCompileResult | undefined {
+        return this._compiledCircuit;
+    }
+
+    /**
+     * The set of dependent proofs that need to be compiled to enable generation and verification of proofs of this type.
+     */
+    static get dependentProofs(): ICompilableZKLocusProof[] {
+        return this._dependentProofs;
+    }
+
+    get proof(): P {
+        return this._proof;
     }  
 }
 
-/**
- * This class represents a proof that a ZKGeoPoint is inside a ZKThreePointPolygon.
- * A 
- */
-@CachingProofVerificationMiddleware
-export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCircuitProof> {
-    protected geoPoint: ZKGeoPoint;
-    protected threePointPolygon: ZKThreePointPolygon;
 
-    constructor(geoPoint: ZKGeoPoint, polygon: ZKThreePointPolygon, proof: GeoPointInPolygonCircuitProof){
-        super();
-        this.geoPoint = geoPoint;
-        this.proof = proof;
-        this.threePointPolygon = polygon;
-    }
-
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
-        return GeoPointInPolygonCircuitProof.fromJSON(jsonProof);
-    }
-
-    protected assertVerifyCoordinatesAndPolygonAreTheClaimedOnes(): void {
-        /*
-            Verify that geoPoint is equal to the one in the proof, and that the polygon is equal to the one in the proof
-        */ 
-        const commitment: GeoPointInPolygonCommitment = this.proof.publicOutput;
-
-        const commitmentVeriifier: ZKGeoPointInPolygonCommitment = new ZKGeoPointInPolygonCommitment(this.geoPoint, this.threePointPolygon, commitment);
-        commitmentVeriifier.verify();
-
-    }
-
-    verify(): void {
-        this.assertVerifyCoordinatesAndPolygonAreTheClaimedOnes();
-        super.verify();
-    }
-}
-
-@CachingProofVerificationMiddleware
-export class ZKGeoPointSignatureVerificationCircuitProof extends ZKLocusProof<GeoPointSignatureVerificationCircuitProof> {
-
-    constructor(protected zkPublicKey: ZKPublicKey, protected zkSignature: ZKSignature, protected _zkGeoPoint: ZKGeoPoint, proof: GeoPointSignatureVerificationCircuitProof) {
-        super();
-        this.proof = proof;
-    }
-
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
-        return GeoPointSignatureVerificationCircuitProof.fromJSON(jsonProof);
-    }
-
-    /**
-     * Verify that the commitment output by the zero-knowlede circuit matches the claimed GeoPoint and PublicKey.
-     */
-    assertGeoPointIsTheClaimedOne(): void {
-        const commitment: OracleAuthenticatedGeoPointCommitment = this.proof.publicOutput;
-        const commitmentVerifier: ZKOracleAuthenticatedGeoPointCommitment = new ZKOracleAuthenticatedGeoPointCommitment(this._zkGeoPoint, this.zkPublicKey, commitment);
-        commitmentVerifier.verify();
-    }
-
-    verify(): void {
-        super.verify();
-        this.assertGeoPointIsTheClaimedOne();
-    }
-
-    verifyIf(condition: Bool): void {
-        if (condition) {
-            this.verify();
-        }
-    }
-
-    /**
-     * The geopoint that was signed by the Oracle.
-     */
-    get zkGeoPoint(): ZKGeoPoint {
-        this.verify();
-        return this._zkGeoPoint;
-    }
-
-    toJSON(): JsonProof {
-        return this.proof.toJSON();
-    }
-}

@@ -8,6 +8,7 @@ import { GeoPointCommitment } from "../../model/public/Commitment";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 import { GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import { GeoPoint } from "../../model/Geography";
+import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 
 
 /**
@@ -18,8 +19,13 @@ import { GeoPoint } from "../../model/Geography";
  */
 @CachingProofVerificationMiddleware
 export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircuitProof> {
-    protected proof: ExactGeoPointCircuitProof;
+    protected _proof: ExactGeoPointCircuitProof;
+    protected static _circuit = ExactGeoPointCircuit;
     protected claimedZKGeoPoint: ZKGeoPoint;
+
+    protected static _dependentProofs = [
+        ZKOracleGeoPointProviderCircuitProof,
+    ]
 
     /**
      * Creates a new instance of ZKExactGeoPointCircuitProof.
@@ -28,7 +34,7 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
      */
     constructor(zkGeoPoint: ZKGeoPoint, proof: ExactGeoPointCircuitProof) {
         super();
-        this.proof = proof;
+        this._proof = proof;
         this.claimedZKGeoPoint = zkGeoPoint;
     }
 
@@ -41,7 +47,7 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
     static async fromZKGeoPointProviderProof(proof: ZKGeoPointProviderCircuitProof): Promise<ZKExactGeoPointCircuitProof> {
         proof.verify();
         const zkGeoPoint: ZKGeoPoint = proof.zkGeoPoint;
-        const geoPointProviderProof: GeoPointProviderCircuitProof = proof.zkProof;
+        const geoPointProviderProof: GeoPointProviderCircuitProof = proof.proof;
 
         const exactGeoPointProof: ExactGeoPointCircuitProof = await ExactGeoPointCircuit.fromGeoPointProvider(
             geoPointProviderProof,
@@ -64,7 +70,7 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
      * Throws an error if the geometric point is not the claimed one.
      */
     protected assertGeoPointIsTheClaimedOne(): void {
-        const geoPointCommitment: GeoPointCommitment = this.proof.publicOutput;
+        const geoPointCommitment: GeoPointCommitment = this._proof.publicOutput;
         const claimedGeoPointCommitment: Field = this.claimedZKGeoPoint.hash();
 
         if(!geoPointCommitment.geoPointHash.equals(claimedGeoPointCommitment)) {
