@@ -8,6 +8,8 @@ import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { ZKProgramCompileResult} from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { Cache } from "o1js/dist/node/lib/proof-system/cache";
+import { ZKProgramCircuit } from "./Types";
+import { ICompilableZKLocusProof } from "./ICompilableZKLocusProof";
 
 
 
@@ -95,21 +97,6 @@ export class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
 }
 
 
-export type ZKP = {compile: (options?: {
-    cache?: import("/Users/iluxonchik/GitHub/zkLocus/contracts/node_modules/o1js/dist/node/lib/proof-system/cache").Cache;
-    forceRecompile?: boolean;
-}) => Promise<{
-    verificationKey: {
-        data: string;
-        hash: Field;
-    };
-}>;
-}
-
-interface ICompilableZKLocusProof {
-    compile(cache?: Cache, forceRecompile?: boolean): Promise<ZKProgramCompileResult>;
-}
-
 /*
     This is the parent abstraction class for all zkLocus proofs. Any zkLocus proof is interpertable and abstractble by
     this type. It can load and convert proofs to JSON, combine proofs together, and verify them.
@@ -121,7 +108,7 @@ export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkPr
     // TODO:
     // - C extends ReturnType<typeof ZkProgram<any, any>> may not be the most elegant way to do this. Subclasess of ZKLocusProof only seem to work when "any" is used as the type for C
     protected _proof: P;
-    protected static _circuit: ZKP;
+    protected static _circuit: ZKProgramCircuit;
     protected static _compiledCircuit: ZKProgramCompileResult | undefined;
     /**
      * The set of dependent proofs that need to be compiled to enable generation and verification of proofs of this type.

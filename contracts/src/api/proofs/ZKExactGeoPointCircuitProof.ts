@@ -7,7 +7,6 @@ import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { GeoPointCommitment } from "../../model/public/Commitment";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 import { GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { GeoPoint } from "../../model/Geography";
 import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 
 

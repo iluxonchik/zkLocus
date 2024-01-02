@@ -1,12 +1,12 @@
 import { Field, JsonProof } from "o1js";
-import { ZKLocusProof } from "./ZKLocusProof";
-import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
-import { IO1JSProof } from "./Types";
-import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { MetadataGeoPointCommitment } from "../../model/public/Commitment";
 import { ExactGeolocationMetadataCircuit, ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { SHA3_512 } from "../sha3/SHA3";
+import { IO1JSProof } from "./Types";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
+import { ZKLocusProof } from "./ZKLocusProof";
+import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
 
 /**
  * Abstraction over the Zero-Knowledge proof of an exact GeoPoint with associated metadata.

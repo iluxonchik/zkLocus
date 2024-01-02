@@ -1,14 +1,13 @@
 import { JsonProof } from "o1js";
 import { Bool } from "o1js/dist/node/lib/bool";
-import { GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import type { ZKSignature } from "../models/ZKSignature";
-import type { ZKPublicKey } from "../models/ZKPublicKey";
-import type { ZKGeoPoint } from "../models/ZKGeoPoint";
-import { IO1JSProof } from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { OracleGeoPointProviderCircuit, OracleGeoPointProviderCircuitProof } from "../../zkprogram/private/Oracle";
-import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
+import type { ZKPublicKey } from "../models/ZKPublicKey";
+import type { ZKSignature } from "../models/ZKSignature";
+import { IO1JSProof } from "./Types";
 import { ZKLocusProof, ZKOracleAuthenticatedGeoPointCommitment } from "./ZKLocusProof";
+import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
 
 
 @CachingProofVerificationMiddleware

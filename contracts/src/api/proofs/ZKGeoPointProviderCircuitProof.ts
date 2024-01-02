@@ -1,7 +1,8 @@
 import { JsonProof, Sign } from "o1js";
 import { GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import { IO1JSProof } from "./Types";
-import { ZKLocusProof, ZKP } from "./ZKLocusProof";
+import { ZKLocusProof } from "./ZKLocusProof";
+import { ZKProgramCircuit } from "./Types";
 import { GeoPoint } from "../../model/Geography";
 import { ZKGeoPoint } from "../models/ZKGeoPoint";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";

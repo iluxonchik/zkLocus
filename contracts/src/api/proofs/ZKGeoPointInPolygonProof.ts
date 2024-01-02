@@ -5,7 +5,8 @@ import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { IO1JSProof } from "./Types";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
-import { ZKLocusProof, ZKP, ZKGeoPointInPolygonCommitment } from "./ZKLocusProof";
+import { ZKLocusProof, ZKGeoPointInPolygonCommitment } from "./ZKLocusProof";
+import { ZKProgramCircuit } from "./Types";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 
 /**
@@ -17,7 +18,7 @@ import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof
 export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCircuitProof> {
     protected geoPoint: ZKGeoPoint;
     protected threePointPolygon: ZKThreePointPolygon;
-    protected static _circuit: ZKP = GeoPointInPolygonCircuit;
+    protected static _circuit: ZKProgramCircuit = GeoPointInPolygonCircuit;
 
     protected static _dependentProofs = [
         ZKGeoPointProviderCircuitProof,
