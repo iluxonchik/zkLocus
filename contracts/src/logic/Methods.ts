@@ -4,7 +4,7 @@ import { isPointOnEdgeProvable } from './Geography';
 
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
-import { GeoPointPolygonInclusionExclusionProof, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
+import { GeoPointInOutPolygonCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
 import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
 import { OracleGeoPointProviderCircuitProof } from "../zkprogram/private/Oracle";
@@ -195,11 +195,13 @@ export function AND(
   proof1: SelfProof<Empty, GeoPointInPolygonCommitment>,
   proof2: SelfProof<Empty, GeoPointInPolygonCommitment>
 ): GeoPointInPolygonCommitment {
-  // IMPORTANT: this has an issue. If I give proof1, which asserts that the user is in Spain, and proof2 that
+  // IMPORTANT: A caveat of this AND. If you give proof1, which asserts that the user is in Spain, and proof2 that
   // asserts that the user is not in Romania, then the resulting proof from .AND will say that the user is
-  // neither in Spain, nor Romania. This is because the AND operation is applied to the `isInPolygon` field
-  // of the two proofs. This is not the desired behaviour. The desired behaviour is to have a proof that
-  // asserts that the user is in Spain AND is not in Romania.
+  // not in Spain AND Romania. This is because the AND operation is applied to the `isInPolygon` field
+  // of the two proofs. This is coherent with the "isPointInPolygon" logic, as the resulting proof attests
+  // whether the point IS IN polygon. As such, the AND logic is applied to whether the point IS IN polygon 1 AND IN polygon 2.
+
+  // A separate piece of functionality is is to have a proof that asserts that the user is in Spain AND is not in Romania.
   // For correctness, this method/proof should opearate ensuring that the values of `isInPolygon` is the same
   // in both proofs: either both are true, or both are false. If they are different, then the proof should
   // fail. This way the proof will attest to either the user being inside a set of polygons, or outside of that set.
@@ -288,14 +290,14 @@ export function OR(
 
 
 } export function combine(
-  proof1: SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>,
-  proof2: SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>
-): GeoPointPolygonInclusionExclusionProof {
+  proof1: SelfProof<Empty, GeoPointInOutPolygonCommitment>,
+  proof2: SelfProof<Empty, GeoPointInOutPolygonCommitment>
+): GeoPointInOutPolygonCommitment {
   proof1.verify();
   proof2.verify();
 
-  const proof1PublicOutput: GeoPointPolygonInclusionExclusionProof = proof1.publicOutput;
-  const proof2PublicOutput: GeoPointPolygonInclusionExclusionProof = proof2.publicOutput;
+  const proof1PublicOutput: GeoPointInOutPolygonCommitment = proof1.publicOutput;
+  const proof2PublicOutput: GeoPointInOutPolygonCommitment = proof2.publicOutput;
 
   // ensure that the proof is for the same coordinates
   proof1.publicOutput.coordinatesCommitment.assertEquals(
@@ -411,7 +413,7 @@ export function OR(
     newOutsideCommitment
   );
 
-  return new GeoPointPolygonInclusionExclusionProof({
+  return new GeoPointInOutPolygonCommitment({
     insidePolygonCommitment: newInsideCommitment,
     outsidePolygonCommitment: newOutsideCommitment,
     coordinatesCommitment: proof1PublicOutput.coordinatesCommitment,
@@ -419,7 +421,7 @@ export function OR(
 }
 export function fromCoordinatesInPolygonProof(
   proof: SelfProof<Empty, GeoPointInPolygonCommitment>
-): GeoPointPolygonInclusionExclusionProof {
+): GeoPointInOutPolygonCommitment {
   proof.verify();
 
   const coodinatesInPolygonProof: GeoPointInPolygonCommitment = proof.publicOutput;
@@ -434,7 +436,7 @@ export function fromCoordinatesInPolygonProof(
     coodinatesInPolygonProof.polygonCommitment
   );
 
-  return new GeoPointPolygonInclusionExclusionProof({
+  return new GeoPointInOutPolygonCommitment({
     insidePolygonCommitment: insideCommitment,
     outsidePolygonCommitment: outsideCommitment,
     coordinatesCommitment: coodinatesInPolygonProof.geoPointCommitment,

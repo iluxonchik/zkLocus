@@ -4,7 +4,6 @@ import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { IZKProver } from "./Interfaces";
 import { GeoPointInPolygonCircuit, GeoPointInPolygonCircuitProof, GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { ZKLocusProof } from "../proofs/ZKLocusProof";
 import { ZKGeoPointInPolygonProof } from "../proofs/ZKGeoPointInPolygonProof";
 import { PublicKey, Signature } from "o1js";
 import { OracleGeoPointProviderCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
@@ -63,7 +62,7 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
              */
             inPolygon: async (polygon: ZKThreePointPolygon): Promise<ZKGeoPointInPolygonProof> => {
                 const geoPointProof: GeoPointProviderCircuitProof = await GeoPointProviderCircuit.fromLiteralGeoPoint(this.toZKValue());
-                const geoPointInPolygonProof: GeoPointInPolygonCircuitProof = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(geoPointProof, polygon.toZKValue());
+                const geoPointInPolygonProof: GeoPointInPolygonCircuitProof = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(geoPointProof, polygon.toZKValue());
                 return new ZKGeoPointInPolygonProof(this, polygon, geoPointInPolygonProof);
             },
             /**

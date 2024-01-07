@@ -5,18 +5,21 @@ import { TimeStampInterval } from "../Time.js";
 
 export class GeoPointInPolygonCommitment extends Struct({
   polygonCommitment: Field,
-  // TODO: consider including outSidePolygonCommitment proofs, in order to inlcude the "inner" and "outer" polygon definitions of GeoJSON
-  //outsidePolygonCommitment: Field,
   geoPointCommitment: Field,
   isInPolygon: Bool,
 }) {
   toString(): string {
     return `Polygon Commitment: ${this.polygonCommitment.toString()}\nCoordinates Commitment: ${this.geoPointCommitment.toString()}\nIs In Polygon: ${this.isInPolygon.toString()}`;
   }
-}
+};
 
-;
-export class GeoPointPolygonInclusionExclusionProof extends Struct({
+
+/**
+ * Two-dimensional private geolocation commitment. It repreesents a commitment to a GeoPoint being outside a list of polygons and inside a list of polygons.
+ * 
+ * IMPORTANT: This commitment expression should only be utilized in the case of 
+ */
+export class GeoPointInOutPolygonCommitment extends Struct({
   insidePolygonCommitment: Field,
   outsidePolygonCommitment: Field,
   coordinatesCommitment: Field,

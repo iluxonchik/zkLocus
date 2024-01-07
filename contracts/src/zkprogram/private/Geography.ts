@@ -1,10 +1,8 @@
 import { Experimental, SelfProof, Empty, ZkProgram} from "o1js";
 import { AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveProvidedGeoPointIn3PointPolygon, exactGeoPointFromOracle} from '../../logic/Methods';
 
-import { GeoPointPolygonInclusionExclusionProof, GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
+import { GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
-import { fromCoordinatesInPolygonProof } from '../../logic/Methods';
-import { combine } from '../../logic/Methods';
 import { TimeStampInterval } from "../../model/Time";
 import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, proofAttachSourcedTimestampinterval } from "../../logic/Methods";
 import { OracleGeoPointProviderCircuitProof } from "./Oracle";
@@ -82,14 +80,9 @@ export const GeoPointInPolygonCircuit = ZkProgram({
     publicOutput: GeoPointInPolygonCommitment,
 
     methods: { 
-        proveProvidedGeoPointIn3PointPolygon: {
+        proveGeoPointIn3PointPolygon: {
             privateInputs: [GeoPointProviderCircuitProof, ThreePointPolygon],
             method: proveProvidedGeoPointIn3PointPolygon,
-        },
-        
-        proofFromPublicOutput: {
-            privateInputs: [GeoPointInPolygonCommitment],
-            method: proofGeoPointInPolygonCommitmentFromOutput,
         },
 
         AND: {
@@ -109,6 +102,7 @@ export const GeoPointInPolygonCircuit = ZkProgram({
         },
     },
 });
+
 
 export class GeoPointInPolygonCircuitProof extends ZkProgram.Proof(GeoPointInPolygonCircuit) {}
 
@@ -179,21 +173,4 @@ export const GeoPointWithTimestampInPolygonCircuit = Experimental.ZkProgram({
     },
 });
 
-// TODO: review if below is needed, and delete if not
-export const GeoPointInOrOutOfPolygonCircuit = Experimental.ZkProgram({
-    publicOutput: GeoPointPolygonInclusionExclusionProof,
 
-    methods: {
-        fromCoordinatesInPolygonProof: {
-            privateInputs: [(SelfProof<Empty, GeoPointInPolygonCommitment>)],
-            method: fromCoordinatesInPolygonProof,
-        },
-        combine: {
-            privateInputs: [
-                (SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>),
-                (SelfProof<Empty, GeoPointPolygonInclusionExclusionProof>),
-            ],
-            method: combine,
-        },
-    },
-});

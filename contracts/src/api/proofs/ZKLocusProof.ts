@@ -1,5 +1,4 @@
-import { Field, JsonProof, ZkProgram} from "o1js";
-import { Bool } from "o1js/dist/node/lib/bool";
+import { Bool, Field, JsonProof, ZkProgram, Cache} from "o1js";
 import type { ZKPublicKey } from "../models/ZKPublicKey";
 import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
@@ -7,9 +6,8 @@ import { GeoPointInPolygonCommitment } from "../../model/private/Commitment";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import { ZKProgramCompileResult} from "./Types";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
-import { Cache } from "o1js/dist/node/lib/proof-system/cache";
 import { ZKProgramCircuit } from "./Types";
-import { ICompilableZKLocusProof } from "./ICompilableZKLocusProof";
+import { ICompilableZKLocusProof } from "./Interfaces";
 
 
 

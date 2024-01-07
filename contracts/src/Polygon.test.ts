@@ -107,17 +107,17 @@ describe('CoordinatesInPolygon', () => {
 
         const notInRomaniaCoordinatesSourced: GeoPointProviderCircuitProof = await GeoPointProviderCircuit.fromLiteralGeoPoint(notInRomaniaCoordinates);
 
-        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+        proofBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             brasovCenterCoordinatesSourced,
             brasovCenterPolygon
         );
 
-        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+        proofNotBrasovCenterCoordinatesInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             notBrasovCenterCoordinatesSourced,
             brasovCenterPolygon
         );
 
-        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+        proofNotInRomaniaCoordinatesNotInBrasovCenterPolygon = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
             notInRomaniaCoordinatesSourced,
             brasovCenterPolygon,
         );
@@ -216,62 +216,62 @@ describe('CoordinatesInPolygon', () => {
             });
 
 
-            proofInsideCoordinate1InInsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate1InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1Sourced,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate2InInsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate2InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2Sourced,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate3InInsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate3InInsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3Sourced,
                 insidePolygon1,
             );
 
-            proofInsideCoordinate1InInsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate1InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1Sourced,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate2InInsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate2InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2Sourced,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate3InInsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate3InInsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3Sourced,
                 insidePolygon2,
             );
 
-            proofInsideCoordinate1NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate1NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1Sourced,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate2NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate2NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2Sourced,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate3NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate3NotInOutsidePolygon1 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3Sourced,
                 outsidePolygon1,
             );
 
-            proofInsideCoordinate1NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate1NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate1Sourced,
                 outsidePolygon2,
             );
             
-            proofInsideCoordinate2NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate2NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate2Sourced,
                 outsidePolygon2,
             );
 
-            proofInsideCoordinate3NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveProvidedGeoPointIn3PointPolygon(
+            proofInsideCoordinate3NotInOutsidePolygon2 = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(
                 insideCoordinate3Sourced,
                 outsidePolygon2,
             );
