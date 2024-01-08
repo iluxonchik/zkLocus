@@ -1,9 +1,9 @@
-import { Field, JsonProof } from "o1js";
-import { MetadataGeoPointCommitment } from "../../model/public/Commitment";
+import type { Field, JsonProof } from "o1js";
+import type { MetadataGeoPointCommitment } from "../../model/public/Commitment";
 import { ExactGeolocationMetadataCircuit, ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { SHA3_512 } from "../sha3/SHA3";
-import { IO1JSProof } from "./Types";
+import type { IO1JSProof } from "./Types";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 import { ZKLocusProof } from "./ZKLocusProof";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";

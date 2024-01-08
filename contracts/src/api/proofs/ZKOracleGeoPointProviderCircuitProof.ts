@@ -1,5 +1,4 @@
-import { JsonProof } from "o1js";
-import { Bool } from "o1js/dist/node/lib/bool";
+import { Bool, JsonProof } from "o1js";
 import { OracleAuthenticatedGeoPointCommitment } from "../../model/private/Oracle";
 import { OracleGeoPointProviderCircuit, OracleGeoPointProviderCircuitProof } from "../../zkprogram/private/Oracle";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";

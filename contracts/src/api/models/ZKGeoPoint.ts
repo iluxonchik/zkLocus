@@ -1,10 +1,11 @@
-import { Field, Int64 } from "o1js";
-import { InputNumber } from "../Types";
-import { GeoPoint } from "../../model/Geography";
-import { ZKLocusAdopter } from "../adopters/Interfaces";
+import type { Field, Int64 } from "o1js";
+import type { InputNumber } from "../Types";
+import type { GeoPoint } from "../../model/Geography";
+import type { ZKLocusAdopter } from "../adopters/Interfaces";
 import ZKGeoPointToGeoPointAdopter from "../adopters/ZKGeoPointToGeoPointAdopter";
-import ZKGeoPointProver, { IZKGeoPointProver } from "../provers/ZKGeoPointProver";
-import { ZKNumber } from "./ZKNumber";
+import { IZKGeoPointProver } from "../provers/IZKGeoPointProver";
+import ZKGeoPointProver from "../provers/ZKGeoPointProver";
+import type { ZKNumber } from "./ZKNumber";
 import { ZKLatitude } from "./ZKLatitude";
 import { ZKLongitude } from "./ZKLongitude";
 

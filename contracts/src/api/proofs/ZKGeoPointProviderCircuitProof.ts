@@ -1,12 +1,11 @@
-import { JsonProof, Sign } from "o1js";
+import { JsonProof} from "o1js";
 import { GeoPointProviderCircuit, GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
 import { IO1JSProof } from "./Types";
 import { ZKLocusProof } from "./ZKLocusProof";
-import { ZKProgramCircuit } from "./Types";
 import { GeoPoint } from "../../model/Geography";
 import { ZKGeoPoint } from "../models/ZKGeoPoint";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
-import { OracleGeoPointProviderCircuitProof, OracleGeoPointProviderCircuit } from "../../zkprogram/private/Oracle";
+import { OracleGeoPointProviderCircuitProof} from "../../zkprogram/private/Oracle";
 import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 
 /*

@@ -12,7 +12,7 @@ import { Int64 } from "o1js";
 import { InputNumber } from "../Types";
 import { ZKLocusAdopter } from "./Interfaces";
 import { ZKLatitude } from "../models/ZKLatitude";
-import { ZKGeoPoint } from "../models/ZKGeoPoint";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { ZKLongitude } from "../models/ZKLongitude";
 import { ZKNumber } from "../models/ZKNumber";
 import { GeoPoint } from "../../model/Geography";
