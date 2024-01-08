@@ -6,7 +6,7 @@ import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
 import { GeoPointInOutPolygonCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
-import { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
+import type { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
 import { OracleGeoPointProviderCircuitProof } from "../zkprogram/private/Oracle";
 import { OracleAuthenticatedGeoPointCommitment } from "../model/private/Oracle";
 

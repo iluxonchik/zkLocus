@@ -1,7 +1,7 @@
 import { Experimental, SelfProof, Empty, ZkProgram} from "o1js";
-import { AND, OR, proofGeoPointInPolygonCommitmentFromOutput, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveProvidedGeoPointIn3PointPolygon, exactGeoPointFromOracle} from '../../logic/Methods';
+import { AND, OR, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveProvidedGeoPointIn3PointPolygon, exactGeoPointFromOracle} from '../../logic/Methods';
 
-import { GeoPointCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
+import { GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
 import { TimeStampInterval } from "../../model/Time";
 import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, proofAttachSourcedTimestampinterval } from "../../logic/Methods";
