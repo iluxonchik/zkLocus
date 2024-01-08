@@ -2,7 +2,7 @@ import { Field, Poseidon, PublicKey } from "o1js";
 import { ZKLocusAdopter } from "../adopters/Interfaces";
 import ZKPublicKeyToPublicKeyAdopter from "../adopters/ZKPublicKeyToPublicKeyAdopter";
 import { ZKKeyPair } from "./ZKKeyPair";
-import { ZKPrivateKey } from "./ZKPrivateKey";
+import type { ZKPrivateKey } from "./ZKPrivateKey";
 
 
 
