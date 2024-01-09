@@ -70,6 +70,7 @@
   },
   "dependencies": {
     "@types/node": "^20.10.5",
+    "decimal.js": "^10.4.3",
     "sha3": "^2.1.4"
   }
 }
