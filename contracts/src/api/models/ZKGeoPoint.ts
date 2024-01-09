@@ -9,6 +9,18 @@ import type { ZKNumber } from "./ZKNumber";
 import { ZKLatitude } from "./ZKLatitude";
 import { ZKLongitude } from "./ZKLongitude";
 
+
+function int64ToNumber(value: Int64): number {
+    const maginitueAsBigInt: BigInt = value.magnitude.toBigInt();
+    const magnitudeAsNumber: number = Number(maginitueAsBigInt);
+    if (value.sgn.isPositive()) {
+        return magnitudeAsNumber;
+    } else {
+        return -magnitudeAsNumber;
+    }
+
+}
+
 /*
     Represents a geographical point in TypeScript that will be converted into a zkLocus geographical point.
     A zkLocus geographical point is one that can be used in a zero-knowledge circuit. zkLocus uses O1JS to
@@ -20,8 +32,6 @@ import { ZKLongitude } from "./ZKLongitude";
     1. Proving wether a point is in polygon
     2. Proving the exact location.
 */
-
-
 @ZKGeoPointProver
 @ZKGeoPointToGeoPointAdopter
 export class ZKGeoPoint {
@@ -51,6 +61,10 @@ export class ZKGeoPoint {
         return this._rawValue;
     }
 
+    get factor(): number {
+        return Math.max(this.latitude.factor, this.longitude.factor);
+    }
+
     /*
     * Create a ZKGeoPoint from a GeoPoint.
     */
@@ -59,13 +73,9 @@ export class ZKGeoPoint {
         const longitude: Int64 = geoPoint.longitude;
         const factor: Int64 = geoPoint.factor;
 
-        const longitudeAsBigInt: BigInt = longitude.toField().toBigInt();
-        const latitudeAsBigInt: BigInt = latitude.toField().toBigInt();
-        const factorAsBigInt: BigInt = factor.toField().toBigInt();
-
-        const latitudeAsNumber: number = Number(latitudeAsBigInt);
-        const longitudeAsNumber: number = Number(longitudeAsBigInt);
-        const factorAsNumber: number = Number(factorAsBigInt);
+        const latitudeAsNumber: number = Number(latitude.toString());
+        const longitudeAsNumber: number = Number(longitude.toString());
+        const factorAsNumber: number = Number(factor.toString());
 
         const latitudeDecimal: number = latitudeAsNumber / factorAsNumber;
         const longitudeDecimal: number = longitudeAsNumber / factorAsNumber;
@@ -83,6 +93,15 @@ export class ZKGeoPoint {
     hash(): Field {
         return this.toZKValue().hash();
     }
+
+    /**
+     * Checks if the current ZKGeoPoint is equal to another ZKGeoPoint.
+     * @param other The ZKGeoPoint to compare with.
+     * @returns True if the ZKGeoPoints are equal, false otherwise.
+     */
+    isEquals(other: ZKGeoPoint): boolean {
+        return this.latitude.isEquals(other.latitude) && this.longitude.isEquals(other.longitude);
+    }    
 
 }
 // Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface

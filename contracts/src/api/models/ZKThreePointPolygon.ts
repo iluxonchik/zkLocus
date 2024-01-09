@@ -25,16 +25,14 @@ export class ZKThreePointPolygon {
             vertex2 instanceof ZKGeoPoint ? vertex2 : new ZKGeoPoint(new ZKLatitude(vertex2.latitude), new ZKLongitude(vertex2.longitude)),
             vertex3 instanceof ZKGeoPoint ? vertex3 : new ZKGeoPoint(new ZKLatitude(vertex3.latitude), new ZKLongitude(vertex3.longitude))
         ];
-        this._ensure_same_factor_in_vertices();
     }
 
-    protected _ensure_same_factor_in_vertices(): void {
-        const first_factor: number = this._vertices[0].latitude.factor;
-        for (let i = 1; i < this._vertices.length; i++) {
-            if (this._vertices[i].latitude.factor !== first_factor) {
-                throw new Error("Invalid polygon vertices");
-            }
-        }
+    /**
+     * Gets the maximum factor value among the vertices of the polygon.
+     * @returns The maximum factor value.
+     */
+    get factor(): number {
+        return Math.min(this.vertices[0].factor, this.vertices[1].factor, this.vertices[2].factor);
     }
 
 }

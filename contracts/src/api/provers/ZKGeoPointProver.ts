@@ -49,7 +49,6 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
              * @returns A promise that resolves to a zero-knowledge proof of the point's presence within the polygon.
              */
             inPolygon: async (polygon: ZKThreePointPolygon): Promise<ZKGeoPointInPolygonProof> => {
-                const ZKGeoPointInPolygonProofCls = await import("../proofs/ZKGeoPointInPolygonProof");
                 const geoPointProof: GeoPointProviderCircuitProof = await GeoPointProviderCircuit.fromLiteralGeoPoint(this.toZKValue());
                 const geoPointInPolygonProof: GeoPointInPolygonCircuitProof = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(geoPointProof, polygon.toZKValue());
 

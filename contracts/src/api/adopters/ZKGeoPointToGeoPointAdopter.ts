@@ -27,7 +27,7 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
         }
         
         normalizedValue(): { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; } {
-            const factorAsNumber: number = 10 ** this.latitude.factor;
+            const factorAsNumber: number = 10 ** this.factor;
             const factor: ZKNumber = new ZKNumber(factorAsNumber);
             const latitude: ZKLatitude = new ZKLatitude(this.latitude.normalized);
             const longitude: ZKLongitude = new ZKLongitude(this.longitude.normalized);
@@ -37,23 +37,21 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 factor,
             };
         }
-
+        
+        /**
+         * Converts the abstracted zkLocus API representation into the raw underlying O1JS value used directly within the Zero-Knowledge circuits of zkLocus.
+         * Every call results in a new object.
+         * @returns {GeoPoint} The converted GeoPoint object.
+         */
         toZKValue(): GeoPoint {
-            console.log(`this.latitude.scaled: ${this.latitude.scaled}`);
-            console.log(`this.longitude.scaled: ${this.longitude.scaled}`);
-            console.log(`this.latitude.factor: ${this.latitude.factor}`);
-            
             const latitudeInt64: Int64 = Int64.from(this.latitude.scaled);
             const longitudeInt64: Int64 = Int64.from(this.longitude.scaled);
-            const factorInt64: Int64 = Int64.from(this.latitude.factor);
+            const factorInt64: Int64 = Int64.from(this.factor);
 
-            console.log(`latitudeInt64: ${latitudeInt64}`);
-            console.log(`longitudeInt64: ${longitudeInt64}`);
-            console.log(`factorInt64: ${factorInt64}`);
             return new GeoPoint({
-                latitude: Int64.from(this.latitude.scaled),
-                longitude: Int64.from(this.longitude.scaled),
-                factor: Int64.from(this.latitude.factor)
+                latitude: latitudeInt64,
+                longitude: longitudeInt64,
+                factor: factorInt64,
             });
         }
     };

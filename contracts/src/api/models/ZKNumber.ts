@@ -2,6 +2,7 @@ import { Int64 } from "o1js";
 import { InputNumber } from "../Types";
 import ZKNumberToInt64Adopter from "../adopters/ZKNumberToInt64Adopter";
 import { ZKLocusAdopter } from "../adopters/Interfaces";
+import Decimal from "decimal.js";
 
 /**
  * Represents a ZKNumber, which is a wrapper class for numeric values used in zkLocus.
@@ -16,12 +17,21 @@ export class ZKNumber {
     protected _num_decimals: number;
 
     /**
+     * Checks if the current ZKNumber is equal to another ZKNumber.
+     * @param other The ZKNumber to compare with.
+     * @returns True if the ZKNumbers are equal, false otherwise.
+     */
+    isEquals(other: ZKNumber): boolean {
+        return this.normalized === other.normalized;
+    }
+
+    /**
      * Creates a new instance of the ZKNumber class.
      * @param value The input number to be wrapped.
      */
     constructor(value: InputNumber) {
         this._raw_value = value;
-        this._normalized_value = Number(value);
+        this._normalized_value = Number(new Decimal(value).toFixed(0));
         this._num_decimals = this.countNumDecimals();
     }
 
@@ -43,7 +53,11 @@ export class ZKNumber {
      * Gets the scaled value of the ZKNumber.
      */
     get scaled(): number {
-        return Math.round(this._normalized_value * Math.pow(10, this._num_decimals));
+        const nomralizedDecimal = new Decimal(this._normalized_value);
+        const factorDecimal = new Decimal(10).pow(this._num_decimals);
+        const scaledDecimal = nomralizedDecimal.mul(factorDecimal);
+        const fixedDecimal = scaledDecimal.toFixed(0);
+        return Number(fixedDecimal);
     }
 
     /**
@@ -52,7 +66,13 @@ export class ZKNumber {
      * For numbers without decimals (i.e. integers), the factor is 1.
      */
     get factor(): number {
-        return Math.max(1, 10 ** this._num_decimals);
+        const decimal = new Decimal(10).pow(this._num_decimals);
+        const decimalFixed = decimal.toFixed(0);
+        return Number(decimalFixed);
+    }
+
+    get numDecimals(): number {
+        return this._num_decimals;
     }
 
     /**
@@ -60,9 +80,10 @@ export class ZKNumber {
      * @returns The number of decimals.
      */
     protected countNumDecimals(): number {
-        const decimalPart = this._normalized_value.toString().split('.')[1];
-        return decimalPart ? decimalPart.length : 0;
+        const decimal: Decimal = new Decimal(this._normalized_value);
+        return decimal.decimalPlaces();
     }
+    
 }
 // Declaration merging to augment the ZKNumber class with the additional properties and methods of the ZKInterface
 export interface ZKNumber extends ZKLocusAdopter<InputNumber, number, Int64> { }

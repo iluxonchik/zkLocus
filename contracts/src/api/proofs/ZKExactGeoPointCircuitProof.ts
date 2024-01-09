@@ -23,7 +23,7 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
     protected claimedZKGeoPoint: ZKGeoPoint;
 
     protected static _dependentProofs = [
-        ZKOracleGeoPointProviderCircuitProof,
+        ZKGeoPointProviderCircuitProof,
     ]
 
     /**
