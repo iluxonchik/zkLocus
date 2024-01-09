@@ -19,7 +19,7 @@ export class GeoPoint extends Struct({
   longitude: Int64,
   factor: Int64, // see note in docs
 }) {
-  hash() {
+  hash(): Field {
     return Poseidon.hash([
       this.latitude.toField(),
       this.longitude.toField(),

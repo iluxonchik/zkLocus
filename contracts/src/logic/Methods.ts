@@ -46,27 +46,32 @@ function isPointIn3PointPolygon(
       Bool(false)
     ).not();
 
-    Provable.log('xj:', xj);
-    Provable.log('xi:', xi);
-    Provable.log('yj:', yj);
-    Provable.log('yi:', yi);
+    // NOTE: Provable.log() statements below are commented out and not removed intentionally.
+    // They allow for a quick internal view into the state of the raytracing point in polygon algorithm,
+    // and allow for a quick and iterative approach to the development. They will, of course, be removed
+    // in the future.
+    
+    //Provable.log('xj:', xj);
+    //Provable.log('xi:', xi);
+    //Provable.log('yj:', yj);
+    //Provable.log('yi:', yi);
 
     const leftOperand: Int64 = xj.sub(xi);
     const rightOperand: Int64 = y.sub(yi);
-    Provable.log('xj.sub(xi):', leftOperand, leftOperand.magnitude, leftOperand.sgn);
-    Provable.log('y.sub(yi):', rightOperand, rightOperand.magnitude, rightOperand.sgn);
+    //Provable.log('xj.sub(xi):', leftOperand, leftOperand.magnitude, leftOperand.sgn);
+    //Provable.log('y.sub(yi):', rightOperand, rightOperand.magnitude, rightOperand.sgn);
 
     const magnitudeProduct: UInt64 = leftOperand.magnitude.mul(rightOperand.magnitude);
     const signProduct: Sign = leftOperand.sgn.mul(rightOperand.sgn);
 
-    Provable.log('magnitudeProduct:', magnitudeProduct);
-    Provable.log('signProduct:', signProduct, signProduct.value, signProduct.isPositive());
+    //Provable.log('magnitudeProduct:', magnitudeProduct);
+    //Provable.log('signProduct:', signProduct, signProduct.value, signProduct.isPositive());
 
     const numerator: Int64 = leftOperand.mul(rightOperand);
 
-    Provable.log('numerator: ', numerator);
+    //Provable.log('numerator: ', numerator);
     let denominator: Int64 = yj.sub(yi);
-    Provable.log('denominator: ', denominator);
+    //Provable.log('denominator: ', denominator);
 
 
     // Horizontal Edge case: ensure that division by zero does not occur
@@ -88,13 +93,13 @@ function isPointIn3PointPolygon(
     );
     inside = Provable.if(isIntersect, inside.not(), inside);
 
-    Provable.log('------------------');
-    Provable.log('i: ', i, ' j: ', j);
-    Provable.log('x: ', x, ' y: ', y, 'result: ', result, ' inside: ', inside);
-    Provable.log('jointCondition1: ', jointCondition1);
-    Provable.log('jointCondition2: ', jointCondition2);
-    Provable.log('isIntersect: ', isIntersect);
-    Provable.log('------------------');
+    // Provable.log('------------------');
+    // Provable.log('i: ', i, ' j: ', j);
+    // Provable.log('x: ', x, ' y: ', y, 'result: ', result, ' inside: ', inside);
+    // Provable.log('jointCondition1: ', jointCondition1);
+    // Provable.log('jointCondition2: ', jointCondition2);
+    // Provable.log('isIntersect: ', isIntersect);
+    // Provable.log('------------------');
   }
 
   inside = Provable.if(isPointLocatedOnEdge, Bool(true), inside);
@@ -113,18 +118,18 @@ export function proveGeoPointIn3PointPolygon(
   // of the values provided as arguments. That proof should also validate
   // that the provided latitude and longitude values are within the accepted
   // values.
-  Provable.log('Proving that point is in polygon...');
+  //Provable.log('Proving that point is in polygon...');
   const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
 
-  Provable.log('Is in Polygon ', isInPolygon);
+  //Provable.log('Is in Polygon ', isInPolygon);
 
   // If point in polygon, return the commitment data
   const polygonCommitment = polygon.hash();
   const coordinatesCommitment = point.hash();
 
-  Provable.log('Polygon Commitment: ', polygonCommitment);
-  Provable.log('Coordinates Commitment: ', coordinatesCommitment);
-  Provable.log('Is In Polygon: ', isInPolygon);
+  //Provable.log('Polygon Commitment: ', polygonCommitment);
+  //Provable.log('Coordinates Commitment: ', coordinatesCommitment);
+  //Provable.log('Is In Polygon: ', isInPolygon);
 
   return new GeoPointInPolygonCommitment({
     polygonCommitment: polygonCommitment,
