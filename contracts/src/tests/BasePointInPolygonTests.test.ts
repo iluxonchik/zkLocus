@@ -1,9 +1,9 @@
 import { Bool, Empty, Field, Int64, Proof } from "o1js";
-import { GeoPointProviderCircuit, GeoPointInPolygonCircuit, GeoPointProviderCircuitProof } from './zkprogram/private/Geography';
-import { GeoPointInPolygonCommitment } from './model/private/Commitment';
-import { GeoPoint, ThreePointPolygon } from './model/Geography';
-import { ZKGeoPointInPolygonProof } from "./api/proofs/ZKGeoPointInPolygonProof";
-import { ZKGeoPointProviderCircuitProof } from "./api/proofs/ZKGeoPointProviderCircuitProof";
+import { GeoPointProviderCircuit, GeoPointInPolygonCircuit, GeoPointProviderCircuitProof } from '../zkprogram/private/Geography';
+import { GeoPointInPolygonCommitment } from '../model/private/Commitment';
+import { GeoPoint, ThreePointPolygon } from '../model/Geography';
+import { ZKGeoPointInPolygonProof } from "../api/proofs/ZKGeoPointInPolygonProof";
+import { ZKGeoPointProviderCircuitProof } from "../api/proofs/ZKGeoPointProviderCircuitProof";
 
 class InternalStructuresInterface {
 

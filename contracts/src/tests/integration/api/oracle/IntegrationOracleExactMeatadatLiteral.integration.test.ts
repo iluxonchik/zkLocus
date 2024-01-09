@@ -30,10 +30,6 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
     if (isProofsEnabled) {
       console.log("Compiling circuits...");
       const startTime = Date.now();
-      //await OracleGeoPointProviderCircuit.compile();
-      //await ZKGeoPointProviderCircuitProof.compile();
-      //await ZKExactGeoPointCircuitProof.compile();
-      //await ZKExactGeolocationMetadataCircuitProof.compile();
       await ZKExactGeolocationMetadataCircuitProof.compile();
       const endTime = Date.now();
       console.log("Compilation complete!");
@@ -61,7 +57,7 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
         zkExactGeoPointWithMetadata.verify();
         
         // Expectations
-        expect(zkExactGeoPointWithMetadata.zkGeoPoint).toEqual(randomGeoPoint);
+        expect(zkExactGeoPointWithMetadata.zkGeoPoint.isEquals(randomGeoPoint)).toBe(true);
         expect(zkExactGeoPointWithMetadata.metadata).toEqual(metadata);
       });
     }

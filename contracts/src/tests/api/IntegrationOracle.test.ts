@@ -16,25 +16,25 @@ describe('Integration Oracle', () => {
     beforeAll(async () => {
 
         if (isProofsEnabled) {
-            await OracleGeoPointProviderCircuit.compile();
+            await ZKGeoPointProviderCircuitProof.compile();
         }
     });
 
 
     describe('Valid Signature', () => {
-        const oraclePublicKey: ZKPublicKey = new ZKPublicKey("B62qqrvqndzyrgVmaH3LDSVEXLqcWDuNjgSKgyrYhkJfYAZAXpyecmc");
-        let validZKGeoPoint: ZKGeoPoint = new ZKGeoPoint(45.67567, 25.55484)
+        const oraclePublicKey: ZKPublicKey = new ZKPublicKey("B62qpo8S8Jzd3P6UyuuJwVB5SUF4r8TYhHqCBC5bFZV4pSonBNcW3DB");
+        let validZKGeoPoint: ZKGeoPoint = new ZKGeoPoint(89.123, -123.123)
         let validOracleGeoPoint: OracleSignature = new OracleSignature(
             oraclePublicKey,
-            new ZKSignature("7mXTCs7YEETZHciBBGELEiuVVSWsyMDramsWA6e5pHAmRUE48JgmHY7tjYtMqCBX1Gw4FpMGq7THx1WQbSxhcjQMhaBiL4jC"),
-            new ZKGeoPoint(45.67567, 25.55484)
+            new ZKSignature("7mX9SFseeigBzjNjzH4e4gnPe9HAoXQD85nKiwd9piobx71ZpDYYZ6WJtZXjaATb6kSXf8FEHFKgv6CiQ8SHUgNiaEL26FtP"),
+            new ZKGeoPoint(89.123, -123.123)
         );
     
         describe('when valid GeoPoint signature is provided to ZK Circuit', () => {
             it('computes the authenticated geolocation commitment correclty', async () => {
                 const zkGeoPointSource: ZKGeoPointProviderCircuitProof = await validZKGeoPoint.Prove.authenticateFromIntegrationOracle(validOracleGeoPoint.zkPublicKey, validOracleGeoPoint.zkSignature);
                 zkGeoPointSource.verify();
-                expect(zkGeoPointSource.zkGeoPoint).toEqual(validZKGeoPoint);
+                expect(zkGeoPointSource.zkGeoPoint.isEquals(validZKGeoPoint)).toBe(true);
             });
             });
         });

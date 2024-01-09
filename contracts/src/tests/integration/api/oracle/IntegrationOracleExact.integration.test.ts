@@ -3,11 +3,8 @@ import { ZKSignature } from "../../../../api/models/ZKSignature";
 import { ZKPublicKey } from "../../../../api/models/ZKPublicKey";
 import { ZKGeoPoint } from "../../../../api/models/ZKGeoPoint";
 import { ZKExactGeoPointCircuitProof } from "../../../../api/proofs/ZKExactGeoPointCircuitProof";
-import { OracleGeoPointProviderCircuit } from "../../../../zkprogram/private/Oracle";
 import OracleClient from "../../../utils/OracleClient";
 import RandomGeoPointGenerator from "../../../utils/RandomGeoPointGenerator";
-import { GeoPointProviderCircuit } from "../../../../zkprogram/private/Geography";
-import { ExactGeoPointCircuit} from "../../../../zkprogram/public/ExactGeoPointCircuit";
 
 const isProofsEnabled: boolean = true;
 
@@ -20,9 +17,7 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
     if (isProofsEnabled) {
       console.log("Compiling circuits...");
       const startTime = Date.now();
-      await OracleGeoPointProviderCircuit.compile();
-      await GeoPointProviderCircuit.compile();
-      await ExactGeoPointCircuit.compile();
+      await ZKExactGeoPointCircuitProof.compile();
       const endTime = Date.now();
       console.log("Compilation complete!");
       console.log(`Proofs compilation took ${endTime - startTime} milliseconds.`);
@@ -33,7 +28,16 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
     for (let i = 0; i < numberOfExecutions; i++) {
       it(`should verify the ZKGeoPoint with Oracle signature and public key successfully - Execution ${i + 1}`, async () => {
         const randomGeoPointData = RandomGeoPointGenerator.generateRandomZKGeoPoint();
+        console.log('randomGeoPointData', randomGeoPointData);
         const randomGeoPoint = new ZKGeoPoint(randomGeoPointData.latitude, randomGeoPointData.longitude);
+
+        console.log('randomLatitude', randomGeoPoint.latitude);
+        console.log('randomLongitude', randomGeoPoint.longitude);
+
+        console.log('ZKGeoPoint.latitude', randomGeoPoint.latitude);
+        console.log('ZKGeoPoint.longitude', randomGeoPoint.longitude);
+
+
         const { signature, publicKey } = await oracleClient.fetchSignatureAndPublicKey(randomGeoPoint.latitude, randomGeoPoint.longitude);
 
         const zkSignature = new ZKSignature(signature);
@@ -48,7 +52,7 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
         zkExactGeoPointSource.verify();
 
         // Expectations - asserting the ZKGeoPoint matches
-        expect(zkExactGeoPointSource.zkGeoPoint).toEqual(randomGeoPoint);
+        expect(zkExactGeoPointSource.zkGeoPoint.isEquals(randomGeoPoint)).toBe(true);
       });
     }
   });
