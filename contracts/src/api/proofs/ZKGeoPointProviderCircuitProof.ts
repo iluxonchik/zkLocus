@@ -50,7 +50,7 @@ export class ZKGeoPointProviderCircuitProof extends ZKLocusProof<GeoPointProvide
         proof.verify();
         const zkGeoPoint: ZKGeoPoint = proof.zkGeoPoint;
         const sigVerificationProof: OracleGeoPointProviderCircuitProof = proof.proof;
-        const geoPoint: GeoPoint = zkGeoPoint.toGeoPoint();
+        const geoPoint: GeoPoint = zkGeoPoint.toZKValue();
         const geoPointProviderProof: GeoPointProviderCircuitProof = await GeoPointProviderCircuit.fromOracle(
             sigVerificationProof,
             geoPoint,
