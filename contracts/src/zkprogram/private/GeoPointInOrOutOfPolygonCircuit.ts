@@ -1,7 +1,6 @@
 import { SelfProof, Empty, ZkProgram } from "o1js";
-import { proveProvidedGeoPointIn3PointPolygon } from '../../logic/Methods';
 import { GeoPointInOutPolygonCommitment } from '../../model/private/Commitment';
-import { GeoPointInPolygonCircuitProof, GeoPointInPolygonCircuit } from "./Geography";
+import { GeoPointInPolygonCircuitProof} from "./Geography";
 import { extendWithPointInPolygonProof, fromPointInPolygonProofs } from "../../logic/private/GeoPointInOrOutOfPolygon";
 
 /*
@@ -65,4 +64,4 @@ export const GeoPointInOrOutOfPolygonCircuit = ZkProgram({
     },
 });
 
-export const GeoPointInOrOutOfPolygonCircuitProof = ZkProgram.Proof(GeoPointInOrOutOfPolygonCircuit);
+export class GeoPointInOrOutOfPolygonCircuitProof extends ZkProgram.Proof(GeoPointInOrOutOfPolygonCircuit) {}
