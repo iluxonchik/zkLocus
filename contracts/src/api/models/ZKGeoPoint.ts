@@ -1,7 +1,7 @@
 import type { Field, Int64 } from "o1js";
 import type { InputNumber } from "../Types";
 import type { GeoPoint } from "../../model/Geography";
-import type { ZKLocusAdopter } from "../adopters/Interfaces";
+import type { HashableZKLocusAdopter, ZKLocusAdopter } from "../adopters/Interfaces";
 import ZKGeoPointToGeoPointAdopter from "../adopters/ZKGeoPointToGeoPointAdopter";
 import { IZKGeoPointProver } from "../provers/IZKGeoPointProver";
 import ZKGeoPointProver from "../provers/ZKGeoPointProver";
@@ -83,17 +83,6 @@ export class ZKGeoPoint {
         return new ZKGeoPoint(latitudeDecimal, longitudeDecimal);
     }
 
-    /*
-    * Obtain the GeoPoint representation of this ZKGeoPoint.
-    */
-    toGeoPoint(): GeoPoint {
-        return this.toZKValue();
-    }
-
-    hash(): Field {
-        return this.toZKValue().hash();
-    }
-
     /**
      * Checks if the current ZKGeoPoint is equal to another ZKGeoPoint.
      * @param other The ZKGeoPoint to compare with.
@@ -105,4 +94,4 @@ export class ZKGeoPoint {
 
 }
 // Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface
-export interface ZKGeoPoint extends ZKLocusAdopter<{ latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint>, IZKGeoPointProver { }
+export interface ZKGeoPoint extends HashableZKLocusAdopter<{ latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint, ZKGeoPoint, Field>, IZKGeoPointProver { }

@@ -1,3 +1,12 @@
+import { Hash } from "crypto";
+
+
+export interface ZKLocusHashable <HashElementType, HashResultType> {
+    hash(): HashResultType;
+    combinedHash(elements: HashElementType[]): HashResultType;
+    combinedHash(otherElements: HashElementType[]): HashResultType;
+}
+
 export interface ZKLocusAdopter<R, N, Z> {
     /*
         Returns the raw value of the type. This is the value that the user provided. This value can be either
@@ -22,4 +31,11 @@ export interface ZKLocusAdopter<R, N, Z> {
 
     */
     toZKValue(): Z;
+}
+
+export interface HashableZKLocusAdopter<R, N, Z, HashElementType, HashResultType> extends ZKLocusAdopter<R, N, Z>, ZKLocusHashable<HashElementType, HashResultType> {
+
+    hash(): HashResultType;
+    combinedHash(elements: HashElementType[]): HashResultType;
+    combinedHash(otherElements: HashElementType[]): HashResultType;
 }
