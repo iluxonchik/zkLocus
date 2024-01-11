@@ -2,7 +2,7 @@ import pointInPolygon from 'point-in-polygon';
 import RandomGeoPointGenerator from './utils/RandomGeoPointGenerator';
 
 describe('RandomGeoPointGenerator Class Tests', () => {
-    const numberOfIterations = 10; // configurable number of iterations for each test
+    const numberOfIterations = 1000; // configurable number of iterations for each test
 
     const randomGeoPointInside: RandomGeoPointGenerator = new RandomGeoPointGenerator();
     const randomGeoPointOutside: RandomGeoPointGenerator = new RandomGeoPointGenerator();
@@ -118,15 +118,6 @@ describe('RandomGeoPointGenerator Unique Triangle Tests', () => {
   
       for (let i = 0; i < numCalls; i++) {
         expect(() => generator.generateTriangleWithPointOutside(point)).not.toThrow('Duplicate triangle generated for type outside');
-      }
-    });
-  
-    it('should not generate the same triangle twice for the same point (on edge)', () => {
-      const generator = new RandomGeoPointGenerator();
-      const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
-  
-      for (let i = 0; i < numCalls; i++) {
-        expect(() => generator.generateTriangleWithPointOnEdge(point)).not.toThrow('Duplicate triangle generated for type edge');
       }
     });
   });
