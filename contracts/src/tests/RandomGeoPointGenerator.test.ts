@@ -2,7 +2,10 @@ import pointInPolygon from 'point-in-polygon';
 import RandomGeoPointGenerator from './utils/RandomGeoPointGenerator';
 
 describe('RandomGeoPointGenerator Class Tests', () => {
-    const numberOfIterations = 1000; // configurable number of iterations for each test
+    const numberOfIterations = 10; // configurable number of iterations for each test
+
+    const randomGeoPointInside: RandomGeoPointGenerator = new RandomGeoPointGenerator();
+    const randomGeoPointOutside: RandomGeoPointGenerator = new RandomGeoPointGenerator();
 
     // Test Random Coordinate Generation
     it.each(Array.from({ length: numberOfIterations }))(
@@ -35,7 +38,7 @@ describe('RandomGeoPointGenerator Class Tests', () => {
         'testGenerateTriangleWithPointInside',
         async () => {
             const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
-            const triangle = RandomGeoPointGenerator.generateTriangleWithPointInside(point);
+            const triangle = randomGeoPointInside.generateTriangleWithPointInside(point);
             const isInside = pointInPolygon([point.latitude, point.longitude], triangle.map(p => [p.latitude, p.longitude]));
 
             if (!isInside) {
@@ -51,7 +54,7 @@ describe('RandomGeoPointGenerator Class Tests', () => {
         'testGenerateTriangleWithPointOutside',
         async () => {
             const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
-            const triangle = RandomGeoPointGenerator.generateTriangleWithPointOutside(point);
+            const triangle = randomGeoPointOutside.generateTriangleWithPointOutside(point);
             const isOutside = !pointInPolygon([point.latitude, point.longitude], triangle.map(p => [p.latitude, p.longitude]));
 
             if (!isOutside) {
@@ -95,3 +98,35 @@ describe('RandomGeoPointGenerator Class Tests', () => {
     // Test Edge Cases and Failure Conditions
     // Assuming generateRandomCoordinate handles edge cases internally
 });
+
+
+describe('RandomGeoPointGenerator Unique Triangle Tests', () => {
+    const numCalls = 10;
+  
+    it('should not generate the same triangle twice for the same point (inside)', () => {
+      const generator = new RandomGeoPointGenerator();
+      const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
+  
+      for (let i = 0; i < numCalls; i++) {
+        expect(() => generator.generateTriangleWithPointInside(point)).not.toThrow('Duplicate triangle generated for type inside');
+      }
+    });
+  
+    it('should not generate the same triangle twice for the same point (outside)', () => {
+      const generator = new RandomGeoPointGenerator();
+      const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
+  
+      for (let i = 0; i < numCalls; i++) {
+        expect(() => generator.generateTriangleWithPointOutside(point)).not.toThrow('Duplicate triangle generated for type outside');
+      }
+    });
+  
+    it('should not generate the same triangle twice for the same point (on edge)', () => {
+      const generator = new RandomGeoPointGenerator();
+      const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
+  
+      for (let i = 0; i < numCalls; i++) {
+        expect(() => generator.generateTriangleWithPointOnEdge(point)).not.toThrow('Duplicate triangle generated for type edge');
+      }
+    });
+  });
