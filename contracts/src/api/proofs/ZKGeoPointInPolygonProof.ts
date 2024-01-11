@@ -8,6 +8,7 @@ import CachingProofVerificationMiddleware from "./middleware/CachingProofVerific
 import { ZKLocusProof, ZKGeoPointInPolygonCommitment } from "./ZKLocusProof";
 import { ZKProgramCircuit } from "./Types";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
+import CachingGeoPointInPolygonProofMiddleware from "./middleware/CachingGeoPointInPolygonProofMiddleware";
 
 
 export type UnverifiedProofDataType = {
@@ -39,7 +40,7 @@ export type CombinedPolygonProof = {
  * This class allows representation of both a single Point In Polygon Proof, and a combination of such proofs
  * using logical AND and OR operators. It encapsulates the logic for combining and verifying these proofs.
  */
-@CachingProofVerificationMiddleware
+@CachingGeoPointInPolygonProofMiddleware
 export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCircuitProof> {
     /**
      * The geo point for which the proof is constructed.
@@ -181,7 +182,7 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCirc
 
 
     // this method bypasses the proving step, as it expects to receive the ready proofs alrady
-    static fromCombinedPolygonProofs(geoPoint: ZKGeoPoint, proof: GeoPointInPolygonCircuitProof, polygonProofs: CombinedPolygonProof[]): ZKGeoPointInPolygonProof {
+    static fromCombinedPolygonProofs(geoPoint: ZKGeoPoint, polygonProofs: CombinedPolygonProof[]): ZKGeoPointInPolygonProof {
         // 1. Identify the base polygon/initial polygon/with NONE operator. This is the polygon that is used as the base for the combination.
         // 1.1 If there is no base polygon, throw an error.
         // 1.2 If there is more than one base polygon, throw an error.
@@ -245,22 +246,18 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCirc
     }
 
     get zkGeoPoint(): ZKGeoPoint {
-        this.verify();
         return this.geoPoint;
     }
 
     get zkPolygon(): ZKThreePointPolygon {
-        this.verify();
         return this.threePointPolygon;
     }
 
     get isGeoPointInsidePolygon(): boolean {
-        this.verify();
         return this._isInside;
     }
 
     get allZKProofs(): ZKGeoPointInPolygonProof[] {
-        this.verify();
         const allPolygonProofs: ZKGeoPointInPolygonProof[] = [this];
         allPolygonProofs.push(...this._andProofs);
         allPolygonProofs.push(...this._orProofs);
@@ -268,7 +265,6 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCirc
     }
     
     get allPolygons(): ZKThreePointPolygon[] {
-        this.verify();
         const zkProofs: ZKGeoPointInPolygonProof[] = this.allZKProofs;
         const polygons: ZKThreePointPolygon[] = zkProofs.map((zkProof) => zkProof.zkPolygon);
 

@@ -42,11 +42,11 @@ export class ZKGeoPointInPolygonCommitment extends ZKCommitment {
         const claimedGeoPointCommitment: Field = claimedGeoPoint.hash();
         const claimedIsInPolygon: boolean = this._isInPolygon;
 
-        if (claimedPolygonCommitment !== polygonCommitment) {
+        if (!claimedPolygonCommitment.equals(polygonCommitment)) {
             throw new Error(`Polygon Commitment does not match the claimed one. Claimed: ${claimedPolygonCommitment.toString()}. Actual: ${polygonCommitment.toString()}`);
         }
 
-        if (claimedGeoPointCommitment !== geoPointCommitment) {
+        if (!claimedGeoPointCommitment.equals(geoPointCommitment)) {
             throw new Error(`GeoPoint Commitment does not match the claimed one. Claimed: ${claimedGeoPointCommitment.toString()}. Actual: ${geoPointCommitment.toString()}`);
         }
 

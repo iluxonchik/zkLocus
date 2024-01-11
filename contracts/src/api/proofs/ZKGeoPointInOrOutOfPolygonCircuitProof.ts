@@ -45,7 +45,7 @@ export class ZKGeoPointInOrOutOfPolygonCircuitProof extends ZKLocusProof<GeoPoin
         const commitedGeoPoint: Field = commitment.coordinatesCommitment;
         const claimedGeoPoint: GeoPoint = this._zkGeoPoint.toZKValue();
         const claimedGeoPointCommitment: Field = claimedGeoPoint.hash();
-        
+
         if (!claimedGeoPointCommitment.equals(claimedGeoPointCommitment)) {
             throw new Error(`GeoPoint Commitment does not match the claimed one. Claimed: ${claimedGeoPointCommitment.toString()}. Actual: ${commitedGeoPoint.toString()}`);
         }
