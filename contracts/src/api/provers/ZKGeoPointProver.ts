@@ -13,6 +13,14 @@ import type { ZKExactGeolocationMetadataCircuitProof } from "../proofs/ZKExactGe
 import { ExactGeolocationMetadataCircuit, ExactGeolocationMetadataCircuitProof } from "../../zkprogram/public/Metadata";
 import { Bytes64, SHA3_512 } from "../sha3/SHA3";
 import { ZKGeoPointConstructor, IZKGeoPointProver } from "./IZKGeoPointProver";
+import type { ZKGeoPointInOrOutOfPolygonCircuitProof } from "../proofs/ZKGeoPointInOrOutOfPolygonCircuitProof";
+import { GeoPointInOrOutOfPolygonCircuit, GeoPointInOrOutOfPolygonCircuitProof } from "../../zkprogram/private/GeoPointInOrOutOfPolygonCircuit";
+
+type PolygonProofs = {
+  insidePolygonProofs: ZKGeoPointInPolygonProof[];
+  outsidePolygonProofs: ZKGeoPointInPolygonProof[];
+};
+
 
 /**
  * Enhances a ZKGeoPoint with methods for generating zero-knowledge proofs.
@@ -34,6 +42,12 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
          */
         private exactGeolocationMetadataProof: ZKExactGeolocationMetadataCircuitProof | null = null;
 
+        private inPolygonProof: PolygonProofs = {
+            insidePolygonProofs: [],
+            outsidePolygonProofs: [],
+        };
+
+
 
         getIntegrationOracleProofOrError(): ZKGeoPointProviderCircuitProof {
             if (this.integrationOracleProof === null) {
@@ -53,7 +67,31 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 const geoPointInPolygonProof: GeoPointInPolygonCircuitProof = await GeoPointInPolygonCircuit.proveGeoPointIn3PointPolygon(geoPointProof, polygon.toZKValue());
 
                 const { ZKGeoPointInPolygonProof } = await import("../proofs/ZKGeoPointInPolygonProof");
-                return new ZKGeoPointInPolygonProof(this, polygon, geoPointInPolygonProof);
+                const zkPointInPolygonProof: ZKGeoPointInPolygonProof = new ZKGeoPointInPolygonProof(this, polygon, geoPointInPolygonProof);
+                
+                // record the proof in the appropriate collection, depending on whether the ZKGeoPoint is inside or outside the polygon
+                if (zkPointInPolygonProof.UnverifiedProofData.isInside) {
+                    this.inPolygonProof.insidePolygonProofs.push(zkPointInPolygonProof);
+                } else {
+                    this.inPolygonProof.outsidePolygonProofs.push(zkPointInPolygonProof);
+                }
+                return zkPointInPolygonProof;
+            },
+
+            inPolygons: async(polygons: ZKThreePointPolygon[]): Promise<ZKGeoPointInPolygonProof[]> => {
+                if (polygons.length === 0) {
+                    throw new Error("'polygons' must contain at least one polygon.")
+                }
+
+                const { ZKGeoPointInPolygonProof } = await import("../proofs/ZKGeoPointInPolygonProof");
+                const proofs: ZKGeoPointInPolygonProof[] = []; 
+                for (const polygon of polygons) {
+                    const proof: ZKGeoPointInPolygonProof = await this.Prove.inPolygon(polygon);
+                    proofs.push(proof);
+                }
+
+                return proofs;
+
             },
             /**
              * Authenticates the ZKGeoPoint using a signature from an Integration Oracle.
@@ -128,7 +166,42 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 this.exactGeolocationMetadataProof = new ZKExactGeolocationMetadataCircuitProof(this, metadata, exactGeolocationMetadataProof);
 
                 return this.exactGeolocationMetadataProof;
+            },
+
+            combinePointInPolygonProofs: async (): Promise<ZKGeoPointInOrOutOfPolygonCircuitProof> => {
+                if (this.inPolygonProof.insidePolygonProofs.length === 0) {
+                    throw new Error("Cannot combine proofs for a ZKGeoPoint that has not been proven to be inside of any polygons. It's requied to have both, inside and outside polygon proofs. If you only have one set, you can combine them together with .AND and/or .OR methods.");
+                }
+
+                if (this.inPolygonProof.outsidePolygonProofs.length === 0) {
+                    throw new Error("Cannot combine proofs for a ZKGeoPoint that has not been proven to be outside of any polygons. It's requied to have both, inside and outside polygon proofs. If you only have one set, you can combine them together with .AND and/or .OR methods.");
+                }
+
+                const insidePolygonProofs: ZKGeoPointInPolygonProof[] = this.inPolygonProof.insidePolygonProofs;
+                const outsidePolygonProofs: ZKGeoPointInPolygonProof[] = this.inPolygonProof.outsidePolygonProofs;
+                
+                const firstInsidePolygonProof: ZKGeoPointInPolygonProof = insidePolygonProofs[0];
+                const firstOutsidePolygonProof: ZKGeoPointInPolygonProof = outsidePolygonProofs[0];
+
+                for (const insidePolygonProof of insidePolygonProofs.slice(1)) {
+                    await firstInsidePolygonProof.AND(insidePolygonProof);
+                }
+
+                for (const outsidePolygonProof of outsidePolygonProofs.slice(1)) {
+                    await firstOutsidePolygonProof.AND(outsidePolygonProof);
+                }
+
+                const insidePolygonProofRaw: GeoPointInPolygonCircuitProof = firstInsidePolygonProof.proof;
+                const outsidePolygonProofRaw: GeoPointInPolygonCircuitProof = firstOutsidePolygonProof.proof;
+
+                const proof: GeoPointInOrOutOfPolygonCircuitProof = await GeoPointInOrOutOfPolygonCircuit.fromPointInPolygonProofs(insidePolygonProofRaw, outsidePolygonProofRaw);
+                
+                const { ZKGeoPointInOrOutOfPolygonCircuitProof } = await import("../proofs/ZKGeoPointInOrOutOfPolygonCircuitProof");
+                const zkProof: ZKGeoPointInOrOutOfPolygonCircuitProof = new ZKGeoPointInOrOutOfPolygonCircuitProof(this, proof);
+                return zkProof;
+
             }
+
         };
 
         private async exactGeoPointForIntegrationOracle(): Promise<ZKExactGeoPointCircuitProof> {
