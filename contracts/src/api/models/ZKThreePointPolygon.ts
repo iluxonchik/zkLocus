@@ -1,18 +1,17 @@
 import { RawCoordinates } from "../Types";
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import ZKThreePointPolygonToThreePointPolygonAdopter from "../adopters/ZKThreePointPolygonToThreePointPolygonAdopter";
-import { ZKLocusAdopter } from "../adopters/Interfaces";
+import { HashableZKLocusAdopter, ZKLocusAdopter, ZKLocusHashable } from "../adopters/Interfaces";
 import { ZKLatitude } from "./ZKLatitude";
 import { ZKLongitude } from "./ZKLongitude";
 import { ZKGeoPoint } from "./ZKGeoPoint";
+import { Field, Poseidon } from "o1js";
 
 /*
 Interface for the ThreePointPolygon zkLocus class. It represents a three point polygon, also refered to as a "geogrpahical area".
 */
-
-
 @ZKThreePointPolygonToThreePointPolygonAdopter
-export class ZKThreePointPolygon {
+export class ZKThreePointPolygon implements ZKLocusHashable<ZKThreePointPolygon, Field>{
     private _vertices: [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint];
 
     get vertices(): [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint] {
@@ -32,9 +31,22 @@ export class ZKThreePointPolygon {
      * @returns The maximum factor value.
      */
     get factor(): number {
-        return Math.min(this.vertices[0].factor, this.vertices[1].factor, this.vertices[2].factor);
+        return Math.max(this.vertices[0].factor, this.vertices[1].factor, this.vertices[2].factor);
     }
 
+    hash(): Field { 
+        return this.toZKValue().hash();
+    }
+
+    combinedHash(elements: ZKThreePointPolygon[]): Field {
+        const allPolygons: ZKThreePointPolygon[] = [this, ...elements];
+        return this.combinedHash(allPolygons);
+    }
+
+    static combinedHash(polygons: ZKThreePointPolygon[]): Field {
+        const hashes: Field[] = polygons.map(polygon => polygon.toZKValue().hash());
+        return Poseidon.hash(hashes);
+    }
 }
 
-export interface ZKThreePointPolygon extends ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> { }
+export interface ZKThreePointPolygon extends HashableZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon, ZKThreePointPolygon, Field> {}
