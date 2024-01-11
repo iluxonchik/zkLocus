@@ -11,11 +11,12 @@
 import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
 import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
 import { ZKGeoPoint } from "../models/ZKGeoPoint";
-import { ZKLocusAdopter } from "./Interfaces";
+import { HashableZKLocusAdopter} from "./Interfaces";
+import { Field, Poseidon } from "o1js";
 
 
 export default function <T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {
-    return class extends Base implements ZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon> {
+    return class extends Base implements HashableZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon, ZKThreePointPolygon, Field> {
         rawValue(): [ZKGeoPoint, ZKGeoPoint, ZKGeoPoint] {
             return this.vertices;
         }
@@ -37,6 +38,16 @@ export default function <T extends new (...args: any[]) => ZKThreePointPolygon>(
             });
 
             return threePointPolygon;
+        }
+
+        static fromThreePointPolygon(threePointPolygon: ThreePointPolygon): ZKThreePointPolygon {
+            const vertices = [
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice1),
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice2),
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice3)
+            ];
+
+            return new this(vertices[0], vertices[1], vertices[2]);
         }
     };
 }

@@ -8,9 +8,9 @@
     See: https://github.com/microsoft/TypeScript/issues/30355
 */
 
-import { Int64 } from "o1js";
+import { Field, Int64, Poseidon } from "o1js";
 import { InputNumber } from "../Types";
-import { ZKLocusAdopter } from "./Interfaces";
+import { HashableZKLocusAdopter, ZKLocusAdopter } from "./Interfaces";
 import { ZKLatitude } from "../models/ZKLatitude";
 import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { ZKLongitude } from "../models/ZKLongitude";
@@ -20,7 +20,7 @@ import { GeoPoint } from "../../model/Geography";
 export type ZKGeoPointConstructor = new (...args: any[]) => ZKGeoPoint;
 
 export default function <T extends ZKGeoPointConstructor>(Base: T) {
-    return class extends Base implements ZKLocusAdopter<{ latitude: InputNumber | ZKLongitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint> {
+    return class extends Base implements HashableZKLocusAdopter<{ latitude: InputNumber | ZKLongitude; longitude: InputNumber | ZKLongitude; }, { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; }, GeoPoint, ZKGeoPoint, Field> {
 
         rawValue(): { latitude: InputNumber | ZKLatitude; longitude: InputNumber | ZKLongitude; } {
             return this.asRawValue;
@@ -54,6 +54,21 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
                 factor: factorInt64,
             });
         }
-    };
 
+        hash(): Field {
+            return this.toZKValue().hash();
+        }
+
+
+        static combinedHash(elements: ZKGeoPoint[]): Field {
+            const hashes: Field[] = elements.map(element => element.toZKValue().hash());
+
+            return Poseidon.hash(hashes);
+        }
+
+        combinedHash(otherElements: ZKGeoPoint[]): Field {
+            const allPoints: ZKGeoPoint[] = [this, ...otherElements];
+            return this.combinedHash(allPoints);
+        };
+    }
 }
