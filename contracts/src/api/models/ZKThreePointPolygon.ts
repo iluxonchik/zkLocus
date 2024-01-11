@@ -40,13 +40,32 @@ export class ZKThreePointPolygon implements ZKLocusHashable<ZKThreePointPolygon,
 
     combinedHash(elements: ZKThreePointPolygon[]): Field {
         const allPolygons: ZKThreePointPolygon[] = [this, ...elements];
-        return this.combinedHash(allPolygons);
+        return ZKThreePointPolygon.combinedHash(allPolygons);
     }
 
     static combinedHash(polygons: ZKThreePointPolygon[]): Field {
+        if (polygons.length === 0){
+            throw new Error('Cannot combine hash of empty array of polygons.');
+        }
+
+
         const hashes: Field[] = polygons.map(polygon => polygon.toZKValue().hash());
+        
+        if (hashes.length === 1){    
+            return hashes[0];
+        }
         return Poseidon.hash(hashes);
     }
+
+    static fromThreePointPolygon(threePointPolygon: ThreePointPolygon): ZKThreePointPolygon {
+            const vertices = [
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice1),
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice2),
+                ZKGeoPoint.fromGeoPoint(threePointPolygon.vertice3)
+            ];
+
+            return new this(vertices[0], vertices[1], vertices[2]);
+        }
 }
 
-export interface ZKThreePointPolygon extends HashableZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon, ZKThreePointPolygon, Field> {}
+export interface ZKThreePointPolygon extends HashableZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon, ZKThreePointPolygon, Field> { }
