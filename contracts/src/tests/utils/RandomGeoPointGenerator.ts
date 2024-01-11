@@ -1,3 +1,4 @@
+import { verify } from 'crypto';
 import Decimal from 'decimal.js';
 
 /**
@@ -93,6 +94,21 @@ export default class RandomGeoPointGenerator {
                     point
                 ];
                 break;
+        }
+
+        for (let i = 0; i < vertices.length; i++) {
+            if (vertices[i].latitude < -90) {
+                vertices[i].latitude = -90;
+            }
+            if (vertices[i].latitude > 90) {
+                vertices[i].latitude = 90;
+            }
+            if (vertices[i].longitude < -180) {
+                vertices[i].longitude = -180;
+            }
+            if (vertices[i].longitude > 180) {
+                vertices[i].longitude = 180;
+            }
         }
 
         return vertices.map(v => ({
