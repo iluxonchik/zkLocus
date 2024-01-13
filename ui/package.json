@@ -35,8 +35,9 @@
   },
   "type": "module",
   "dependencies": {
+    "decimal.js": "^10.4.3",
     "leaflet": "^1.9.4",
-    "o1js": "^0.14.2",
+    "o1js": "^0.15.2",
     "zklocus": "file:../contracts"
   }
 }
