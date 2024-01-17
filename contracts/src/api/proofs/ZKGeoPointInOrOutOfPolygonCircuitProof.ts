@@ -10,6 +10,45 @@ import { OracleGeoPointProviderCircuitProof} from "../../zkprogram/private/Oracl
 import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 import { ZKGeoPointInPolygonProof } from "./ZKGeoPointInPolygonProof";
 import { GeoPointInOutPolygonCommitment, GeoPointInPolygonCommitment } from "../../model/private/Commitment";
+import { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
+
+/**
+ * Represents a rolled-up ZKGeoPointInPolygonCircuit proof. Currently, it's used as a DTO, but later it should be
+ * expanded into a more sophisticated abstraction, which behaves like any other ZKLocusProof.
+ */
+export class RolledUpZKGeoPointInPolygonCircuitProof {
+    /**
+     * Creates a new instance of RolledUpZKGeoPointInPolygonCircuitProof.
+     * @param _individualZkProofs The individual ZKGeoPointInOrOutOfPolygonCircuit proofs.
+     * @param _rolledUpProof The rolled-up ZKGeoPointInOrOutOfPolygonCircuit proof.
+     */
+    constructor (protected _individualZkProofs: ZKGeoPointInPolygonProof[], protected _rolledUpProof: ZKGeoPointInPolygonProof) {
+    }
+
+    /**
+     * Gets the individual ZKGeoPointInPolygonProof proofs.
+     */
+    get individualZkProofs(): ZKGeoPointInPolygonProof[] {
+        return this._individualZkProofs;
+    }
+
+    /**
+     * Gets the rolled-up ZKGeoPointInPolygonProof proof.
+     */
+    get rolledUpProof(): ZKGeoPointInPolygonProof {
+        return this._rolledUpProof;
+    }
+
+    get isInsidePolygon(): boolean {
+        return this._rolledUpProof.isGeoPointInsidePolygon;
+    }
+
+    combinedHashOfPolygons(): Field {
+        const polygons: ZKThreePointPolygon[] = this._individualZkProofs.map((proof) => proof.polygonOrError);
+        return ZKThreePointPolygon.combinedHash(polygons);
+    
+    }
+}
 
 /*
 * Authenticated GeoPoint source proof. This is an abstraction over the set of Zero-Knowledge proof that is used to
@@ -27,7 +66,15 @@ export class ZKGeoPointInOrOutOfPolygonCircuitProof extends ZKLocusProof<GeoPoin
         ZKGeoPointInPolygonProof,
     ]
 
-    constructor(protected _zkGeoPoint: ZKGeoPoint, protected _proof: GeoPointInOrOutOfPolygonCircuitProof) {
+    constructor(protected _zkGeoPoint: ZKGeoPoint, protected _insideProofs: RolledUpZKGeoPointInPolygonCircuitProof, protected _outsideProofs: RolledUpZKGeoPointInPolygonCircuitProof, protected _proof: GeoPointInOrOutOfPolygonCircuitProof) {
+        if (!_insideProofs.isInsidePolygon) {
+            throw new Error("The provided inside proof rollup is outside of the polygon combination.");
+        }
+
+        if(_outsideProofs.isInsidePolygon) {
+            throw new Error("The provided outside proof rollup is inside of the polygon combination.");
+        }
+        
         super();
     }
 
@@ -38,6 +85,21 @@ export class ZKGeoPointInOrOutOfPolygonCircuitProof extends ZKLocusProof<GeoPoin
     get zkGeoPoint(): ZKGeoPoint {
         this.verify();
         return this._zkGeoPoint;
+    }
+
+    get insideProofs(): RolledUpZKGeoPointInPolygonCircuitProof {
+        this.verify();
+        return this._insideProofs;
+    }
+
+    get outsideProofs(): RolledUpZKGeoPointInPolygonCircuitProof {
+        this.verify();
+        return this._outsideProofs;
+    }
+
+    get commitment(): GeoPointInOutPolygonCommitment {
+        this.verify();
+        return this._proof.publicOutput;
     }
 
     assertGeoPointIsTheClaimedOne(): void {
@@ -51,9 +113,43 @@ export class ZKGeoPointInOrOutOfPolygonCircuitProof extends ZKLocusProof<GeoPoin
         }
     }
 
+    assertPolygonsAreTheClaimedOnes(): void {
+        // assert that all of the inside proofs are indeed inside polygon proofs
+        for (const insideProof of this._insideProofs.individualZkProofs) {
+            insideProof.verify();
+            if (!insideProof.isGeoPointInsidePolygon) {
+                throw new Error("Not all of the inside proofs are proofs of a GeoPoint being inside a polygon. Faulty proof: " + insideProof.toString());
+            }
+        }
+
+        // assert that all of the outside proofs are indeed outside polygon proofs
+        for (const outsideProof of this._outsideProofs.individualZkProofs) {
+            outsideProof.verify();
+            if (outsideProof.isGeoPointInsidePolygon) {
+                throw new Error("Not all of the outside proofs are proofs of a GeoPoint being outside a polygon. Faulty proof: " + outsideProof.toString());
+            }
+        }
+
+        const commitment: GeoPointInOutPolygonCommitment = this._proof.publicOutput;
+        const commitedInsidePolygon: Field = commitment.insidePolygonCommitment;
+        const commitedOutsidePolygon: Field = commitment.outsidePolygonCommitment;
+
+        const claimedInsidePolygonCommitment: Field = this._insideProofs.combinedHashOfPolygons();
+        const claimedOutsidePolygonCommitment: Field = this._outsideProofs.combinedHashOfPolygons();
+
+        if (!claimedInsidePolygonCommitment.equals(commitedInsidePolygon)) {
+            throw new Error(`Inside Polygon Commitment does not match the claimed one. Claimed: ${claimedInsidePolygonCommitment.toString()}. Actual: ${commitedInsidePolygon.toString()}`);
+        }
+
+        if (!claimedOutsidePolygonCommitment.equals(commitedOutsidePolygon)) {
+            throw new Error(`Outside Polygon Commitment does not match the claimed one. Claimed: ${claimedOutsidePolygonCommitment.toString()}. Actual: ${commitedOutsidePolygon.toString()}`);
+        }
+    }
+
     verify() {
         super.verify();
         this.assertGeoPointIsTheClaimedOne();
+        this.assertPolygonsAreTheClaimedOnes();
     }
    
 }

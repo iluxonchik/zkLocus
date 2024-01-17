@@ -1,6 +1,6 @@
 import { Empty, Field, Poseidon, Provable, SelfProof } from "o1js";
 import { GeoPointInOutPolygonCommitment, GeoPointInPolygonCommitment } from "../../model/private/Commitment";
-import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/Geography";
+import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/GeoPointInPolygonCircuit";
 
 
 /**

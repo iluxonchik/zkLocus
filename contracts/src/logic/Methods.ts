@@ -6,7 +6,8 @@ import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { Int64Prover } from "../math/Provers.js";
 import { GeoPointInOutPolygonCommitment, GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from "../model/private/Commitment";
 import { TimeStampInterval } from "../model/Time";
-import type { GeoPointInPolygonCircuitProof, GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
+import type { GeoPointProviderCircuitProof, TimeStampIntervalProviderCircuitProof } from "../zkprogram/private/Geography";
+import type { GeoPointInPolygonCircuitProof } from "../zkprogram/private/GeoPointInPolygonCircuit";
 import { OracleGeoPointProviderCircuitProof } from "../zkprogram/private/Oracle";
 import { OracleAuthenticatedGeoPointCommitment } from "../model/private/Oracle";
 
@@ -102,6 +103,7 @@ function isPointIn3PointPolygon(
     // Provable.log('------------------');
   }
 
+  // point on edge is considered inside
   inside = Provable.if(isPointLocatedOnEdge, Bool(true), inside);
 
   return inside;
@@ -120,8 +122,6 @@ export function proveGeoPointIn3PointPolygon(
   // values.
   //Provable.log('Proving that point is in polygon...');
   const isInPolygon: Bool = isPointIn3PointPolygon(point, polygon);
-
-  //Provable.log('Is in Polygon ', isInPolygon);
 
   // If point in polygon, return the commitment data
   const polygonCommitment = polygon.hash();
@@ -157,13 +157,24 @@ export function proveProvidedGeoPointIn3PointPolygon(
   sourcedGeoPointProof: GeoPointProviderCircuitProof,
   polygon: ThreePointPolygon,
 ): GeoPointInPolygonCommitment {
+  Provable.log("Verifying...");
   sourcedGeoPointProof.verify();
+  Provable.log("Verified!");
   const point: GeoPoint = sourcedGeoPointProof.publicOutput;
-  return proveGeoPointIn3PointPolygon(point, polygon);
+  const commitment: GeoPointInPolygonCommitment =  proveGeoPointIn3PointPolygon(point, polygon);
+  Provable.log("Returning commitment...");
+  Provable.asProver(() => {
+    Provable.log('Finished proving that point is in polygon...')
+    Provable.log('Point: [', point.latitude.toString(), point.longitude.toString(), point.factor.toString(), ']');
+    Provable.log('Polygon: [', polygon.vertice1.latitude.toString(), polygon.vertice1.longitude.toString(), polygon.vertice1.factor.toString(), '], [', polygon.vertice2.latitude.toString(), polygon.vertice2.longitude.toString(), polygon.vertice2.factor.toString(), '], [', polygon.vertice3.latitude.toString(), polygon.vertice3.longitude.toString(), polygon.vertice3.factor.toString(), ']');
+ });
+  return commitment;
 }
 
 function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygonCommitment) {
   // ensure that the proof is for the same coordinates
+
+  Provable.log('Verifying that the proofs are for the same coordinates...')
   first.geoPointCommitment.assertEquals(
     second.geoPointCommitment
   );
@@ -173,9 +184,14 @@ function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygo
   //proof1.publicOutput.polygonCommitment.assertNotEquals(
   // proof2.publicOutput.polygonCommitment
   //);
+
+  Provable.log('Verifying for inside of polygons...')
+
+  
   // ensure that the proofs are either both for isInPolygon, or both not for isInPolygon
   const isInPolygon: Bool = first.isInPolygon.and(second.isInPolygon);
-  return new GeoPointInPolygonCommitment({
+  Provable.log('Building commitment...')
+  const commitment = new GeoPointInPolygonCommitment({
     polygonCommitment: Poseidon.hash([
       first.polygonCommitment,
       second.polygonCommitment,
@@ -183,6 +199,15 @@ function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygo
     geoPointCommitment: first.geoPointCommitment,
     isInPolygon: isInPolygon,
   });
+  Provable.asProver(() => {
+    Provable.log("first.polygonCommitment: ", first.polygonCommitment.toString())
+    Provable.log("second.polygonCommitment: ", second.polygonCommitment.toString());
+    Provable.log("Polygon Commitment: ", commitment.polygonCommitment.toString())
+    Provable.log("Coordinates Commitment: ", commitment.geoPointCommitment.toString())
+    Provable.log("Is In Polygon: ", commitment.isInPolygon.toString())
+  });
+  Provable.log("Returning commitment...")
+  return commitment;
 
 }
 
@@ -197,8 +222,8 @@ function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygo
  */
 
 export function AND(
-  proof1: SelfProof<Empty, GeoPointInPolygonCommitment>,
-  proof2: SelfProof<Empty, GeoPointInPolygonCommitment>
+  proof1: GeoPointInPolygonCircuitProof,
+  proof2: GeoPointInPolygonCircuitProof
 ): GeoPointInPolygonCommitment {
   // IMPORTANT: A caveat of this AND. If you give proof1, which asserts that the user is in Spain, and proof2 that
   // asserts that the user is not in Romania, then the resulting proof from .AND will say that the user is
@@ -224,13 +249,19 @@ export function AND(
   // and combine them into a public output which whould add all of the `isInPolygon=True` polygons to `insidePolygonCommitment`,
   // and all of the `isInPolygon=False` polygons to `outsidePolygonCommitment`. The new ZKProgram would also verify that
   // the `coordinatesCommitment` of the two proofs are the same, and that the `polygonCommitment` are different.
+
+  Provable.log("Verifying proof1...");
   proof1.verify();
+  Provable.log("Verifying proof2...");
   proof2.verify();
+  console.log("Proof1 and Proof2 verified")
 
   const proof1PublicOuput: GeoPointInPolygonCommitment = proof1.publicOutput;
   const proof2PublicOuput: GeoPointInPolygonCommitment = proof2.publicOutput;
 
-  return ANDLiteral(proof1PublicOuput, proof2PublicOuput);
+  const returnValue = ANDLiteral(proof1PublicOuput, proof2PublicOuput);
+  Provable.log("Returning result of AND...")
+  return returnValue;
 }
 
 function ORLiteral(
@@ -282,8 +313,8 @@ function ORLiteral(
  */
 
 export function OR(
-  proof1: SelfProof<Empty, GeoPointInPolygonCommitment>,
-  proof2: SelfProof<Empty, GeoPointInPolygonCommitment>
+  proof1: GeoPointInPolygonCircuitProof,
+  proof2: GeoPointInPolygonCircuitProof
 ): GeoPointInPolygonCommitment {
   proof1.verify();
   proof2.verify();

@@ -8,11 +8,12 @@
     See: https://github.com/microsoft/TypeScript/issues/30355
 */
 
-import { GeoPoint, ThreePointPolygon } from "../../model/Geography";
+import type { GeoPoint} from "../../model/Geography";
+import { ThreePointPolygon } from "../../model/Geography";
 import type { ZKThreePointPolygon } from "../models/ZKThreePointPolygon";
-import { ZKGeoPoint } from "../models/ZKGeoPoint";
+import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { HashableZKLocusAdopter} from "./Interfaces";
-import { Field} from "o1js";
+import type { Field } from "o1js";
 
 
 export default function <T extends new (...args: any[]) => ZKThreePointPolygon>(Base: T) {

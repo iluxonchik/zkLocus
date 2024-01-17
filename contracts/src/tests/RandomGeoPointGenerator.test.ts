@@ -39,7 +39,7 @@ describe('RandomGeoPointGenerator Class Tests', () => {
         async () => {
             const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
             const triangle = randomGeoPointInside.generateTriangleWithPointInside(point);
-            const isInside = pointInPolygon([point.latitude, point.longitude], triangle.map(p => [p.latitude, p.longitude]));
+            const isInside = pointInPolygon([point.latitude, point.longitude], triangle.toRandomGeoPoints().map(p => [p.latitude, p.longitude]));
 
             if (!isInside) {
                 console.log(`Failed testGenerateTriangleWithPointInside: point ${JSON.stringify(point)}, triangle ${JSON.stringify(triangle)}`);
@@ -55,7 +55,7 @@ describe('RandomGeoPointGenerator Class Tests', () => {
         async () => {
             const point = RandomGeoPointGenerator.generateRandomZKGeoPoint();
             const triangle = randomGeoPointOutside.generateTriangleWithPointOutside(point);
-            const isOutside = !pointInPolygon([point.latitude, point.longitude], triangle.map(p => [p.latitude, p.longitude]));
+            const isOutside = !pointInPolygon([point.latitude, point.longitude], triangle.toRandomGeoPoints().map(p => [p.latitude, p.longitude]));
 
             if (!isOutside) {
                 console.log(`Failed testGenerateTriangleWithPointOutside: point ${JSON.stringify(point)}, triangle ${JSON.stringify(triangle)}`);
@@ -86,7 +86,7 @@ describe('RandomGeoPointGenerator Class Tests', () => {
                 point.latitude.toString().split('.')[1]?.length || 0, 
                 point.longitude.toString().split('.')[1]?.length || 0
             );
-            triangle.forEach(p => {
+            triangle.toRandomGeoPoints().forEach(p => {
                 const latitudePrecision = p.latitude.toString().split('.')[1]?.length || 0;
                 const longitudePrecision = p.longitude.toString().split('.')[1]?.length || 0;
                 expect(latitudePrecision).toBeLessThanOrEqual(pointPrecision);

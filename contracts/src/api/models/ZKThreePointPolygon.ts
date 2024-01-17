@@ -24,6 +24,12 @@ export class ZKThreePointPolygon implements ZKLocusHashable<ZKThreePointPolygon,
             vertex2 instanceof ZKGeoPoint ? vertex2 : new ZKGeoPoint(new ZKLatitude(vertex2.latitude), new ZKLongitude(vertex2.longitude)),
             vertex3 instanceof ZKGeoPoint ? vertex3 : new ZKGeoPoint(new ZKLatitude(vertex3.latitude), new ZKLongitude(vertex3.longitude))
         ];
+
+        const maximumFactorOfVertices: number = Math.max(this._vertices[0].factor, this._vertices[1].factor, this._vertices[2].factor);
+        for (let i = 0; i < this._vertices.length; i++) {
+            this._vertices[i].latitude.increaseFactor(maximumFactorOfVertices);
+            this._vertices[i].longitude.increaseFactor(maximumFactorOfVertices);
+        }
     }
 
     /**
@@ -32,6 +38,12 @@ export class ZKThreePointPolygon implements ZKLocusHashable<ZKThreePointPolygon,
      */
     get factor(): number {
         return Math.max(this.vertices[0].factor, this.vertices[1].factor, this.vertices[2].factor);
+    }
+
+    public isEquals(other: ZKThreePointPolygon): boolean {
+        return this.vertices[0].isEquals(other.vertices[0]) &&
+            this.vertices[1].isEquals(other.vertices[1]) &&
+            this.vertices[2].isEquals(other.vertices[2]);
     }
 
     hash(): Field { 
@@ -65,7 +77,11 @@ export class ZKThreePointPolygon implements ZKLocusHashable<ZKThreePointPolygon,
             ];
 
             return new this(vertices[0], vertices[1], vertices[2]);
-        }
+    }
+    
+    toString(): string {
+        return `ZKThreePointPolygon(${this.vertices[0]}, ${this.vertices[1]}, ${this.vertices[2]})`;
+    }
 }
 
 export interface ZKThreePointPolygon extends HashableZKLocusAdopter<[ZKGeoPoint, ZKGeoPoint, ZKGeoPoint], [GeoPoint, GeoPoint, GeoPoint], ThreePointPolygon, ZKThreePointPolygon, Field> { }

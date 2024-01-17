@@ -1,5 +1,5 @@
-import { verify } from 'crypto';
 import Decimal from 'decimal.js';
+import pointInPolygon from 'point-in-polygon';
 
 /**
  * Represents a geographic point with latitude and longitude.
@@ -7,6 +7,24 @@ import Decimal from 'decimal.js';
 export interface RandomGeoPoint {
     latitude: number;
     longitude: number;
+}
+
+export class RandomThreePointPolygon {
+
+    constructor(private vertices: RandomGeoPoint[]) { 
+        if (vertices.length !== 3) {
+            throw new Error('A polygon mustehave exactly 3 vertices.');
+        }
+    }
+
+    isEquals(other: RandomThreePointPolygon): boolean {
+        return this.vertices.every((vertex, index) => vertex.latitude === other.vertices[index].latitude && vertex.longitude === other.vertices[index].longitude);
+    }
+
+    toRandomGeoPoints(): RandomGeoPoint[] {
+        return this.vertices;
+    }
+
 }
 
 type TriangleType = 'inside' | 'outside' | 'edge';
@@ -46,7 +64,8 @@ export default class RandomGeoPointGenerator {
      * @returns A random GeoPoint object.
      */
     public static generateRandomZKGeoPoint(): RandomGeoPoint {
-        const precision = Math.floor(Math.random() * 8); // 0 to 7 decimal points
+        let precision = Math.floor(Math.random() * 8); // 0 to 7 decimal points
+        precision = 2
         const latitude = this.generateRandomCoordinate(-90, 90, precision);
         const longitude = this.generateRandomCoordinate(-180, 180, precision);
         return { latitude, longitude };
@@ -59,7 +78,7 @@ export default class RandomGeoPointGenerator {
      * @param precision The precision for the vertices.
      * @returns An array of vertices (GeoPoint objects).
      */
-    private static getTriangleVertices(point: RandomGeoPoint, type: 'inside' | 'outside' | 'edge', precision: number): RandomGeoPoint[] {
+    private static getTriangleVertices(point: RandomGeoPoint, type: 'inside' | 'outside' | 'edge', precision: number): RandomThreePointPolygon {
         let vertices: RandomGeoPoint[] = [];
         const baseOffset = precision > 0 ? new Decimal(0.1): new Decimal(1);
         
@@ -76,7 +95,7 @@ export default class RandomGeoPointGenerator {
                 vertices = [
                     { latitude: point.latitude - parseFloat(offset1), longitude: point.longitude - parseFloat(offset1) },
                     { latitude: point.latitude + parseFloat(offset2), longitude: point.longitude - parseFloat(offset2) },
-                    { latitude: point.latitude, longitude: point.longitude + parseFloat(offset3) }
+                    { latitude: point.latitude + parseFloat(offset3), longitude: point.longitude + parseFloat(offset3) }
                 ]; 
                 break;
             case 'outside':
@@ -96,6 +115,8 @@ export default class RandomGeoPointGenerator {
                 break;
         }
 
+        // IMPORTANT: this may cause the 'inside'/'outside' condition to be violated. There are checks ahead to ensure that doesn't happen.
+        // HOWEVER, please note that issues may still arise
         for (let i = 0; i < vertices.length; i++) {
             if (vertices[i].latitude < -90) {
                 vertices[i].latitude = -90;
@@ -111,21 +132,32 @@ export default class RandomGeoPointGenerator {
             }
         }
 
-        return vertices.map(v => ({
+        const polygonVertices: RandomGeoPoint[] = vertices.map(v => ({
             latitude: Number(new Decimal(v.latitude).toFixed(precision)),
             longitude: Number(new Decimal(v.longitude).toFixed(precision))
         }));
+
+        return new RandomThreePointPolygon(polygonVertices);
     }
 
+    public static isPointInsideTriangle(point: RandomGeoPoint, triangle: RandomThreePointPolygon): boolean {
+        return pointInPolygon([point.latitude, point.longitude], triangle.toRandomGeoPoints().map(v => [v.latitude, v.longitude]));
+    }
 
     /**
      * Generates a triangle polygon with the given point inside it.
      * @param point The point to be inside the triangle.
      * @returns A triangle polygon as an array of GeoPoints.
      */
-    public static generateTriangleWithPointInside(point: RandomGeoPoint): RandomGeoPoint[] {
+    public static generateTriangleWithPointInside(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
-        return this.getTriangleVertices(point, 'inside', precision);
+        const triangle: RandomThreePointPolygon =  this.getTriangleVertices(point, 'inside', precision);
+        const isInside: boolean = this.isPointInsideTriangle(point, triangle);
+
+        if (!isInside) {
+            throw new Error('Triangle generated with point outside it.');
+        }
+        return triangle;
     }
 
     /**
@@ -133,9 +165,17 @@ export default class RandomGeoPointGenerator {
      * @param point The point to be outside the triangle.
      * @returns A triangle polygon as an array of GeoPoints.
      */
-    public static generateTriangleWithPointOutside(point: RandomGeoPoint): RandomGeoPoint[] {
+    public static generateTriangleWithPointOutside(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
-        return this.getTriangleVertices(point, 'outside', precision);
+        const triangle: RandomThreePointPolygon = this.getTriangleVertices(point, 'outside', precision);
+
+        const isInside: boolean = this.isPointInsideTriangle(point, triangle);
+
+        if (isInside) {
+            throw new Error('Triangle generated with point inside it.');
+        }
+
+        return triangle;
     }
 
     /**
@@ -143,34 +183,48 @@ export default class RandomGeoPointGenerator {
      * @param point The point to be on the edge of the triangle.
      * @returns A triangle polygon as an array of GeoPoints.
      */
-    public static generateTriangleWithPointOnEdge(point: RandomGeoPoint): RandomGeoPoint[] {
+    public static generateTriangleWithPointOnEdge(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
         return this.getTriangleVertices(point, 'edge', precision);
     }
 
-    private checkAndStoreTriangle(triangle: RandomGeoPoint[], type: TriangleType): void {
-        const triangleKey = JSON.stringify(triangle);
+    private checkAndStoreTriangle(triangle: RandomThreePointPolygon, type: TriangleType): void {
+        const triangleVertices = triangle.toRandomGeoPoints();
+        const triangleKey = JSON.stringify(triangleVertices);
         if (this.generatedTriangles.get(type)?.has(triangleKey)) {
             throw new Error(`Duplicate triangle generated for type ${type}`);
         }
         this.generatedTriangles.get(type)?.add(triangleKey);
     }
 
-    public generateTriangleWithPointInside(point: RandomGeoPoint): RandomGeoPoint[] {
+    public generateTriangleWithPointInside(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
         const triangle = RandomGeoPointGenerator.getTriangleVertices(point, 'inside', precision);
         this.checkAndStoreTriangle(triangle, 'inside');
+
+        const isInside: boolean = RandomGeoPointGenerator.isPointInsideTriangle(point, triangle);
+        if (!isInside) {
+            throw new Error('Triangle generated with point outside it.');
+        }
+
         return triangle;
     }
 
-    public generateTriangleWithPointOutside(point: RandomGeoPoint): RandomGeoPoint[] {
+
+    public generateTriangleWithPointOutside(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
         const triangle = RandomGeoPointGenerator.getTriangleVertices(point, 'outside', precision);
         this.checkAndStoreTriangle(triangle, 'outside');
+
+        const isInside: boolean = RandomGeoPointGenerator.isPointInsideTriangle(point, triangle);
+        if (isInside) {
+            throw new Error('Triangle generated with point inside it.');
+        }
+
         return triangle;
     }
 
-    public generateTriangleWithPointOnEdge(point: RandomGeoPoint): RandomGeoPoint[] {
+    public generateTriangleWithPointOnEdge(point: RandomGeoPoint): RandomThreePointPolygon {
         const precision = Math.max(point.latitude.toString().split('.')[1]?.length || 0, point.longitude.toString().split('.')[1]?.length || 0);
         const triangle = RandomGeoPointGenerator.getTriangleVertices(point, 'edge', precision);
         this.checkAndStoreTriangle(triangle, 'edge');

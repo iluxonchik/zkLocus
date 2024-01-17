@@ -1,9 +1,10 @@
-import { Bool, Empty, Field, Int64, Proof } from "o1js";
-import { GeoPointProviderCircuit, GeoPointInPolygonCircuit, GeoPointProviderCircuitProof } from '../zkprogram/private/Geography';
+import { Bool, Empty, Int64, Proof } from "o1js";
+import { GeoPointProviderCircuit, GeoPointProviderCircuitProof } from '../zkprogram/private/Geography';
 import { GeoPointInPolygonCommitment } from '../model/private/Commitment';
 import { GeoPoint, ThreePointPolygon } from '../model/Geography';
 import { ZKGeoPointInPolygonProof } from "../api/proofs/ZKGeoPointInPolygonProof";
 import { ZKGeoPointProviderCircuitProof } from "../api/proofs/ZKGeoPointProviderCircuitProof";
+import { GeoPointInPolygonCircuit, GeoPointInPolygonCombinerCircuit } from "../zkprogram/private/GeoPointInPolygonCircuit";
 
 class InternalStructuresInterface {
 
@@ -280,26 +281,26 @@ describe('CoordinatesInPolygon', () => {
                 outsidePolygon2,
             );
 
-            orProofForInsideOutsideC1 = await GeoPointInPolygonCircuit.OR(
+            orProofForInsideOutsideC1 = await GeoPointInPolygonCombinerCircuit.OR(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon1,
             );
 
-            orProofForInsideInsideC1 = await GeoPointInPolygonCircuit.OR(
+            orProofForInsideInsideC1 = await GeoPointInPolygonCombinerCircuit.OR(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1InInsidePolygon2,
             );
-            orProofForOutsideOutsideC1 = await GeoPointInPolygonCircuit.OR(
+            orProofForOutsideOutsideC1 = await GeoPointInPolygonCombinerCircuit.OR(
                 proofInsideCoordinate1NotInOutsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon2,
             );
 
-            andProoForInsideOutsideC1 = await GeoPointInPolygonCircuit.AND(
+            andProoForInsideOutsideC1 = await GeoPointInPolygonCombinerCircuit.AND(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1NotInOutsidePolygon1,
             )
             
-            andProofForInsideInsideC1 = await GeoPointInPolygonCircuit.AND(
+            andProofForInsideInsideC1 = await GeoPointInPolygonCombinerCircuit.AND(
                 proofInsideCoordinate1InInsidePolygon1,
                 proofInsideCoordinate1InInsidePolygon2,
             );
@@ -390,7 +391,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ANDed with a proof outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.AND(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );
@@ -403,7 +404,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ANDed with a proof outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.AND(
                     andProoForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );
@@ -416,7 +417,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ANDed with a proof inside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.AND(
+                const andInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.AND(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1InInsidePolygon1,
                 );
@@ -429,7 +430,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ORed with a proof inside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.OR(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1InInsidePolygon1,
                 );
@@ -442,7 +443,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ORed with OR inside/outside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.OR(
                     andProoForInsideOutsideC1,
                     orProofForInsideOutsideC1,
                 );
@@ -455,7 +456,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when AND inside/outside proof is ORed with a OR outside/outside polygon', () => {
             it('returns proof outside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.OR(
                     andProoForInsideOutsideC1,
                     orProofForOutsideOutsideC1,
                 );
@@ -468,7 +469,7 @@ describe('CoordinatesInPolygon', () => {
 
         describe('when OR inside/outside proof is ORed with a proof outside polygon', () => {
             it('returns proof inside polygon', async () => {
-                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCircuit.OR(
+                const orInsideOutsideProofAndOutsideProof = await GeoPointInPolygonCombinerCircuit.OR(
                     orProofForInsideOutsideC1,
                     proofInsideCoordinate1NotInOutsidePolygon1,
                 );

@@ -17,6 +17,7 @@ export interface IZKGeoPointProver extends IZKProver {
     Prove: {
         inPolygon: (polygon: ZKThreePointPolygon) => Promise<ZKGeoPointInPolygonProof>;
         inPolygons: (polygons: ZKThreePointPolygon[]) => Promise<ZKGeoPointInPolygonProof[]>;
+        combineProofs: (proofs: ZKGeoPointInPolygonProof[]) => Promise<ZKGeoPointInPolygonProof>;
         combinePointInPolygonProofs: () => Promise<ZKGeoPointInOrOutOfPolygonCircuitProof>;
         authenticateFromIntegrationOracle: (publicKey: ZKPublicKey, signature: ZKSignature) => Promise<ZKGeoPointProviderCircuitProof>;
         exactGeoPoint: () => Promise<ZKExactGeoPointCircuitProof>;

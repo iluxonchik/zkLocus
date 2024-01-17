@@ -27,10 +27,19 @@ export default function <T extends ZKGeoPointConstructor>(Base: T) {
         }
         
         normalizedValue(): { latitude: ZKLatitude; longitude: ZKLongitude; factor: ZKNumber; } {
-            const factorAsNumber: number = 10 ** this.factor;
-            const factor: ZKNumber = new ZKNumber(factorAsNumber);
+            const factor: ZKNumber = new ZKNumber(this.factor);
             const latitude: ZKLatitude = new ZKLatitude(this.latitude.normalized);
             const longitude: ZKLongitude = new ZKLongitude(this.longitude.normalized);
+
+            const maximumFactor: number = Math.max(latitude.factor, longitude.factor);
+
+            console.log('Latitude factor: ' + latitude.factor);
+            console.log('Longitude factor: ' + longitude.factor);
+            console.log('Maximum factor: ' + maximumFactor);
+
+            latitude.increaseFactor(maximumFactor);
+            longitude.increaseFactor(maximumFactor);
+            
             return {
                 latitude,
                 longitude,

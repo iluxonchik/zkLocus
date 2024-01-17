@@ -1,6 +1,6 @@
 import { SelfProof, Empty, ZkProgram } from "o1js";
 import { GeoPointInOutPolygonCommitment } from '../../model/private/Commitment';
-import { GeoPointInPolygonCircuitProof} from "./Geography";
+import { GeoPointInPolygonCircuitProof } from "./GeoPointInPolygonCircuit";
 import { extendWithPointInPolygonProof, fromPointInPolygonProofs } from "../../logic/private/GeoPointInOrOutOfPolygon";
 
 /*

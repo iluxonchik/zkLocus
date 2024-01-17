@@ -1,4 +1,4 @@
-import { GeoPointInPolygonCircuitProof } from "../../../zkprogram/private/Geography";
+import { GeoPointInPolygonCircuitProof } from "../../../zkprogram/private/GeoPointInPolygonCircuit";
 import { Bool } from "o1js";
 import type { ZKGeoPointInPolygonProof } from "../ZKGeoPointInPolygonProof";
 
@@ -24,6 +24,7 @@ export default function <T extends new (...args: any[]) => ZKGeoPointInPolygonPr
                 this.isVerified = true;
             }
         }
+ 
 
         get isCached(): boolean {
             return this.isVerified;
@@ -31,11 +32,6 @@ export default function <T extends new (...args: any[]) => ZKGeoPointInPolygonPr
 
         protected setProof(proof: GeoPointInPolygonCircuitProof): void { 
             super.setProof(proof);
-            this.isVerified = false;
-        }
-
-        protected setBaseProof(baseProof: ZKGeoPointInPolygonProof): void {
-            super.setBaseProof(baseProof);
             this.isVerified = false;
         }
 

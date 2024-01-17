@@ -1,4 +1,4 @@
-import { Field, JsonProof } from "o1js";
+import { Cache, Field, JsonProof } from "o1js";
 import { ExactGeoPointCircuit, ExactGeoPointCircuitProof } from "../../zkprogram/public/ExactGeoPointCircuit";
 import { ZKLocusProof } from "./ZKLocusProof";
 import CachingProofVerificationMiddleware from "./middleware/CachingProofVerificationMiddleware";
@@ -7,7 +7,6 @@ import type { ZKGeoPoint } from "../models/ZKGeoPoint";
 import { GeoPointCommitment } from "../../model/public/Commitment";
 import { ZKGeoPointProviderCircuitProof } from "./ZKGeoPointProviderCircuitProof";
 import { GeoPointProviderCircuitProof } from "../../zkprogram/private/Geography";
-import { ZKOracleGeoPointProviderCircuitProof } from "./ZKOracleGeoPointProviderCircuitProof";
 
 
 /**
@@ -36,6 +35,8 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
         this._proof = proof;
         this.claimedZKGeoPoint = zkGeoPoint;
     }
+
+
 
     /**
      * Creates a ZKExactGeoPointCircuitProof from a ZKGeoPointProviderCircuitProof.

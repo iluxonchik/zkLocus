@@ -1,10 +1,8 @@
-import { Experimental, SelfProof, Empty, ZkProgram} from "o1js";
-import { AND, OR, expandTimeStampInterval, expandTimeStampIntervalRecursive, geoPointFromLiteral, timeStampIntervalFromLiteral, proveProvidedGeoPointIn3PointPolygon, exactGeoPointFromOracle} from '../../logic/Methods';
+import { ZkProgram} from "o1js";
+import { geoPointFromLiteral, timeStampIntervalFromLiteral, exactGeoPointFromOracle} from '../../logic/Methods';
 
-import { GeoPointInPolygonCommitment, GeoPointWithTimeStampIntervalInPolygonCommitment } from '../../model/private/Commitment';
-import { GeoPoint, ThreePointPolygon } from '../../model/Geography';
+import { GeoPoint} from '../../model/Geography';
 import { TimeStampInterval } from "../../model/Time";
-import { geoPointWithTimeStampInPolygonAND, geoPointWithTimeStampInPolygonOR, proofAttachSourcedTimestampinterval } from "../../logic/Methods";
 import { OracleGeoPointProviderCircuitProof } from "./Oracle";
 
 
@@ -49,8 +47,8 @@ import { OracleGeoPointProviderCircuitProof } from "./Oracle";
  * The output of this should be as an input to GeoPointInPolygon.
  */
 export const GeoPointProviderCircuit = ZkProgram({
-    name: "GeoPointProviderCircuit",
-
+    name: "GeoPoint Provider Circuit",
+    publicInput: undefined,
     publicOutput: GeoPoint,
 
     methods: {
@@ -68,44 +66,6 @@ export const GeoPointProviderCircuit = ZkProgram({
 });
 
 export class GeoPointProviderCircuitProof extends ZkProgram.Proof(GeoPointProviderCircuit) {}
-
-/**
- * Set of ZK circuts responsible for verifying that a geographical point is within a polygon,
- * and contains the logic for combining multiple proofs into a single one.
- * 
- * The source of the geographical point is attested by the proof from where the point is sourced.
- */
-export const GeoPointInPolygonCircuit = ZkProgram({
-    name: "Geo Point In Polygon Circuit",
-    publicOutput: GeoPointInPolygonCommitment,
-
-    methods: { 
-        proveGeoPointIn3PointPolygon: {
-            privateInputs: [GeoPointProviderCircuitProof, ThreePointPolygon],
-            method: proveProvidedGeoPointIn3PointPolygon,
-        },
-
-        AND: {
-            privateInputs: [
-                (SelfProof<Empty, GeoPointInPolygonCommitment>),
-                (SelfProof<Empty, GeoPointInPolygonCommitment>),
-            ],
-            method: AND,
-        },
-
-        OR: {
-            privateInputs: [
-                (SelfProof<Empty, GeoPointInPolygonCommitment>),
-                (SelfProof<Empty, GeoPointInPolygonCommitment>),
-            ],
-            method: OR,
-        },
-    },
-});
-
-
-export class GeoPointInPolygonCircuitProof extends ZkProgram.Proof(GeoPointInPolygonCircuit) {}
-
 
 /**
  * Set of ZK circuits that allow for the creation of a proof attesting to the validity of a timestamp interval.
@@ -126,51 +86,3 @@ export const TimeStampIntervalProviderCircuit = ZkProgram({
 
 
 export class TimeStampIntervalProviderCircuitProof extends ZkProgram.Proof(TimeStampIntervalProviderCircuit) {}
-
-/**
- * Set of ZK circuits responsible for attaching a timestamp to a GeoPoint in Polygon proof.
- * The source of the timestamp is attested by the proof from where the timestamp is sourced.
- * 
- * The means by which the timestamp is attached to the GeoPoint in Polygon proof is by
- * adding the timestamp to the GeoPoint in Polygon proof's public output. This follows the
- * architectural approach that I have developed as a part of developing zkLocus, and it consists 
- * of "attaching" data to a proof.
- */
-export const GeoPointWithTimestampInPolygonCircuit = Experimental.ZkProgram({
-    publicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment,
-
-    methods: {
-        proofAttachProvidedTimestampinterval: {
-            privateInputs: [GeoPointInPolygonCircuitProof, TimeStampIntervalProviderCircuitProof],
-            method: proofAttachSourcedTimestampinterval,
-        }, 
-
-        increaseTimeStampInterval: {
-            privateInputs: [GeoPointWithTimeStampIntervalInPolygonCommitment, TimeStampInterval],
-            method: expandTimeStampInterval,
-        },
-
-        increaseTimeStampIntervalRecursive: {
-            privateInputs: [SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, TimeStampInterval],
-            method: expandTimeStampIntervalRecursive,
-        },
-
-        AND: {
-            privateInputs: [
-                (SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>),
-                (SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>),
-            ],
-            method: geoPointWithTimeStampInPolygonAND,
-        },
-
-        OR: {
-            privateInputs: [
-                (SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>),
-                (SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>),
-            ],
-            method: geoPointWithTimeStampInPolygonOR,
-        },
-    },
-});
-
-

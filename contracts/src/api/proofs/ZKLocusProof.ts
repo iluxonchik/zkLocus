@@ -106,8 +106,6 @@ export class ZKOracleAuthenticatedGeoPointCommitment extends ZKCommitment {
     proof structure.
 */
 export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkProgram.Proof>>>{
-    // TODO:
-    // - C extends ReturnType<typeof ZkProgram<any, any>> may not be the most elegant way to do this. Subclasess of ZKLocusProof only seem to work when "any" is used as the type for C
     protected _proof: P;
     protected static _circuit: ZKProgramCircuit;
     protected static _compiledCircuit: ZKProgramCompileResult | undefined;
@@ -115,6 +113,16 @@ export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkPr
      * The set of dependent proofs that need to be compiled to enable generation and verification of proofs of this type.
      */
     protected static _dependentProofs: ICompilableZKLocusProof[];
+
+    /**
+     * The set of sibling circuits associated with the main circuit. A sibling circuit is a circuit that has the same public output as the main circuit,
+     * and extends the main circuit's semanthics and functionality. An example of a sibling circuit is a circuit that provides roll-up functionality
+     * for the main circuit.
+     * 
+     * Sibling circuits are compiled alongisde the main circuit.
+     */
+    protected static _siblingCircuits: ZKProgramCircuit[] = [];
+    protected static _compiledSiblingCircuits: ZKProgramCompileResult[] = [];
 
 
     verify(): void {
@@ -155,6 +163,17 @@ export abstract class ZKLocusProof<P extends InstanceType<ReturnType<typeof ZkPr
             }
         );
         this._compiledCircuit = result;
+
+        for (const siblingCircuit of this._siblingCircuits) {
+            const siblingResult: ZKProgramCompileResult = await siblingCircuit.compile(
+                {
+                    cache: cache,
+                    forceRecompile: forceRecompile
+                }
+            );
+            this._compiledSiblingCircuits.push(siblingResult);
+        }
+
         return result;
     }
 

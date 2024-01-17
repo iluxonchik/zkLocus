@@ -9,18 +9,6 @@ import type { ZKNumber } from "./ZKNumber";
 import { ZKLatitude } from "./ZKLatitude";
 import { ZKLongitude } from "./ZKLongitude";
 
-
-function int64ToNumber(value: Int64): number {
-    const maginitueAsBigInt: BigInt = value.magnitude.toBigInt();
-    const magnitudeAsNumber: number = Number(maginitueAsBigInt);
-    if (value.sgn.isPositive()) {
-        return magnitudeAsNumber;
-    } else {
-        return -magnitudeAsNumber;
-    }
-
-}
-
 /*
     Represents a geographical point in TypeScript that will be converted into a zkLocus geographical point.
     A zkLocus geographical point is one that can be used in a zero-knowledge circuit. zkLocus uses O1JS to
@@ -47,6 +35,10 @@ export class ZKGeoPoint {
 
         this._latitude = latitude instanceof ZKLatitude ? latitude : new ZKLatitude(latitude);
         this._longitude = longitude instanceof ZKLongitude ? longitude : new ZKLongitude(longitude);
+
+        const maximumFactor: number = Math.max(this._latitude.factor, this._longitude.factor);
+        this._latitude.increaseFactor(maximumFactor);
+        this._longitude.increaseFactor(maximumFactor);
     }
 
     get latitude(): ZKLatitude {
@@ -90,7 +82,11 @@ export class ZKGeoPoint {
      */
     isEquals(other: ZKGeoPoint): boolean {
         return this.latitude.isEquals(other.latitude) && this.longitude.isEquals(other.longitude);
-    }    
+    }
+    
+    toString(): string {
+        return `ZKGeoPoint(${this.latitude}, ${this.longitude})`;
+    }
 
 }
 // Declaration merging to augment the ZKGeoPoint class with the additional properties and methods of the ZKInterface
