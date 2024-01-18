@@ -1,15 +1,17 @@
 <script lang="ts">
-	import MapComponent from '../components/MapComponent.svelte';
-	import LocateMe from '../components/LocateMe.svelte';
-	import AuroWalletConnector from '../components/AuroWalletConnector.svelte';
-	import StatusDisplay from '../components/StatusDisplay.svelte';
-	import ProofVerification from '../components/ProofVerification.svelte';
+	import MapComponent from '../../components/MapComponent.svelte';
+	import LocateMe from '../../components/LocateMe.svelte';
+	import AuroWalletConnectorExact from '../../components/AuroWalletConnectorExact.svelte';
+	import StatusDisplay from '../../components/StatusDisplay.svelte';
+	import ProofVerification from '../../components/ProofVerification.svelte';
 
 	import { Decimal } from 'decimal.js';
 
 	import OracleClient from 'zkLocus/src/tests/utils/OracleClient';
 	import { onMount } from 'svelte';
-	import {GeoPointInPolygonCombinedContract, ZKGeoPointInPolygonProof, ZKExactGeoPointCircuitProof, ZKPublicKey, ZKSignature, ZKGeoPoint, ZKThreePointPolygon} from 'zklocus';
+	import {ZKExactGeoPointCircuitProof, ZKPublicKey, ZKSignature, ZKGeoPoint, ZKThreePointPolygon, ZKExactGeolocationMetadataCircuitProof, GeoPointWithMetadataContract} from 'zklocus';
+	import ProofVerificationExact from '../../components/ProofVerificationExact.svelte';
+	
 	type LatLng = {
 		lat: number;
 		lng: number;
@@ -35,17 +37,17 @@
 	let isProofGenerationAllowed: boolean = false;
 
 	let allPolygons = [];
-	let proof: str;
 
 	let allThreePointPolygons: ZKThreePointPolygon[] = [];
-	let zkProofs: ZKGeoPointInPolygonProof[] = [];
 	let zkGeoPoint: ZKGeoPoint = new ZKGeoPoint(latitude, longitude);
 
-	let finalZKProof: ZKGeoPointInPolygonProof;
+	let finalZKProof: ZKExactGeolocationMetadataCircuitProof;
 
 	let oracleEndpointURL: string = 'http://127.0.0.1:5577';
 	let connectionStatus: boolean | null = null;
 	let isGeolocationAuthenticated: boolean = false;
+
+	let metadata: string;
 
 
 	onMount(async () => {
@@ -144,11 +146,9 @@
 			const startTime = Date.now();
 
 
-			await ZKGeoPointInPolygonProof.compile();
 			await ZKExactGeoPointCircuitProof.compile();
-			await GeoPointInPolygonCombinedContract.compile();
-			
-
+			await ZKExactGeolocationMetadataCircuitProof.compile();
+			await GeoPointWithMetadataContract.compile();
 
 			const endTime = Date.now();
 			const durationInSeconds = (endTime - startTime) / 1000;
@@ -170,41 +170,16 @@
 	async function generateProof() {
 		appStatus = 'Proving... ⚙️';
 
-		console.log('Generating private geolocation proofs...');
-		let zkProof: ZKGeoPointInPolygonProof;
+		console.log('Attaching metadata to exact GeoPoint proof...');
+		
+		finalZKProof = await zkGeoPoint.Prove.attachMetadata(metadata);
 
-		for (let polygon of allThreePointPolygons) {
-			console.log('\tGenerating proof for polygon: ', polygon.toString());
-			zkProof = await zkGeoPoint.Prove.inPolygon(polygon);
-			finalZKProof = zkProof;
-			const stringified = JSON.stringify(finalZKProof, null, 2);
-			console.log("stringified");
-			console.log(stringified);
-			const unstringifed: ZKGeoPointInPolygonProof = JSON.parse(stringified);
-			console.log("unstringifed");
-			console.log(unstringifed);
-			zkProofs.push(zkProof);
-			console.log(
-				'\tProof generated! ✅ Is geopoint in polygon? ',
-				zkProof.UnverifiedProofData.isInside
-			);
-		}
+		console.log('Metadata attached! ✅');
 
-		console.log('Private geolocation proofs generated! ✅ Total: ', zkProofs.length);
+		
 
-		if (zkProofs.length > 1) {
-			console.log('Rolling-up multiple geolocation proofs into a single one... 🔄');
-			zkProof = await zkGeoPoint.Prove.combineProofs(zkProofs);
-			finalZKProof = zkProof;
-			zkProofs.push(zkProof);
-			console.log(
-				'Roll-up complete! ✅ Is geopoint in polygon? ',
-				zkProof.UnverifiedProofData.isInside
-			);
-		}
-
-		appStatus = zkProofs.length > 0 ? 'Proofs generated ✅' : 'Proof generation failed ❌';
-		proofGenerated = zkProofs.length > 0;
+		appStatus = 'Proofs generated ✅';
+		proofGenerated = true;
 	}
 
 	function setPolygonPoints(newPoints: Array<LatLng>) {
@@ -307,6 +282,16 @@
 					bind:value={longitude}
 					disabled={isGeolocationAuthenticated}
 				/>
+				<label class="label">
+					<span class="label-text">Metadata:</span>
+				</label>
+				<input
+					type="text"
+					placeholder="Enter your metadata here after authenticating your geolocation"
+					class="input input-bordered"
+					bind:value={metadata}
+					disabled={!isGeolocationAuthenticated}
+				/>
 			</div>
 			<div class="card-actions justify-start">
 				<button
@@ -328,7 +313,7 @@
 					on:click={async (e) => {
 						await generateProof();
 					}}
-					disabled={!isProofGenerationAllowed || !isGeolocationAuthenticated}>Generate Proof</button
+					disabled={!isProofGenerationAllowed || !isGeolocationAuthenticated}>Attach Metadata</button
 				>
 			</div>
 		</div>
@@ -353,7 +338,7 @@
 
 	<div class="my-4">
 		<h2 class="text-xl font-bold mb-2">Submit Proof with Auro Wallet</h2>
-		<AuroWalletConnector proof={finalZKProof} on:walletConnected={handleWalletConnected} on:transactionSubmitted={handleTransactionSubmitted} />
+		<AuroWalletConnectorExact proof={finalZKProof} on:walletConnected={handleWalletConnected} on:transactionSubmitted={handleTransactionSubmitted} />
 	</div>
 	
 
@@ -362,7 +347,7 @@
 	<div class="card bg-base-200 shadow-xl">
 		<div class="card-body">
 			<h2 class="card-title">Proof Verification</h2>
-			<ProofVerification zkProof={finalZKProof} />
+			<ProofVerificationExact zkProof={finalZKProof} />
 		</div>
 	</div>
 

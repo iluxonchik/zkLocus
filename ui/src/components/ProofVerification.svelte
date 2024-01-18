@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Proof, verify } from 'o1js';
-	import { GeoPointInPolygonCommitment } from '../../../contracts/src/model/private/Commitment';
+	import type { JsonProof } from 'o1js';
+	import type { ZKGeoPointInPolygonProof, ZKThreePointPolygon } from 'zklocus';
 	let L;
 
 	let jsonInput: string = '';
 	let map;
-	let polygonLayer;
-  let proofVerificationStatus: string = "Waiting for JSON input..."
+	let polygonLayers = [];
+	let proofVerificationStatus: string = 'Waiting for JSON input...';
+
+	export let zkProof: ZKGeoPointInPolygonProof;
 
 	onMount(async () => {
 		L = await import('leaflet');
@@ -17,68 +19,150 @@
 		}).addTo(map);
 	});
 
+	function areJsonProofsEqual(proof1: JsonProof, proof2: JsonProof): boolean {
+    // Compare publicInput arrays
+    if (proof1.publicInput.length !== proof2.publicInput.length) {
+        return false;
+    }
+    for (let i = 0; i < proof1.publicInput.length; i++) {
+        if (proof1.publicInput[i] !== proof2.publicInput[i]) {
+            return false;
+        }
+    }
+
+    // Compare publicOutput arrays
+    if (proof1.publicOutput.length !== proof2.publicOutput.length) {
+        return false;
+    }
+    for (let i = 0; i < proof1.publicOutput.length; i++) {
+        if (proof1.publicOutput[i] !== proof2.publicOutput[i]) {
+            return false;
+        }
+    }
+
+    // Compare maxProofsVerified
+    if (proof1.maxProofsVerified !== proof2.maxProofsVerified) {
+        return false;
+    }
+
+    // Compare proof strings
+    if (proof1.proof !== proof2.proof) {
+        return false;
+    }
+
+    // All properties are equal
+    return true;
+}
+
+	function clearPolygonLayers() {
+		for (const polygonLayer of polygonLayers) {
+			polygonLayer.remove();
+		}
+		polygonLayers = [];
+	}
+
 	function handleJsonInput(event) {
 		jsonInput = event.target.value;
 		try {
-			const proofObject = JSON.parse(jsonInput);
-			const vertices = Object.values(proofObject.polygon); // Get the vertices as an array
-			displayPolygon(vertices);
+			displayPolygonsFromZKProof(zkProof);
 		} catch (error) {
 			console.error('Error parsing JSON:', error);
 			// Reset the map and polygonLayer if the JSON is invalid
-			if (polygonLayer) {
-				polygonLayer.remove();
-				polygonLayer = null;
-			}
+			clearPolygonLayers();
 			map.setView([0, 0], 2); // Reset map view to default
 		}
 	}
 
-	function displayPolygon(vertices) {
-		// Remove previous polygon if exists
-		if (polygonLayer) {
-			polygonLayer.remove();
-		}
-		// Parse and convert coordinates, then add polygon to the map
-		const latLngs = vertices.map((vertex) => convertPoint(vertex));
-		polygonLayer = L.polygon(latLngs, { color: 'yellow' }).addTo(map);
-		map.fitBounds(polygonLayer.getBounds());
-	}
 
-	function convertPoint(vertex) {
-		// Convert the factor back into floating point representation
-		const latitude = parseInt(vertex.latitude.magnitude) / parseInt(vertex.factor.magnitude);
-		const longitude = parseInt(vertex.longitude.magnitude) / parseInt(vertex.factor.magnitude);
-		return [latitude, longitude];
+	function displayPolygonsFromZKProof(proof: ZKGeoPointInPolygonProof) {
+		// only supports one combined proof (i.e. .AND())
+		let allPolygons: ZKThreePointPolygon[];
+		if (proof.polygon !== undefined) {
+			allPolygons = [proof.polygon];
+		} else {
+			if (proof!.leftZKProof!.polygon === undefined || proof!.rightZKProof!.polygon === undefined) {
+				throw new Error('Polygons are undefined');
+			}
+			allPolygons = [proof!.leftZKProof!.polygon, proof.rightZKProof!.polygon];
+		}
+
+		clearPolygonLayers();
+
+		for (const polygon of allPolygons) {
+			// Parse and convert coordinates, then add polygon to the map
+			const polVertices = polygon.vertices;
+			const latLngs = [
+				[polVertices[0].latitude.normalized, polVertices[0].longitude.normalized],
+				[polVertices[1].latitude.normalized, polVertices[1].longitude.normalized],
+				[polVertices[2].latitude.normalized, polVertices[2].longitude.normalized]
+			];
+			const polygonLayer = L.polygon(latLngs, { color: 'yellow' }).addTo(map);
+			polygonLayers.push(polygonLayer);
+			map.fitBounds(polygonLayer.getBounds());
+		}
 	}
 
 	async function verifyProof() {
 		try {
-      proofVerificationStatus = "Parsing JSON..."
-			const proofObject = JSON.parse(jsonInput);
-      proofVerificationStatus = "Verifying proof..."
-      const isOk: Boolean = await verify(proofObject.proof, proofObject.geoPointInPolygonCircuitVerificationKey)
-      proofVerificationStatus = "Proof verified!"
+			proofVerificationStatus = 'Parsing JSON...';
+			const jsonProof: JsonProof = JSON.parse(jsonInput);
+			proofVerificationStatus = 'Verifying proof...';
+
+			let isOk: boolean = true;
+			try {
+				const zkJsonProof: JsonProof = zkProof.toJSON();
+				if (!areJsonProofsEqual(zkJsonProof, jsonProof)) {
+					console.log('JSON proof:', jsonProof);
+					console.log('ZK proof:', zkJsonProof);
+					throw new Error('JSON proof does not match the proof generated by the circuit');
+				}
+				await zkProof.verify();
+			} catch (e) {
+				isOk = false;
+				console.error(e);
+			}
+			proofVerificationStatus = 'Proof verified!';
+			const lastPolygonLayer = polygonLayers[polygonLayers.length - 1];
+
 			if (isOk) {
-				polygonLayer.setStyle({ color: 'green' });
+				for (const polygonLayer of polygonLayers) {
+					polygonLayer.setStyle({ color: 'green' });
+				}
+
 				L.popup()
-					.setLatLng(polygonLayer.getBounds().getCenter())
-					.setContent('Location verified successfully! You have just proved to a third-party that your location is within this polygon, without revealing your exact coordinates.')
+					.setLatLng(lastPolygonLayer.getBounds().getCenter())
+					.setContent(
+						'Location verified successfully! You have just proved to a third-party that your location is within the polygon(s), without revealing your exact coordinates.'
+					)
 					.openOn(map);
 			} else {
-				polygonLayer.setStyle({ color: 'red' });
+				for (const polygonLayer of polygonLayers) {
+					polygonLayer.setStyle({ color: 'red' });
+					L.popup()
+					.setLatLng(lastPolygonLayer.getBounds().getCenter())
+					.setContent(
+						'Location verification failed! The provided proof could not be verified.'
+					)
+					.openOn(map);
+				}
 				console.error('Proof verification failed');
 			}
 		} catch (error) {
-			polygonLayer.setStyle({ color: 'red' });
+			for (const polygonLayer of polygonLayers) {
+				polygonLayer.setStyle({ color: 'red' });
+			}
 			console.error('Error verifying proof:', error);
 		}
 	}
-
 </script>
+
 <p><b>Status: </b>{proofVerificationStatus}</p>
 <div id="proof-map" style="height: 400px;" />
-<textarea placeholder="Paste the JSON proof here and click on 'Verify Proof'" bind:value={jsonInput} on:input={handleJsonInput} />
+<textarea
+	placeholder="Paste the JSON proof here and click on 'Verify Proof'"
+	bind:value={jsonInput}
+	on:input={handleJsonInput}
+/>
 <button class="btn btn-primary" on:click={verifyProof} disabled={!jsonInput}>Verify Proof</button>
 
 <style>
