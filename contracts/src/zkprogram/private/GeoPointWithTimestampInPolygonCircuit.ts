@@ -14,6 +14,9 @@ import { TimeStampIntervalProviderCircuitProof } from "./Geography";
  * adding the timestamp to the GeoPoint in Polygon proof's public output. This follows the
  * architectural approach that I have developed as a part of developing zkLocus, and it consists
  * of "attaching" data to a proof.
+ * 
+ *    IMPORTANT: This is a prototype, which was implemenented to demonstrate feasiablity.
+ *         This is not a final implementation, and should not be used in production.
  */
 
 export const GeoPointWithTimestampInPolygonCircuit = ZkProgram({
