@@ -21,3 +21,7 @@ export class GeoPointInPolygonCombinedContract extends SmartContract {
         this.geoPointInPolygon.set(proof.publicOutput);
     }
 }
+
+export class RandomMina extends SmartContract {
+    
+}
