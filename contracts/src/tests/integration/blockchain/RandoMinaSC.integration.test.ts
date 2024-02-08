@@ -54,7 +54,6 @@ describe('RandoMina Random Number Generator', () => {
 
   describe('Success Case', () => {
     it('Generating a random number with a random Nonce succeeds', async () => {
-
       const randomNonce: Field = Field.random();
       const currNetworkState: NetworkValue = Mina.activeInstance.getNetworkState();
       const currentState: Field = currNetworkState.stakingEpochData.ledger.hash;
@@ -93,4 +92,49 @@ describe('RandoMina Random Number Generator', () => {
       expect(txnId.isSuccess).toBe(true);
     });
   });
+
+  describe("Failure Case", () => {
+    it('Generating a number with mismatched network state fails', async () => {
+      const randomNonce: Field = Field.random();
+      const currentState: Field = Field.random(); // Random network state
+      const sender: Field = Poseidon.hash(feePayerPublicKey.toFields());
+
+      const actualCurrNetworkState: NetworkValue = Mina.activeInstance.getNetworkState();
+      const actualCurrentState: Field = actualCurrNetworkState.stakingEpochData.ledger.hash;
+
+      // Sanity check to ensure that the randomly generated number is not equal to the actual network state
+      const isAbortTest: boolean = actualCurrentState.equals(currentState).toBoolean();
+      expect(isAbortTest).toBe(false);
+
+      console.log('Generating observation of computation of PRNG...');
+      const randomNumberGenerationObservation: RandomNumberObservationCircuitProof = await RandomNumberObservationCircuit.generateRandomNumber(
+        { networkState: currentState, sender: sender }, // public PRNG params
+        randomNonce, // private PRNG param
+      );
+      console.log('Observation of computation of PRNG generated!');
+
+      // Extract generated random number from proof. Verificaiton is skipped, because it
+      // is perfomed in the smart contract call below
+      const obtainedRandomNumber: Field = randomNumberGenerationObservation.publicOutput;
+      // Re-construct PRNG algorithm
+      const expectedRandomNumber: Field = Poseidon.hash([currentState, feePayerPublicKeyDigest, randomNonce]);
+
+      const isPRNGCorrect: boolean = obtainedRandomNumber.equals(expectedRandomNumber).toBoolean()
+      expect(isPRNGCorrect).toBe(true);
+
+      console.log("Posting proof to blockchain...");
+      const txn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
+        zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+      });
+
+      console.log("\tProving smart contract invocation...");
+      await txn.prove();
+      console.log("\tSmart contract invocation proved!");
+      
+      txn.sign([feePayer]);
+
+      await expect(txn.send()).rejects.toThrow(/Protocol_state_precondition_unsatisfied/);
+    });
+  });
+
 });
