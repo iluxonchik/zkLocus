@@ -137,4 +137,44 @@ describe('RandoMina Random Number Generator', () => {
     });
   });
 
+  it('Generating a number with mismatched public key fails', async () => {
+    const randomNonce: Field = Field.random();
+    const currNetworkState: NetworkValue = Mina.activeInstance.getNetworkState();
+    const currentState: Field = currNetworkState.stakingEpochData.ledger.hash;
+    const sender: Field = Field.random(); // Random sender
+    const actualSender: Field = Poseidon.hash(feePayerPublicKey.toFields());
+
+    // Ensure that the randomly generated sender is not equal to the actual sender
+    const isAbortTest: boolean = actualSender.equals(sender).toBoolean();
+    expect(isAbortTest).toBe(false);
+
+    console.log('Generating observation of computation of PRNG...');
+    const randomNumberGenerationObservation: RandomNumberObservationCircuitProof = await RandomNumberObservationCircuit.generateRandomNumber(
+      { networkState: currentState, sender: sender }, // public PRNG params
+      randomNonce, // private PRNG param
+    );
+    console.log('Observation of computation of PRNG generated!');
+
+    // Extract generated random number from proof. Verificaiton is skipped, because it
+    // is perfomed in the smart contract call below
+    const obtainedRandomNumber: Field = randomNumberGenerationObservation.publicOutput;
+    // Re-construct PRNG algorithm
+    const expectedRandomNumber: Field = Poseidon.hash([currentState, sender, randomNonce]);
+
+    const isPRNGCorrect: boolean = obtainedRandomNumber.equals(expectedRandomNumber).toBoolean()
+    expect(isPRNGCorrect).toBe(true);
+
+    console.log("Posting proof to blockchain...");
+    const txn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
+      zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+    });
+
+    console.log("\tProving smart contract invocation...");
+    await txn.prove();
+    console.log("\tSmart contract invocation proved!");
+    
+    txn.sign([feePayer]);
+
+    await expect(txn.send()).rejects.toThrow(/Protocol_state_precondition_unsatisfied/);
+  });
 });
