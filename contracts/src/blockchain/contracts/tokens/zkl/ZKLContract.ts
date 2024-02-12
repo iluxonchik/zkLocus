@@ -6,6 +6,8 @@ import {
     DeployArgs,
     Permissions,
     UInt64,
+    PublicKey,
+    Signature,
   } from 'o1js';
   
   const tokenSymbol = 'ZKL';
