@@ -19,6 +19,7 @@ import {
    * 
    */
   export class ZKLContract extends SmartContract {
+    SUPPLY_CAP: UInt64 = UInt64.from(21n**18n);
     @state(UInt64) circulatingSupply = State<UInt64>();
   
     deploy(args: DeployArgs) {
@@ -49,7 +50,8 @@ import {
         let totalCirculatingSupply: UInt64 = this.circulatingSupply.get();
         this.circulatingSupply.requireEquals(totalCirculatingSupply);
     
-        let newTotalAmountInCirculation: UInt64 = totalCirculatingSupply.add(amount);
+        const newTotalAmountInCirculation: UInt64 = totalCirculatingSupply.add(amount);
+        newTotalAmountInCirculation.assertLessThanOrEqual(this.SUPPLY_CAP, "Cannot mint above the supply cap.")
 
         adminSignature
           .verify(
