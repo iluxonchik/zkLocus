@@ -19,7 +19,7 @@ import {
    * 
    */
   export class ZKLContract extends SmartContract {
-    SUPPLY_CAP: UInt64 = UInt64.from(21n**18n);
+    SUPPLY_CAP: UInt64 = UInt64.from(1n**18n);
     @state(UInt64) circulatingSupply = State<UInt64>();
   
     deploy(args: DeployArgs) {

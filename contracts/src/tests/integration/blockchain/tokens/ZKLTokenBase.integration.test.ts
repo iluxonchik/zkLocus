@@ -1,7 +1,6 @@
 
 import { AccountUpdate, Field, Mina, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
-import { zkAppProver } from "o1js/dist/node/lib/account_update";
 
 
 describe('ZKL Token Smart Contract', () => {
@@ -29,15 +28,15 @@ describe('ZKL Token Smart Contract', () => {
 
     console.log("Compiling smart contract...");
     const startTimeSC = Date.now();
-    const verificationKey: {data: string, hash: Field} = (await ZKLContract.compile()).verificationKey;
+    const verificationKey: { data: string, hash: Field } = (await ZKLContract.compile()).verificationKey;
     const endTimeSC = Date.now();
     console.log("Compilation complete!");
-    console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`); 
+    console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
 
     console.log("Deploying smart contract...");
     const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
       AccountUpdate.fundNewAccount(feePayerPublicKey);
-      zkAppInstance.deploy({ verificationKey, zkappKey: zkAppPrivateKey});
+      zkAppInstance.deploy({ verificationKey, zkappKey: zkAppPrivateKey });
     });
     await txn.prove();
     txn.sign([feePayer, zkAppPrivateKey]);
@@ -51,9 +50,30 @@ describe('ZKL Token Smart Contract', () => {
 
   describe('Initial state checks', () => {
     it('Initial supply is zero', async () => {
-        const totalSupply: UInt64 = zkAppInstance.circulatingSupply.get();
-        expect(totalSupply.equals(UInt64.zero).toBoolean()).toBe(true);
+      const totalSupply: UInt64 = zkAppInstance.circulatingSupply.get();
+      expect(totalSupply.equals(UInt64.zero).toBoolean()).toBe(true);
     });
-  }); 
+  });
+
+  describe('Minting checks', () => {
+    it('Minting tokens to own zkApp succeeds', async () => {
+      const mintAmount: UInt64 = UInt64.from(1);
+
+      const mintSig: Signature = Signature.create(
+        zkAppPrivateKey,
+        mintAmount.toFields().concat(zkAppAddress.toFields())
+      )
+      const mintTxn: Mina.Transaction = await Mina.transaction(
+        feePayer.toPublicKey(), () => {
+          AccountUpdate.fundNewAccount(feePayer.toPublicKey());
+          zkAppInstance.mint(zkAppAddress, mintAmount, mintSig);
+        });
+
+      console.log("Proving mint transaction...")
+      await mintTxn.prove();
+      await mintTxn.sign([feePayer]).send();
+      console.log("Mint transaction proved!");
+    });
+  });
 
 });
