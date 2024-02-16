@@ -1,6 +1,7 @@
 
 import { AccountUpdate, Field, Mina, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
+import exp from "constants";
 
 
 describe('ZKL Token Smart Contract', () => {
@@ -73,6 +74,23 @@ describe('ZKL Token Smart Contract', () => {
       await mintTxn.prove();
       await mintTxn.sign([feePayer]).send();
       console.log("Mint transaction proved!");
+
+      // Ensure the tokens got sent to the desired address
+      const zkAppBalance: bigint = Mina.getBalance(zkAppAddress, zkAppInstance.token.id).value.toBigInt();
+      const expectedZkAppBalance: bigint = mintAmount.toBigInt();
+      expect(zkAppBalance).toEqual(expectedZkAppBalance);
+
+      // Ensure the total supply has been correctly updated
+      const obtainedTotalSupply: bigint = zkAppInstance.circulatingSupply.get().toBigInt();
+      const expectedTotalSupply: bigint = mintAmount.toBigInt();
+      expect(obtainedTotalSupply).toEqual(expectedTotalSupply);
+      
+    });
+
+    it('Account without balance raises exception', async () => {
+      const newAccount = Local.testAccounts[2].privateKey;
+      expect(Mina.getBalance(newAccount.toPublicKey(), zkAppInstance.token.id)).rejects.toThrow();
+
     });
   });
 
