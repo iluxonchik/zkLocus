@@ -71,6 +71,6 @@ export class RandoMinaContract extends SmartContract {
         claimedSender.assertEquals(Poseidon.hash(this.sender.toFields()));
 
         const claimedNetworkState: Field = observationProof.publicInput.networkState;
-        this.network.snarkedLedgerHash.requireEquals(claimedNetworkState);
+        this.network.stakingEpochData.ledger.hash.requireEquals(claimedNetworkState);
     }
 }
