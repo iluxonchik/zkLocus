@@ -19,14 +19,16 @@ import {
    * 
    */
   export class ZKLContract extends SmartContract {
-    SUPPLY_CAP: UInt64 = UInt64.from(1n**18n);
+    SUPPLY_CAP: UInt64 = UInt64.from(10n**18n);
     @state(UInt64) circulatingSupply = State<UInt64>();
   
     deploy(args: DeployArgs) {
       super.deploy(args);
   
       const permissionToEdit = Permissions.proof();
-  
+      
+
+    // Temporarily all set to proof, will be refined later
       this.account.permissions.set({
         ...Permissions.default(),
         editState: permissionToEdit,
@@ -64,8 +66,43 @@ import {
           address: receiverAddress,
           amount,
         });
+
     
         this.circulatingSupply.set(newTotalAmountInCirculation);
       }
 
+      @method sendTo(
+        senderAddress: PublicKey,
+        receiverAddress: PublicKey,
+        amount: UInt64
+      ) {
+        this.token.send({
+          from: senderAddress,
+          to:receiverAddress,
+          amount: amount,
+        });
+      }
+
+      /**
+       * ⚠️ WARNING: ITERATIVE PROTOTYPE
+       * 
+       * $ZKL is being developed iteratively, and this is a part of its developing functionality.
+       * For now, this method has not protections.
+       *
+       *  Move $ZKL from one address to another.
+       * @param senderAddress 
+       * @param receiverAddress 
+       * @param amount 
+       */
+      @method sendFromTo(
+        senderAddress: PublicKey,
+        receiverAddress: PublicKey,
+        amount: UInt64
+      ) {
+        this.token.send({
+          from: senderAddress,
+          to:receiverAddress,
+          amount: amount,
+        });
+      }
 }
