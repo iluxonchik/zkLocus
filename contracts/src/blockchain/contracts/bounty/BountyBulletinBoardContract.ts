@@ -53,6 +53,8 @@ export class BountyBulletinBoardContract extends SmartContract {
   // @method initState(intialBountyMapRoot: Field) {
   //   this.bountyMapRoot.set(intialBountyMapRoot);
   // }
+
+  
   
   
   @method fundBounty(
@@ -84,27 +86,35 @@ export class BountyBulletinBoardContract extends SmartContract {
     amount: UInt64,
   ) {
     const zklContract: ZKLContract = new ZKLContract(zklAddress);
-    zklContract.sendTo(this.address, amount);
-
+    zklContract.sendFromTo(this.sender, this.address, amount);
     // Mint custom token of the same amount
+    this.token.mint({address: this.sender, amount: amount});
+    
   }
 
   @method burnToZKL(
     amount: UInt64,
   ) {
     // Burn an amount of BBB_ZKL to ZKL
-
+    this.token.burn({address: this.sender, amount: amount});
+    const zklContract: ZKLContract = new ZKLContract(this.sender);
+    zklContract.sendFromTo(this.address, this.sender, amount);
   }
 
   deploy(args: DeployArgs) {
     super.deploy(args);
+    // Temporarily all set to proof, will be refined later
     this.account.permissions.set({
       ...Permissions.default(),
-      editState: Permissions.proofOrSignature(),
+      editState: Permissions.proof(),
+      setTokenSymbol: Permissions.proof(),
+      send: Permissions.proof(),
+      receive: Permissions.none(),
     });
   }
 
   @method init() {
       super.init();
+      this.account.tokenSymbol.set("BBB");
   } 
 }
