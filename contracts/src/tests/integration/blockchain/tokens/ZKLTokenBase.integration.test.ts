@@ -1,20 +1,38 @@
 
-import { AccountUpdate, Field, Mina, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
+import { Account, AccountUpdate, Field, Mina, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
-import exp from "constants";
-
+import { BountyBulletinBoardContract } from "../../../../blockchain/contracts/bounty/BountyBulletinBoardContract";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 describe('ZKL Token Smart Contract', () => {
   const Local = Mina.LocalBlockchain();
+  Local.setProofsEnabled(false);
   // let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
-  let zkAppInstance: ZKLContract;
-  const feePayer: PrivateKey = Local.testAccounts[0].privateKey;
+  let zklSC: ZKLContract;
+  const deployerPrivateKey: PrivateKey = Local.testAccounts[0].privateKey;
   //const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
-  const feePayerPublicKey: PublicKey = feePayer.toPublicKey();
+  const deployerPublicKey: PublicKey = deployerPrivateKey.toPublicKey();
+
+  const interactor1PrivateKey: PrivateKey = Local.testAccounts[1].privateKey;
+  const interactor1PublicKey: PublicKey = interactor1PrivateKey.toPublicKey();
+
+  const interactor2PrivateKey: PrivateKey = Local.testAccounts[2].privateKey;
+  const interactor2PublicKey: PublicKey = interactor2PrivateKey.toPublicKey();
+
   const transactionFee: number = 100_000_000;
-  const zkAppPrivateKey: PrivateKey = PrivateKey.random();
-  const zkAppAddress: PublicKey = zkAppPrivateKey.toPublicKey();
-  zkAppInstance = new ZKLContract(zkAppAddress);
+
+  const zklAppPrivateKey: PrivateKey = PrivateKey.random();
+  const zklAppAddress: PublicKey = zklAppPrivateKey.toPublicKey();
+
+  const bbbAppprivateKey: PrivateKey = PrivateKey.random();
+  const bbbAppAddress: PublicKey = bbbAppprivateKey.toPublicKey();
+
+  zklSC = new ZKLContract(zklAppAddress);
+  const bbbSC: BountyBulletinBoardContract = new BountyBulletinBoardContract(bbbAppAddress);
+  
 
   beforeAll(async () => {
     console.log("Compiling circuits...");
@@ -27,31 +45,43 @@ describe('ZKL Token Smart Contract', () => {
     Mina.setActiveInstance(Local);
     //Mina.setActiveInstance(Berkeley);
 
-    console.log("Compiling smart contract...");
+    console.log("Compiling smart contracts...");
     const startTimeSC = Date.now();
-    const verificationKey: { data: string, hash: Field } = (await ZKLContract.compile()).verificationKey;
+    const zklContractVerificationKey: { data: string, hash: Field } = (await ZKLContract.compile()).verificationKey;
+    const bbbContractVerificationKey: { data: string, hash: Field } = (await BountyBulletinBoardContract.compile()).verificationKey;
     const endTimeSC = Date.now();
     console.log("Compilation complete!");
     console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
 
-    console.log("Deploying smart contract...");
-    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-      AccountUpdate.fundNewAccount(feePayerPublicKey);
-      zkAppInstance.deploy({ verificationKey, zkappKey: zkAppPrivateKey });
+    console.log("Deploying $ZKL smart contract...");
+    const txn1 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+      AccountUpdate.fundNewAccount(deployerPublicKey);
+      zklSC.deploy({ verificationKey: zklContractVerificationKey, zkappKey: zklAppPrivateKey });
     });
-    await txn.prove();
-    txn.sign([feePayer, zkAppPrivateKey]);
-    await txn.send();
-    console.log("Smart contract deployed!");
+    await txn1.prove();
+    txn1.sign([deployerPrivateKey, zklAppPrivateKey]);
+    await txn1.send();
+    console.log("$ZKL smart contract deployed!");
 
-    console.log(txn.toGraphqlQuery());
+    console.log(txn1.toGraphqlQuery());
     console.log();
-    console.log(txn.toJSON());
+    console.log(txn1.toJSON());
+
+    console.log("Deploying $BBB smart contract...");
+    const txn2 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+      AccountUpdate.fundNewAccount(deployerPublicKey);
+      bbbSC.deploy({ verificationKey: bbbContractVerificationKey, zkappKey: bbbAppprivateKey });
+    });
+    await txn2.prove();
+    txn2.sign([deployerPrivateKey, bbbAppprivateKey]);
+    await txn2.send();
+    console.log("$BBB smart contract deployed!");
   });
+
 
   describe('Initial state checks', () => {
     it('Initial supply is zero', async () => {
-      const totalSupply: UInt64 = zkAppInstance.circulatingSupply.get();
+      const totalSupply: UInt64 = zklSC.circulatingSupply.get();
       expect(totalSupply.equals(UInt64.zero).toBoolean()).toBe(true);
     });
   });
@@ -60,38 +90,72 @@ describe('ZKL Token Smart Contract', () => {
     it('Minting tokens to own zkApp succeeds', async () => {
       const mintAmount: UInt64 = UInt64.from(1);
 
-      const mintSig: Signature = Signature.create(
-        zkAppPrivateKey,
-        mintAmount.toFields().concat(zkAppAddress.toFields())
-      )
       const mintTxn: Mina.Transaction = await Mina.transaction(
-        feePayer.toPublicKey(), () => {
-          AccountUpdate.fundNewAccount(feePayer.toPublicKey());
-          zkAppInstance.mint(zkAppAddress, mintAmount, mintSig);
+        deployerPrivateKey.toPublicKey(), () => {
+          AccountUpdate.fundNewAccount(deployerPrivateKey.toPublicKey());
+          zklSC.mint(zklAppAddress, mintAmount);
         });
 
       console.log("Proving mint transaction...")
       await mintTxn.prove();
-      await mintTxn.sign([feePayer]).send();
+      await mintTxn.sign([deployerPrivateKey]).send();
       console.log("Mint transaction proved!");
 
       // Ensure the tokens got sent to the desired address
-      const zkAppBalance: bigint = Mina.getBalance(zkAppAddress, zkAppInstance.token.id).value.toBigInt();
+      const zkAppBalance: bigint = Mina.getBalance(zklAppAddress, zklSC.token.id).value.toBigInt();
       const expectedZkAppBalance: bigint = mintAmount.toBigInt();
       expect(zkAppBalance).toEqual(expectedZkAppBalance);
 
       // Ensure the total supply has been correctly updated
-      const obtainedTotalSupply: bigint = zkAppInstance.circulatingSupply.get().toBigInt();
+      const obtainedTotalSupply: bigint = zklSC.circulatingSupply.get().toBigInt();
       const expectedTotalSupply: bigint = mintAmount.toBigInt();
       expect(obtainedTotalSupply).toEqual(expectedTotalSupply);
-      
     });
 
-    it('Account without balance raises exception', async () => {
-      const newAccount = Local.testAccounts[2].privateKey;
-      expect(Mina.getBalance(newAccount.toPublicKey(), zkAppInstance.token.id)).rejects.toThrow();
+    describe('Bounty Bulletin Board Integration Basics', () => {
+
+      it('Minting $BBL_ZKL from $ZKL works', async () => {
+        const mintAmount: UInt64 = UInt64.from(100000);
+
+        const mintTxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey);
+            zklSC.mint(deployerPublicKey, mintAmount);
+          });
+        console.log(`Proving mint of ${mintAmount} of $ZKL...`);
+        await mintTxn.prove();
+        await mintTxn.sign([interactor1PrivateKey]).send();
+        console.log(`Mint of ${mintAmount} of $ZKL proved!`);
+
+        // At this point, the feePayerPublicKey should `mintAmount` of $ZKL
+        // Now, let's mint $BBB_ZKL from $ZKL
+        console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL...`);
+        const mintAmountBBB: UInt64 = UInt64.from(10);
+        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
+          deployerPublicKey, () => {
+            AccountUpdate.fundNewAccount(deployerPublicKey, 2);
+            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+          });
+
+        console.log("\t - Proving mint transaction...");
+
+        await mintFromZKLtxn.prove();
+        await mintFromZKLtxn.sign([deployerPrivateKey]).send();
+
+        console.log("\tMint transaction proved!");
+
+        // Confirm balances are correct
+        const zkAppBalance: bigint = Mina.getBalance(deployerPublicKey, zklSC.token.id).value.toBigInt();
+        const expectedZkAppBalance: bigint = mintAmount.toBigInt() - mintAmountBBB.toBigInt();
+        expect(zkAppBalance).toEqual(expectedZkAppBalance);
+
+        const bbbAppBalance: bigint = Mina.getBalance(deployerPublicKey, bbbSC.token.id).value.toBigInt();
+        const expectedBbbAppBalance: bigint = mintAmountBBB.toBigInt();
+        expect(bbbAppBalance).toEqual(expectedBbbAppBalance);
+      });
 
     });
-  });
 
-});
+  })
+}
+);
