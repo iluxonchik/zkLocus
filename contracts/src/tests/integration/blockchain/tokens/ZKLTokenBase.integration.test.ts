@@ -154,6 +154,73 @@ describe('ZKL Token Smart Contract', () => {
         expect(bbbAppBalance).toEqual(expectedBbbAppBalance);
       });
 
+
+      it('Funding a bounty with $ZKL works as epxected', async () => {
+        // TODO: this is the test method that I'm currently developing
+        const mintAmount: UInt64 = UInt64.from(100000);
+
+        const mintTxn: Mina.Transaction = await Mina.transaction(
+          interactor2PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor2PublicKey);
+            zklSC.mint(interactor1PublicKey, mintAmount);
+          });
+
+        console.log(`Proving mint of ${mintAmount} of $ZKL...`);
+        await mintTxn.prove();
+        await mintTxn.sign([interactor2PrivateKey]).send();
+        console.log(`Mint of ${mintAmount} of $ZKL proved!`);
+
+        // At this point, the feePayerPublicKey should `mintAmount` of $ZKL
+        // Now, let's mint $BBB_ZKL from $ZKL
+        console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL...`);
+        const mintAmountBBB: UInt64 = UInt64.from(10);
+        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey, 2);
+            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+          });
+
+        console.log("\t - Proving mint transaction...");
+
+        await mintFromZKLtxn.prove();
+        await mintFromZKLtxn.sign([interactor1PrivateKey]).send();
+
+        console.log("\tMint transaction proved!");
+
+        // Confirm balances are correct
+        const zklInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, zklSC.token.id).value.toBigInt();
+        const expectedZKLInteractor1Balance: bigint = mintAmount.toBigInt() - mintAmountBBB.toBigInt();
+        expect(zklInteractor1Balance).toEqual(expectedZKLInteractor1Balance);
+
+        const bbbInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, bbbSC.token.id).value.toBigInt();
+        const expectedBBBInteractor1Balance: bigint = mintAmountBBB.toBigInt();
+        expect(bbbInteractor1Balance).toEqual(expectedBBBInteractor1Balance);
+
+        console.log("Funding bounty with $BBB");
+
+        let fundedPubKey = bbbSC.deriveBountyAccountAddress(interactor1PublicKey, UInt64.from(1));
+        const fundBountyTxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey, 1);
+            fundedPubKey = bbbSC.fundBounty(
+              interactor1PublicKey,
+              UInt64.from(1),
+              mintAmountBBB,
+            )
+          });
+
+        console.log("\t - Proving fundBounty() transaction...");
+
+        await fundBountyTxn.prove();
+        await fundBountyTxn.sign([interactor1PrivateKey]).send();
+
+        // Confirm balances are correct
+        const fundedPubKeyBlanace: bigint = Mina.getBalance(fundedPubKey, bbbSC.deriveTokenId()).value.toBigInt();
+        const expectedPubKeyBalance: bigint = mintAmountBBB.toBigInt();
+        expect(fundedPubKeyBlanace).toEqual(expectedPubKeyBalance);
+      });
+
+      
     });
 
   })
