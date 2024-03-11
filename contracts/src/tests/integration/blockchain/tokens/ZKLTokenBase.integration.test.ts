@@ -220,7 +220,103 @@ describe('ZKL Token Smart Contract', () => {
         expect(fundedPubKeyBlanace).toEqual(expectedPubKeyBalance);
       });
 
-      
+      it.only('Claiming a bounty with $ZKL works as epxected', async () => {
+        // TODO: this is the test method that I'm currently developing
+        const mintAmount: UInt64 = UInt64.from(100000);
+
+
+        const mintTxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey);
+            zklSC.mint(interactor1PublicKey, mintAmount);
+          });
+
+        console.log(`Proving mint of ${mintAmount} of $ZKL to ${interactor1PublicKey.toBase58()}...`);
+        await mintTxn.prove();
+        await mintTxn.sign([interactor1PrivateKey]).send();
+        console.log(`Mint of ${mintAmount} of $ZKL proved!`);
+
+
+
+        // At this point, the feePayerPublicKey should `mintAmount` of $ZKL
+        // Now, let's mint $BBB_ZKL from $ZKL
+        console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL for ${interactor1PublicKey.toBase58()}...`);
+        const mintAmountBBB: UInt64 = UInt64.from(10);
+        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey, 2);
+            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+          });
+
+        console.log("\t - Proving mint transaction...");
+
+        await mintFromZKLtxn.prove();
+        await mintFromZKLtxn.sign([interactor1PrivateKey]).send();
+
+
+        console.log("\tMint transaction proved!");
+
+        console.log(`Funding bounty with $BBB from ${interactor1PublicKey.toBase58()}...`);
+
+        let fundedPubKey: PublicKey | undefined = undefined;
+        const fundBountyTxn: Mina.Transaction = await Mina.transaction(
+          interactor1PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor1PublicKey, 1);
+            fundedPubKey = bbbSC.fundBounty(
+              interactor1PublicKey,
+              UInt64.from(1),
+              mintAmountBBB,
+            )
+          });
+
+        if (fundedPubKey === undefined) {
+          throw new Error("fundedPubKey is undefined");
+        }
+        fundedPubKey = fundedPubKey as PublicKey;
+
+        console.log("\t - Proving fundBounty() transaction...");
+
+        await fundBountyTxn.prove();
+        await fundBountyTxn.sign([interactor1PrivateKey]).send();
+
+        console.log("\t - fundBounty() transaction proved and sent to network!");
+
+        // Burn $BBB_ZKL to $ZKL
+        console.log(`Claiming bounty by ${interactor2PublicKey.toBase58()}...`);
+
+
+        const claimBountyTxn: Mina.Transaction = await Mina.transaction(
+          interactor2PublicKey, () => {
+            AccountUpdate.fundNewAccount(interactor2PublicKey, 1);
+            bbbSC.claimBounty(interactor1PublicKey, UInt64.from(1));
+          });
+
+        console.log("\t - Proving claimBounty() transaction...");
+
+        await claimBountyTxn.prove();
+        claimBountyTxn.sign([interactor2PrivateKey]);
+          
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+
+        const jsonData = JSON.stringify(JSON.parse(claimBountyTxn.toJSON()), null, 2);
+        fs.writeFileSync(path.join(__dirname, 'output.json'), jsonData);
+        await claimBountyTxn.send();
+
+        // Confirm balances are correct:
+        // 1. The bounty $BBB_ZKL balance should be zero
+        // 2. The $ZKL amount of claimer is incremented by the bounty amount
+
+        const bountyBalance: bigint = Mina.getBalance(fundedPubKey, bbbSC.token.id).value.toBigInt();
+        expect(bountyBalance).toEqual(0);
+
+        const claimerBalance: bigint = Mina.getBalance(interactor2PublicKey, zklSC.token.id).value.toBigInt();
+        const expectedClaimerBalance: bigint = mintAmountBBB.toBigInt();
+        expect(claimerBalance).toEqual(expectedClaimerBalance);
+
+
+      });
+
     });
 
   })
