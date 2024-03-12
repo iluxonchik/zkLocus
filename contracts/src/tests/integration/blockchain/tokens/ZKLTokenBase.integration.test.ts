@@ -317,6 +317,11 @@ describe('ZKL Token Smart Contract', () => {
 
       });
 
+      it('Account without balance raises exception', async () => {
+        const newAccount = Local.testAccounts[2].privateKey;
+        expect(Mina.getBalance(newAccount.toPublicKey(), zklSC.token.id)).rejects.toThrow();
+
+      });
     });
 
   })
