@@ -33,8 +33,8 @@ import {
         ...Permissions.default(),
         editState: permissionToEdit,
         setTokenSymbol: permissionToEdit,
-        send: permissionToEdit,
-        receive: permissionToEdit,
+        send: Permissions.none(),
+        receive: Permissions.none(),
       });
     }
 
@@ -47,7 +47,7 @@ import {
     @method mint(
         receiverAddress: PublicKey,
         amount: UInt64,
-        adminSignature: Signature
+        //adminSignature: Signature
       ) {
         let totalCirculatingSupply: UInt64 = this.circulatingSupply.get();
         this.circulatingSupply.requireEquals(totalCirculatingSupply);
@@ -55,12 +55,12 @@ import {
         const newTotalAmountInCirculation: UInt64 = totalCirculatingSupply.add(amount);
         newTotalAmountInCirculation.assertLessThanOrEqual(this.SUPPLY_CAP, "Cannot mint above the supply cap.")
 
-        adminSignature
-          .verify(
-            this.address,
-            amount.toFields().concat(receiverAddress.toFields())
-          )
-          .assertTrue();
+        // adminSignature
+        //   .verify(
+        //     this.address,
+        //     amount.toFields().concat(receiverAddress.toFields())
+        //   )
+        //   .assertTrue();
     
         this.token.mint({
           address: receiverAddress,
