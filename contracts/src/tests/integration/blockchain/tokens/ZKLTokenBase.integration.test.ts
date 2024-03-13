@@ -33,6 +33,17 @@ describe('ZKL Token Smart Contract', () => {
   zklSC = new ZKLContract(zklAppAddress);
   const bbbSC: BountyBulletinBoardContract = new BountyBulletinBoardContract(bbbAppAddress);
   
+  const firstFundedAddr: PublicKey = bbbSC.deriveBountyAccountAddress(interactor1PublicKey, UInt64.from(1));
+
+
+  const publicKeyToName = {
+  [interactor1PublicKey.toBase58()]: { publicKey: interactor1PublicKey, name: 'Interactor 1' },
+  [interactor2PublicKey.toBase58()]: { publicKey: interactor2PublicKey, name: 'Interactor 2' },
+  [deployerPublicKey.toBase58()]: { publicKey: deployerPublicKey, name: 'Deployer' },
+  [zklAppAddress.toBase58()]: { publicKey: zklAppAddress, name: 'ZKL App' },
+  [bbbAppAddress.toBase58()]: { publicKey: bbbAppAddress, name: 'BBB App' },
+  [firstFundedAddr.toBase58()]: { publicKey: firstFundedAddr, name: 'First Funded Public Key' },
+};
 
   beforeAll(async () => {
     console.log("Compiling circuits...");
@@ -78,6 +89,38 @@ describe('ZKL Token Smart Contract', () => {
     console.log("$BBB smart contract deployed!");
   });
 
+type PublicKeyWithName = {
+  publicKey: PublicKey;
+  name: string;
+};
+
+async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>, label: string) {
+  const balances = [];
+
+  for (const { publicKey, name } of Object.values(publicKeyToName)) {
+    const balance: Record<string, string> = { 'Address': publicKey.toBase58()};
+    balance['Account Name'] = name;
+
+    try {
+      const zklBalance = Mina.getBalance(publicKey, zklSC.token.id).value.toBigInt();
+      balance['$ZKL'] = zklBalance.toString();
+    } catch (error) {
+      balance['$ZKL'] = '-';
+    }
+
+    try {
+      const bbbBalance = Mina.getBalance(publicKey, bbbSC.deriveTokenId()).value.toBigInt();
+      balance['$BBB'] = bbbBalance.toString();
+    } catch (error) {
+      balance['$BBB'] = '-';
+    }
+
+    balances.push(balance);
+  }
+
+  console.log(label);
+  console.table(balances);
+}
 
   describe('Initial state checks', () => {
     it('Initial supply is zero', async () => {
@@ -225,6 +268,8 @@ describe('ZKL Token Smart Contract', () => {
         const mintAmount: UInt64 = UInt64.from(100000);
 
 
+        await printBalances(publicKeyToName, "Initial state");
+
         const mintTxn: Mina.Transaction = await Mina.transaction(
           interactor1PublicKey, () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey);
@@ -236,6 +281,8 @@ describe('ZKL Token Smart Contract', () => {
         await mintTxn.sign([interactor1PrivateKey]).send();
         console.log(`Mint of ${mintAmount} of $ZKL proved!`);
 
+
+        await printBalances(publicKeyToName, "After $ZKL Mint");
 
 
         // At this point, the feePayerPublicKey should `mintAmount` of $ZKL
@@ -253,6 +300,8 @@ describe('ZKL Token Smart Contract', () => {
         await mintFromZKLtxn.prove();
         await mintFromZKLtxn.sign([interactor1PrivateKey]).send();
 
+
+        await printBalances(publicKeyToName, "After $BBB Mint from $ZKL");
 
         console.log("\tMint transaction proved!");
 
@@ -284,6 +333,9 @@ describe('ZKL Token Smart Contract', () => {
         // Burn $BBB_ZKL to $ZKL
         console.log(`Claiming bounty by ${interactor2PublicKey.toBase58()}...`);
 
+
+
+        await printBalances(publicKeyToName, "After Fund Bounty");
 
         const claimBountyTxn: Mina.Transaction = await Mina.transaction(
           interactor2PublicKey, () => {
