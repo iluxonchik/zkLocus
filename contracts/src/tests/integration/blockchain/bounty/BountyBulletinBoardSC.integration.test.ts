@@ -49,6 +49,20 @@ describe('ZKL Token Smart Contract', () => {
     console.log(txn.toJSON());
   });
 
+  describe('Funding Checks', () => {
+    it('Funding a $ZKL bounty suceeds', async () => {
+      const fundTx: Mina.Transaction = await Mina.transaction(
+        feePayer.toPublicKey(), () => {
+          //AccountUpdate.fundNewAccount(feePayer.toPublicKey());
+          zkAppInstance.fundBounty(feePayer.toPublicKey(), UInt64.from(1), UInt64.from(1));
+        });
+
+      console.log("Proving fund transaction...")
+      await fundTx.prove();
+      await fundTx.sign([feePayer]).send();
+      console.log("Mint transaction proved!");      
+    });
+
   });
 
 });
