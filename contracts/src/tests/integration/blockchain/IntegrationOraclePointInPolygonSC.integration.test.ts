@@ -24,7 +24,22 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
   const Local = Mina.LocalBlockchain();
   let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
   let zkAppInstance: GeoPointInPolygonContract;
-  const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
+  const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY);
+  const pubKey: PublicKey = feePayer.toPublicKey();
+
+  const pubKeyFields: Field[] = pubKey.toFields();
+
+  console.log(pubKeyFields);
+  console.log(pubKeyFields.toString());
+  console.log(pubKeyFields.length);
+
+
+  const privateKeyFields: Field[] = feePayer.toFields();
+  console.log(privateKeyFields);
+  console.log(privateKeyFields.toString());
+  console.log(privateKeyFields.length);
+
+
   const feePayerPublicKey: PublicKey = feePayer.toPublicKey();
   const transactionFee = 100_000_000;
 
