@@ -72,7 +72,7 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
   });
 
   const randomGeoPointData = RandomGeoPointGenerator.generateRandomZKGeoPoint();
-  const randomGeoPoint = new ZKGeoPoint(randomGeoPointData.latitude, randomGeoPointData.longitude);
+  const randomGeoPoint: ZKGeoPoint  = new ZKGeoPoint(randomGeoPointData.latitude, randomGeoPointData.longitude);
   
 
 
