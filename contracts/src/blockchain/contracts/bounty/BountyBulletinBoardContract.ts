@@ -13,8 +13,10 @@ import {
   AccountUpdate,
   TokenContract,
   AccountUpdateForest,
+  Bool,
 } from 'o1js';
 import { ZKLContract } from '../tokens/zkl/ZKLContract';
+import { Account } from 'o1js/dist/node/lib/precondition';
 
 /*
   Merkle Witness Mental Model Glossary:
@@ -28,13 +30,13 @@ import { ZKLContract } from '../tokens/zkl/ZKLContract';
 type GroupHash = {
   x: Field;
   y: {
-      x0: Field;
-      x1: Field;
+    x0: Field;
+    x1: Field;
   };
 }
 
 
-  
+
 /**
  * Bounty Bulletin Board is the smart contract that exposes the "Fund Bounty" and "Claim Bounty" interfaces.
  * 
@@ -77,10 +79,10 @@ export class BountyBulletinBoardContract extends TokenContract {
 
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
-    
+
     // https://github.com/o1-labs/o1js/blob/0ec1c9da8c714298e6088ffa88178abb3961d200/src/lib/nullifier.ts#L64
     const newGroupHash: GroupHash = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
-    const group: Group  = new Group({x: newGroupHash.x, y: newGroupHash.y.x0});
+    const group: Group = new Group({ x: newGroupHash.x, y: newGroupHash.y.x0 });
     const bountyPublicKey: PublicKey = PublicKey.fromGroup(group);
 
     return bountyPublicKey;
@@ -93,10 +95,10 @@ export class BountyBulletinBoardContract extends TokenContract {
 
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
-    
+
     // https://github.com/o1-labs/o1js/blob/0ec1c9da8c714298e6088ffa88178abb3961d200/src/lib/nullifier.ts#L64
     const newGroupHash: GroupHash = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
-    const group: Group  = new Group({x: newGroupHash.x, y: newGroupHash.y.x0});
+    const group: Group = new Group({ x: newGroupHash.x, y: newGroupHash.y.x0 });
     const bountyPublicKey: PublicKey = PublicKey.fromGroup(group);
 
     return bountyPublicKey;
@@ -113,7 +115,7 @@ export class BountyBulletinBoardContract extends TokenContract {
     // this.approveAccountUpdate(accountUpdate);
     let accountUpdate = this.internal.send({
       from: senderAddress,
-      to:receiverAddress,
+      to: receiverAddress,
       amount: amount,
     });
     this.approveAccountUpdate(accountUpdate);
@@ -138,7 +140,7 @@ export class BountyBulletinBoardContract extends TokenContract {
         to: bountyPublicKey,
         amount: bbAmountIncrement,
       }
-    ) 
+    )
 
     return bountyPublicKey;
 
@@ -156,21 +158,42 @@ export class BountyBulletinBoardContract extends TokenContract {
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
     const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+
+    // sender acccount update 
     let au = AccountUpdate.create(bountyPublicKey, this.deriveTokenId());
-    this.approveAccountUpdate(au);
     let balance: UInt64 = au.account.balance.getAndRequireEquals();
+    au.balance.subInPlace(balance);
+    au.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
+    this.approve(au);
+
+    // receiver account update
+    let au2 = AccountUpdate.create(this.sender, this.deriveTokenId());
+    au2.balance.addInPlace(balance);
+    au2.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
+    this.approve(au2);
+
+
     //this.sendFromTo(bountyPublicKey, this.sender, balance);
 
-    au = this.internal.send({
-      from: bountyPublicKey,
-      to: this.sender,
-      amount: balance,
-    })
+    // au = this.internal.send({
+    //   from: au,
+    //   to: au2,
+    //   amount: balance,
+    // });
 
-    this.approveAccountUpdate(au);
+    //this.approveAccountUpdate(au);
 
     //this.burnToZKL(bountyPublicKey, this.sender);
-    
+
+  }
+
+  @method claimBountyWithApprove(
+    claimAU: AccountUpdate,
+    bountyId: UInt64,
+  ) {
+    this.approve(claimAU);
+
+
   }
 
   @method mintFromZKL(
@@ -180,13 +203,13 @@ export class BountyBulletinBoardContract extends TokenContract {
     const zklContract: ZKLContract = new ZKLContract(zklAddress);
     zklContract.sendFromTo(this.sender, this.address, amount);
     // Mint custom token of the same amount
-    this.internal.mint({address: this.sender, amount: amount});   
+    this.internal.mint({ address: this.sender, amount: amount });
   }
 
   @method burnToZKL(
     bountyAccountPublicKey: PublicKey,
     receiverAccountAddress: PublicKey,
-  ) {   
+  ) {
 
     // const bountyAccountUpdate = AccountUpdate.create(
     //   bountyAccountPublicKey,
@@ -205,7 +228,8 @@ export class BountyBulletinBoardContract extends TokenContract {
     let accountUpdate = AccountUpdate.create(receiverAccountAddress, this.deriveTokenId());
     let currentBalance: UInt64 = accountUpdate.account.balance.getAndRequireEquals();
     accountUpdate.balance.subInPlace(currentBalance);
-    let sendAccUpd = this.internal.send({from: bountyAccountPublicKey, to: this.address, amount: currentBalance});
+    accountUpdate.balanceChange
+    let sendAccUpd = this.internal.send({ from: bountyAccountPublicKey, to: this.address, amount: currentBalance });
     //this.approveAccountUpdate(sendAccUpd);
     //this.internal.burn({address: this.address, amount: currentBalance});
     const zklContract: ZKLContract = new ZKLContract(receiverAccountAddress);
@@ -217,17 +241,17 @@ export class BountyBulletinBoardContract extends TokenContract {
     // Temporarily all set to proof, will be refined later
     this.account.permissions.set({
       ...Permissions.default(),
-      editState: Permissions.proof(),
+      //editState: Permissions.proof(),
       setTokenSymbol: Permissions.proof(),
       send: Permissions.none(),
-      receive: Permissions.none(),
-      access: Permissions.proofOrSignature(),
+      //receive: Permissions.none()
+      //access: Permissions.proofOrSignature(),
     });
 
   }
 
   @method init() {
-      super.init();
-      this.account.tokenSymbol.set("BBB");
-  } 
+    super.init();
+    this.account.tokenSymbol.set("BBB");
+  }
 }
