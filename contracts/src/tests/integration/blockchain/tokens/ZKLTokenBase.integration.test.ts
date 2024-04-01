@@ -322,6 +322,8 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
           throw new Error("fundedPubKey is undefined");
         }
         fundedPubKey = fundedPubKey as PublicKey;
+        
+        const confirmedFundedPubKey = fundedPubKey as PublicKey;
 
         console.log("\t - Proving fundBounty() transaction...");
 
@@ -354,6 +356,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         const jsonData = JSON.stringify(JSON.parse(claimBountyTxn.toJSON()), null, 2);
         fs.writeFileSync(path.join(__dirname, 'output.json'), jsonData);
         await claimBountyTxn.send();
+
+        console.log("\t - claimBounty() transaction proved and sent to network!");
+        
+        await printBalances(publicKeyToName, "After Claim Bounty");
 
         // Confirm balances are correct:
         // 1. The bounty $BBB_ZKL balance should be zero
