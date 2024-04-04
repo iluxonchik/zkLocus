@@ -121,7 +121,47 @@ export class BountyBulletinBoardContract extends TokenContract {
     this.approveAccountUpdate(accountUpdate);
   }
 
-  @method fundBounty(
+@method fundBounty(
+    funderAddress: PublicKey,
+    bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
+    bbAmountIncrement: UInt64,
+  ): PublicKey {
+
+    // 1. Derive the  a PublicKey, which will represent the address of the account 
+    // which contains the bounty $ZKL amount
+    const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+
+    // NOTE: funding of new account may be required, if the "bountyPublicKey" is a new account.
+    // The sender can easily verify wether the bounty needs to be funded (new bounty operation),
+    // or whether it already exists
+
+    const au: AccountUpdate = AccountUpdate.create(bountyPublicKey, this.deriveTokenId());
+    au.body.update.permissions = {
+      isSome: Bool(true),
+      value: {
+        ...Permissions.default(),
+        send: Permissions.none(),
+        receive: Permissions.none(),
+      }
+    }
+
+    au.balance.addInPlace(bbAmountIncrement);
+
+    this.approve(au);
+
+    // this.internal.send(
+    //   {
+    //     from: this.sender,
+    //     to: au,
+    //     amount: bbAmountIncrement,
+    //   }
+    // )
+
+    return bountyPublicKey;
+  }
+
+
+  @method fundBountyOriginal(
     funderAddress: PublicKey,
     bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
     bbAmountIncrement: UInt64,
@@ -159,32 +199,36 @@ export class BountyBulletinBoardContract extends TokenContract {
     // which contains the bounty $ZKL amount
     const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
 
-    // sender acccount update 
+    // // sender acccount update 
     let au = AccountUpdate.create(bountyPublicKey, this.deriveTokenId());
     let balance: UInt64 = au.account.balance.getAndRequireEquals();
-    au.balance.subInPlace(balance);
-    au.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
-    this.approve(au);
+    // au.balance.subInPlace(balance);
+    // au.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
+    // this.approve(au);
 
-    // receiver account update
-    let au2 = AccountUpdate.create(this.sender, this.deriveTokenId());
-    au2.balance.addInPlace(balance);
-    au2.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
-    this.approve(au2);
+    // // receiver account update
+    // let au2 = AccountUpdate.create(this.sender, this.deriveTokenId());
+    // au2.balance.addInPlace(balance);
+    // au2.body.mayUseToken = AccountUpdate.MayUseToken.ParentsOwnToken;
+    // this.approve(au2);
 
 
     //this.sendFromTo(bountyPublicKey, this.sender, balance);
 
-    // au = this.internal.send({
-    //   from: au,
-    //   to: au2,
-    //   amount: balance,
-    // });
+    let ac = this.internal.send({
+      from: bountyPublicKey,
+      to: this.sender,
+      amount: balance,
+    });
+
 
     //this.approveAccountUpdate(au);
 
     //this.burnToZKL(bountyPublicKey, this.sender);
+  }
 
+  @method approveUpdate(au: AccountUpdate) {
+    this.approve(au);
   }
 
   @method claimBountyWithApprove(
@@ -243,7 +287,7 @@ export class BountyBulletinBoardContract extends TokenContract {
       ...Permissions.default(),
       //editState: Permissions.proof(),
       setTokenSymbol: Permissions.proof(),
-      send: Permissions.none(),
+      send: Permissions.proof(),
       //receive: Permissions.none()
       //access: Permissions.proofOrSignature(),
     });
