@@ -345,6 +345,21 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
             bbbSC.claimBounty(interactor1PublicKey, UInt64.from(1));
           });
 
+        // const claimBountyTxn: Mina.Transaction = await Mina.transaction(
+        //   interactor2PublicKey, () => {
+        //     AccountUpdate.fundNewAccount(interactor2PublicKey, 1);
+            
+        //     let au1 = AccountUpdate.create(confirmedFundedPubKey, bbbSC.deriveTokenId());
+            
+        //     let balance: UInt64 = au1.account.balance.getAndRequireEquals();
+        //     au1.balance.subInPlace(balance);
+        //     bbbSC.approveUpdate(au1);
+
+        //     let au2 = AccountUpdate.create(interactor2PublicKey, bbbSC.deriveTokenId());
+        //     au2.balance.addInPlace(balance);
+        //     bbbSC.approveUpdate(au2);
+        //   });
+
         console.log("\t - Proving claimBounty() transaction...");
 
         await claimBountyTxn.prove();
