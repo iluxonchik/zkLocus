@@ -134,6 +134,46 @@ export class BountyBulletinBoardContract extends TokenContract {
     // NOTE: funding of new account may be required, if the "bountyPublicKey" is a new account.
     // The sender can easily verify wether the bounty needs to be funded (new bounty operation),
     // or whether it already exists
+
+    const au: AccountUpdate = AccountUpdate.create(bountyPublicKey, this.deriveTokenId());
+    au.body.update.permissions = {
+      isSome: Bool(true),
+      value: {
+        ...Permissions.default(),
+        send: Permissions.none(),
+        receive: Permissions.none(),
+      }
+    }
+
+    au.balance.addInPlace(bbAmountIncrement);
+
+    this.approve(au);
+
+    // this.internal.send(
+    //   {
+    //     from: this.sender,
+    //     to: au,
+    //     amount: bbAmountIncrement,
+    //   }
+    // )
+
+    return bountyPublicKey;
+  }
+
+
+  @method fundBountyOriginal(
+    funderAddress: PublicKey,
+    bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
+    bbAmountIncrement: UInt64,
+  ): PublicKey {
+
+    // 1. Derive the  a PublicKey, which will represent the address of the account 
+    // which contains the bounty $ZKL amount
+    const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+
+    // NOTE: funding of new account may be required, if the "bountyPublicKey" is a new account.
+    // The sender can easily verify wether the bounty needs to be funded (new bounty operation),
+    // or whether it already exists
     this.internal.send(
       {
         from: this.sender,
