@@ -1,4 +1,4 @@
-import { Account, AccountUpdate, Bool, DeployArgs, Field, PublicKey, SmartContract, State, VerificationKey, method, state, Permissions, Poseidon, Mina} from "o1js";
+import { AccountUpdate, Bool, DeployArgs, Field, PublicKey, SmartContract, State, VerificationKey, method, state } from "o1js";
 import { DeployeeSC } from "./DeployeeSC";
 
 /**
@@ -7,9 +7,9 @@ import { DeployeeSC } from "./DeployeeSC";
 export class DeployerSC extends SmartContract {
     @state(PublicKey) bountyMapRoot = State<PublicKey>();
 
-    @method deployDeployee(deployeeAddr: PublicKey, args: DeployArgs) { 
+    @method deployDeployee(deployeeAddr: PublicKey, verificationKey: VerificationKey) { 
         const deployeeSC: DeployeeSC = new DeployeeSC(deployeeAddr);
-        deployeeSC.deploy(args);
+        deployeeSC.deploy({verificationKey: verificationKey});
         deployeeSC.initState(deployeeAddr);
         
         // Retrieve the account update of DeployeeSC
