@@ -1,26 +1,27 @@
-import { AccountUpdate, Bool, DeployArgs, Field, PublicKey, SmartContract, State, VerificationKey, method, state } from "o1js";
+import { Account, AccountUpdate, Bool, DeployArgs, Field, PublicKey, SmartContract, State, VerificationKey, method, state, Permissions, Poseidon, Mina} from "o1js";
 import { DeployeeSC } from "./DeployeeSC";
 
 /**
  * DeployerSC is a smart contract that deploys another Smart Contract.
  */
 export class DeployerSC extends SmartContract {
+     
     @state(PublicKey) bountyMapRoot = State<PublicKey>();
+    @method deployDeployee(deployeeAddr: PublicKey, deployeePubKey: PublicKey,  verificationKey: VerificationKey) {         
+        deployeeAddr.assertEquals(this.sender);
 
-    @method deployDeployee(deployeeAddr: PublicKey, verificationKey: VerificationKey) { 
-        const deployeeSC: DeployeeSC = new DeployeeSC(deployeeAddr);
-        deployeeSC.deploy({verificationKey: verificationKey});
-        deployeeSC.initState(deployeeAddr);
-        
-        // Retrieve the account update of DeployeeSC
-        const deployeeAccountUpdate: AccountUpdate = deployeeSC.self;
+        let zkApp: AccountUpdate = AccountUpdate.createSigned(deployeePubKey);
 
-        // TODO: ensure that verification key is set to a specific value
-        // [Code is needed here]
+        zkApp.account.permissions.set({
+            ...Permissions.default(),
+            editState: Permissions.proofOrSignature(),
+        });
 
-        deployeeAccountUpdate.body.update.appState.at(0)?.isSome.assertEquals(Bool(true));
+        zkApp.account.verificationKey.set(verificationKey);
+        AccountUpdate.setValue(zkApp.body.update.appState[0], Poseidon.hash(deployeeAddr.toFields()));
 
-        // Approve the account update of the DeployeeSC
-        this.approve(deployeeAccountUpdate);
+        const feePayer: AccountUpdate = AccountUpdate.createSigned(deployeeAddr);
+        const feeReceiver: AccountUpdate = AccountUpdate.createSigned(this.address);
+        feePayer.send({to:feeReceiver, amount: Mina.getNetworkConstants().accountCreationFee})
     }
 }
