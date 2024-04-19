@@ -7,6 +7,16 @@ import { DeployeeSC } from "./DeployeeSC";
 export class DeployerSC extends SmartContract {
      
     @state(PublicKey) bountyMapRoot = State<PublicKey>();
+
+    deploy(args: DeployArgs) {
+        super.deploy(args);
+        this.account.permissions.set({
+            ...Permissions.default(),
+            editState: Permissions.none(),
+            incrementNonce: Permissions.none(),
+        });
+    }
+
     @method deployDeployee(deployeeAddr: PublicKey, deployeePubKey: PublicKey,  verificationKey: VerificationKey) {         
         deployeeAddr.assertEquals(this.sender);
 
