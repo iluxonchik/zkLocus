@@ -1,5 +1,5 @@
 
-import { Account, AccountUpdate, Field, Mina, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
+import { Account, AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
 import { BountyBulletinBoardContract } from "../../../../blockchain/contracts/bounty/BountyBulletinBoardContract";
 import { dirname } from 'path';
@@ -76,17 +76,17 @@ describe('ZKL Token Smart Contract', () => {
 
         const deployeeSCPrivateKey: PrivateKey = PrivateKey.random();
         const deployeeContract: DeployeeSC = new DeployeeSC(deployeeSCPrivateKey.toPublicKey());
-
         const deployeeDeployTxn: Mina.Transaction = await Mina.transaction(
           deployerPublicKey, () => {
             AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerContract.deployDeployee(deployerPublicKey, deployeeSCVerificationKey);
+            deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
           });
           await deployeeDeployTxn.prove();
           await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey, deployerSCPrivateKey]).send();
 
-          const deployerVal: PublicKey = deployeeContract.deployer.getAndRequireEquals();
-          expect(deployerVal).toEqual(deployerPublicKey);
+          const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
+          const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
+          expect(deployerVal).toEqual(expectedDeployerVal);
 
  
       });

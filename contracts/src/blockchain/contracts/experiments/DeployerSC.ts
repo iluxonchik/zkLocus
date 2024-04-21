@@ -31,7 +31,7 @@ export class DeployerSC extends SmartContract {
         AccountUpdate.setValue(zkApp.body.update.appState[0], Poseidon.hash(deployeeAddr.toFields()));
 
         const feePayer: AccountUpdate = AccountUpdate.createSigned(deployeeAddr);
-        const feeReceiver: AccountUpdate = AccountUpdate.createSigned(this.address);
+        const feeReceiver: AccountUpdate = AccountUpdate.create(this.address);
         feePayer.send({to:feeReceiver, amount: Mina.getNetworkConstants().accountCreationFee})
     }
 }
