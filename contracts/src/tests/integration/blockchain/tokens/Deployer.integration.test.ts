@@ -82,7 +82,7 @@ describe('ZKL Token Smart Contract', () => {
             deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
           });
           await deployeeDeployTxn.prove();
-          await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey, deployerSCPrivateKey]).send();
+          await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey]).send();
 
           const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
           const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
