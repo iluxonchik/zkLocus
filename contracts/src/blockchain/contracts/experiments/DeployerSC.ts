@@ -12,8 +12,6 @@ export class DeployerSC extends SmartContract {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
-            editState: Permissions.none(),
-            incrementNonce: Permissions.none(),
         });
     }
 
