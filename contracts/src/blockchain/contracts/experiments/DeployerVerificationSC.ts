@@ -28,7 +28,8 @@ export class DeployerVerificationSC extends SmartContract {
         // Then, ensure the deployer attribute matches the sender/claimed
         const deployedSC: DeployeeSC = new DeployeeSC(deployedSCAddr);
         const supposedDeployerAddr: Field = deployedSC.deployer.get();
-        deployedSC.deployer.requireEquals(claimedDeployeeAddrDigest);
+        deployedSC.deployer.requireEquals(supposedDeployerAddr);
+        supposedDeployerAddr.assertEquals(claimedDeployeeAddrDigest);
         
         // TODO:
         // Verify that the verification key of the SC is the expected one 
