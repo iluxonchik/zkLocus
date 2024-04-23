@@ -33,13 +33,10 @@ export class DeployerVerificationSC extends SmartContract {
         const supposedDeployerAddr: Field = deployedSC.deployer.get();
         deployedSC.deployer.requireEquals(supposedDeployerAddr);
         supposedDeployerAddr.assertEquals(claimedDeployeeAddrDigest);
+
+        deployedSC.confirmUsage();
         
         // TODO:
         // Verify that the verification key of the SC is the expected one 
-        const ac: AccountUpdate = AccountUpdate.create(deployedSCAddr);
-        const storedVk: Field = ac.body.update.verificationKey.value.hash;
-
-        const expectedVerificationKeyDigest: Field = this.expectedVerificationKeyDigest.getAndRequireEquals();
-        storedVk.assertEquals(expectedVerificationKeyDigest);
     }
 }

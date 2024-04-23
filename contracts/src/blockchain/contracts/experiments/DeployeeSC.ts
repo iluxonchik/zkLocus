@@ -12,9 +12,8 @@ export class DeployeeSC extends SmartContract {
         });
     }
 
-    // TODO: without @method the complication fails
-    @method setDeployer(deployer: Field) {
-        this.deployer.set(deployer);
-    } 
+    @method confirmUsage() {
+        // Meant to be empty
+    }
 
 }

@@ -130,9 +130,6 @@ describe('ZKL Token Smart Contract', () => {
       await deployerVerificationSCDeployTxn.sign([deployerPrivateKey, deployerVerificationSCPrivateKey]).send();
 
     });
-
-
-
   });
 
 });
