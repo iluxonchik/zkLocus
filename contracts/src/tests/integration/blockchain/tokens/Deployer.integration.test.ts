@@ -32,7 +32,7 @@ describe('ZKL Token Smart Contract', () => {
 
   zklSC = new ZKLContract(zklAppAddress);
   const bbbSC: BountyBulletinBoardContract = new BountyBulletinBoardContract(bbbAppAddress);
-  
+
   const firstFundedAddr: PublicKey = bbbSC.deriveBountyAccountAddress(interactor1PublicKey, UInt64.from(1));
 
   let deployerSCVerificationKey: { data: string, hash: Field };
@@ -60,82 +60,79 @@ describe('ZKL Token Smart Contract', () => {
     console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
   });
 
-    describe('Bounty Bulletin Board Integration Basics', () => {
+  describe('Bounty Bulletin Board Integration Basics', () => {
 
-      it('Deploy of child account is successful', async () => {
-        // TODO: this is the test method that I'm currently developing
-        const mintAmount: UInt64 = UInt64.from(100000);
-        
-        const deployerSCPrivateKey: PrivateKey = PrivateKey.random();
-        const deployerContract: DeployerSC = new DeployerSC(deployerSCPrivateKey.toPublicKey());
+    it('Deploy of child account is successful', async () => {
+      const deployerSCPrivateKey: PrivateKey = PrivateKey.random();
+      const deployerContract: DeployerSC = new DeployerSC(deployerSCPrivateKey.toPublicKey());
 
-        const deployerDeployTxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
-            AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerContract.deploy({verificationKey: deployerSCVerificationKey, zkappKey: deployerSCPrivateKey});
-          });
-          await deployerDeployTxn.prove();
-          await deployerDeployTxn.sign([deployerPrivateKey, deployerSCPrivateKey]).send();
+      const deployerDeployTxn: Mina.Transaction = await Mina.transaction(
+        deployerPublicKey, () => {
+          AccountUpdate.fundNewAccount(deployerPublicKey);
+          deployerContract.deploy({ verificationKey: deployerSCVerificationKey, zkappKey: deployerSCPrivateKey });
+        });
+      await deployerDeployTxn.prove();
+      await deployerDeployTxn.sign([deployerPrivateKey, deployerSCPrivateKey]).send();
 
-        const deployeeSCPrivateKey: PrivateKey = PrivateKey.random();
-        const deployeeContract: DeployeeSC = new DeployeeSC(deployeeSCPrivateKey.toPublicKey());
-        const deployeeDeployTxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
-            AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
-          });
-          await deployeeDeployTxn.prove();
-          await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey]).send();
+      const deployeeSCPrivateKey: PrivateKey = PrivateKey.random();
+      const deployeeContract: DeployeeSC = new DeployeeSC(deployeeSCPrivateKey.toPublicKey());
+      const deployeeDeployTxn: Mina.Transaction = await Mina.transaction(
+        deployerPublicKey, () => {
+          AccountUpdate.fundNewAccount(deployerPublicKey);
+          deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
+        });
+      await deployeeDeployTxn.prove();
+      await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey]).send();
 
-          const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
-          const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
-          expect(deployerVal).toEqual(expectedDeployerVal); 
-      });
-
-      it.only('Verify deployment of child account is successful', async () => {
-        // TODO: this is the test method that I'm currently developing
-        const mintAmount: UInt64 = UInt64.from(100000);
-        
-        const deployerSCPrivateKey: PrivateKey = PrivateKey.random();
-        const deployerContract: DeployerSC = new DeployerSC(deployerSCPrivateKey.toPublicKey());
-
-        const deployerDeployTxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
-            AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerContract.deploy({verificationKey: deployerSCVerificationKey, zkappKey: deployerSCPrivateKey});
-          });
-          await deployerDeployTxn.prove();
-          await deployerDeployTxn.sign([deployerPrivateKey, deployerSCPrivateKey]).send();
-
-        const deployeeSCPrivateKey: PrivateKey = PrivateKey.random();
-        const deployeeContract: DeployeeSC = new DeployeeSC(deployeeSCPrivateKey.toPublicKey());
-        const deployeeDeployTxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
-            AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
-          });
-          await deployeeDeployTxn.prove();
-          await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey]).send();
-
-          const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
-          const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
-          expect(deployerVal).toEqual(expectedDeployerVal);
-        
-        const deployerVerificationSCPrivateKey: PrivateKey = PrivateKey.random();
-        const deployerVerificationSC: DeployerVerificationSC = new DeployerVerificationSC(deployerVerificationSCPrivateKey.toPublicKey());
-        const deployerVerificationSCDeployTxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
-            AccountUpdate.fundNewAccount(deployerPublicKey);
-            deployerVerificationSC.deploy({verificationKey: deployerVerificationSCVerificationKey, zkappKey: deployerVerificationSCPrivateKey});
-          });
-
-          await deployerVerificationSCDeployTxn.prove();
-          await deployerVerificationSCDeployTxn.sign([deployerPrivateKey, deployerVerificationSCPrivateKey]).send();
-
-      });
-
-
-      
+      const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
+      const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
+      expect(deployerVal).toEqual(expectedDeployerVal);
     });
 
+    it.only('Verify deployment of child account is successful', async () => {
+
+      console.log(`Verification key: ${deployeeSCVerificationKey.hash.toString()}`)
+
+      const deployerSCPrivateKey: PrivateKey = PrivateKey.random();
+      const deployerContract: DeployerSC = new DeployerSC(deployerSCPrivateKey.toPublicKey());
+
+      const deployerDeployTxn: Mina.Transaction = await Mina.transaction(
+        deployerPublicKey, () => {
+          AccountUpdate.fundNewAccount(deployerPublicKey);
+          deployerContract.deploy({ verificationKey: deployerSCVerificationKey, zkappKey: deployerSCPrivateKey });
+        });
+      await deployerDeployTxn.prove();
+      await deployerDeployTxn.sign([deployerPrivateKey, deployerSCPrivateKey]).send();
+
+      const deployeeSCPrivateKey: PrivateKey = PrivateKey.random();
+      const deployeeContract: DeployeeSC = new DeployeeSC(deployeeSCPrivateKey.toPublicKey());
+      const deployeeDeployTxn: Mina.Transaction = await Mina.transaction(
+        deployerPublicKey, () => {
+          AccountUpdate.fundNewAccount(deployerPublicKey);
+          deployerContract.deployDeployee(deployerPublicKey, deployeeSCPrivateKey.toPublicKey(), deployeeSCVerificationKey);
+        });
+      await deployeeDeployTxn.prove();
+      await deployeeDeployTxn.sign([deployerPrivateKey, deployeeSCPrivateKey]).send();
+
+      const deployerVal: Field = deployeeContract.deployer.getAndRequireEquals();
+      const expectedDeployerVal: Field = Poseidon.hash(deployerPublicKey.toFields());
+      expect(deployerVal).toEqual(expectedDeployerVal);
+
+      const deployerVerificationSCPrivateKey: PrivateKey = PrivateKey.random();
+      const deployerVerificationSC: DeployerVerificationSC = new DeployerVerificationSC(deployerVerificationSCPrivateKey.toPublicKey());
+      const deployerVerificationSCDeployTxn: Mina.Transaction = await Mina.transaction(
+        deployerPublicKey, () => {
+          AccountUpdate.fundNewAccount(deployerPublicKey);
+          deployerVerificationSC.deploy({ verificationKey: deployerVerificationSCVerificationKey, zkappKey: deployerVerificationSCPrivateKey });
+        });
+
+      await deployerVerificationSCDeployTxn.prove();
+      await deployerVerificationSCDeployTxn.sign([deployerPrivateKey, deployerVerificationSCPrivateKey]).send();
+
+    });
+
+
+
   });
+
+});

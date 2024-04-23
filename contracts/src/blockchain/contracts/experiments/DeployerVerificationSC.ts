@@ -7,11 +7,14 @@ import { DeployeeSC } from "./DeployeeSC";
  */
 export class DeployerVerificationSC extends SmartContract {
 
+    @state(Field) expectedVerificationKeyDigest = State<Field>();
+
     deploy(args: DeployArgs) {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
         });
+
     }
 
     /**
@@ -33,5 +36,10 @@ export class DeployerVerificationSC extends SmartContract {
         
         // TODO:
         // Verify that the verification key of the SC is the expected one 
+        const ac: AccountUpdate = AccountUpdate.create(deployedSCAddr);
+        const storedVk: Field = ac.body.update.verificationKey.value.hash;
+
+        const expectedVerificationKeyDigest: Field = this.expectedVerificationKeyDigest.getAndRequireEquals();
+        storedVk.assertEquals(expectedVerificationKeyDigest);
     }
 }
