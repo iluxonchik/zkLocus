@@ -47,8 +47,8 @@ export class BountyBulletinBoardSC extends SmartContract {
     zkApp.account.verificationKey.set(bountyVerificationKey);
 
     // Set two values in the Bounty: the funder address and the bounty address
-    AccountUpdate.setValue(zkApp.body.update.appState[0], Poseidon.hash(this.address.toFields()));
-    AccountUpdate.setValue(zkApp.body.update.appState[1], Poseidon.hash(funderAddr.toFields()));
+    AccountUpdate.setValue(zkApp.body.update.appState[0], Poseidon.hash(this.address.toFields())); // deployer
+    AccountUpdate.setValue(zkApp.body.update.appState[1], Poseidon.hash(funderAddr.toFields())); // funder
 
     const feePayer: AccountUpdate = AccountUpdate.createSigned(this.sender);
     // since the deployment of the zkApp is done a child update of the account update created by this
