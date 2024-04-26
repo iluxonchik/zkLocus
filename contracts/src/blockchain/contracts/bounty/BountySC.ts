@@ -13,7 +13,7 @@ export class BountySC extends SmartContract {
     }
 
     @method confirmUsage() {
-        // Meant to be empty
+        Field(0).assertEquals(Field(0));
     }
 
 }

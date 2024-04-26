@@ -8,9 +8,14 @@ import {
   SmartContract,
   VerificationKey,
   Mina,
+  Field,
+  UInt64,
 } from 'o1js';
+import { BountySC } from './BountySC';
 
-
+class Constants {
+  static ACCOUNT_CREATION_FEE: UInt64 = Mina.getNetworkConstants().accountCreationFee;
+}
 
 /**
  * Bounty Bulletin Board (BBB) is the smart contact with which the end-user interacts for the deployment,
@@ -24,24 +29,24 @@ export class BountyBulletinBoardSC extends SmartContract {
   deploy(args: DeployArgs) {
     super.deploy(args);
     this.account.permissions.set({
-        ...Permissions.default(),
+      ...Permissions.default(),
     });
-}
+  }
 
-/**
- * Mints a new bounty for the funder. The current design allows for the funder to be arbitrarily set, meaning that
- * ayone can create a bounty for anyone else.
- * 
- * @param funderAddr - The public key of the funder.
- * @param bountyPubKey - The public key of the bounty.
- * @param bountyVerificationKey - The verification key of the newly minted Bounty contract
- */
-@method mintBounty(funderAddr: PublicKey, bountyPubKey: PublicKey,  bountyVerificationKey: VerificationKey) {         
+  /**
+   * Mints a new bounty for the funder. The current design allows for the funder to be arbitrarily set, meaning that
+   * ayone can create a bounty for anyone else.
+   * 
+   * @param funderAddr - The public key of the funder.
+   * @param bountyPubKey - The public key of the bounty.
+   * @param bountyVerificationKey - The verification key of the newly minted Bounty contract
+   */
+  @method mintBounty(funderAddr: PublicKey, bountyPubKey: PublicKey, bountyVerificationKey: VerificationKey) {
     let zkApp: AccountUpdate = AccountUpdate.createSigned(bountyPubKey);
 
     zkApp.account.permissions.set({
-        ...Permissions.default(),
-        editState: Permissions.proofOrSignature(),
+      ...Permissions.default(),
+      editState: Permissions.proofOrSignature(),
     });
 
     zkApp.account.verificationKey.set(bountyVerificationKey);
@@ -55,6 +60,37 @@ export class BountyBulletinBoardSC extends SmartContract {
     // contract's AccountUpdate, we are transferring the account creation fee from the sender to the contract,
     // so that this smart contract's AU can pay for the zkApp's deployment [?] --> can other addr be used?
     const feeReceiver: AccountUpdate = AccountUpdate.create(this.address);
-    feePayer.send({to:feeReceiver, amount: Mina.getNetworkConstants().accountCreationFee})
-}
+    feePayer.send({ to: feeReceiver, amount: Constants.ACCOUNT_CREATION_FEE })
+  }
+
+  /**
+   * Ensures that a given bounty contract conforms to the required interface and attributes.
+   * The deployer and founder attributes of the bounty must match the ones provided in the
+   * private inputs (method args).
+   *
+   * @param {PublicKey} bountyAddr - The public key address of the bounty contract.
+   * @param {PublicKey} funderAddr - The public key address of the funder of the bounty.
+   *
+   * @see {@link BountySC} for the bounty contract that this method checks.
+   */
+  @method requireBountyInterfaceConformance(bountyAddr: PublicKey, funderAddr: PublicKey) {
+
+    const funderAddrHash: Field = Poseidon.hash(funderAddr.toFields());
+    const thisAddrHash: Field = Poseidon.hash(this.address.toFields());
+
+
+    // Ensure interface and attrs match
+    // TODO: isn't just requiring interface conformance enough?
+    const deployedSC: BountySC = new BountySC(bountyAddr);
+
+    const bountyDeployerAddrHash: Field = deployedSC.deployer.get();
+    deployedSC.deployer.requireEquals(bountyDeployerAddrHash);
+    bountyDeployerAddrHash.assertEquals(thisAddrHash);
+
+    const bountyFunderAddrHash: Field = deployedSC.funder.get();
+    deployedSC.funder.requireEquals(bountyFunderAddrHash);
+    bountyFunderAddrHash.assertEquals(funderAddrHash);
+
+    deployedSC.confirmUsage();
+  }
 }
