@@ -81,16 +81,24 @@ export class BountyBulletinBoardSC extends SmartContract {
 
     // Ensure interface and attrs match
     // TODO: isn't just requiring interface conformance enough?
-    const deployedSC: BountySC = new BountySC(bountyAddr);
+    const bountySC: BountySC = new BountySC(bountyAddr);
 
-    const bountyDeployerAddrHash: Field = deployedSC.deployer.get();
-    deployedSC.deployer.requireEquals(bountyDeployerAddrHash);
+    const bountyDeployerAddrHash: Field = bountySC.deployer.get();
+    bountySC.deployer.requireEquals(bountyDeployerAddrHash);
     bountyDeployerAddrHash.assertEquals(thisAddrHash);
 
-    const bountyFunderAddrHash: Field = deployedSC.funder.get();
-    deployedSC.funder.requireEquals(bountyFunderAddrHash);
+    const bountyFunderAddrHash: Field = bountySC.funder.get();
+    bountySC.funder.requireEquals(bountyFunderAddrHash);
     bountyFunderAddrHash.assertEquals(funderAddrHash);
 
-    deployedSC.confirmUsage();
+    bountySC.confirmUsage();
+  }
+
+  @method claimBounty(bountyAddr: PublicKey, funderAddr: PublicKey, zklAddr: PublicKey) {
+    // TODO: set zklAddr to constant, like this now to ease testing and dev
+    this.requireBountyInterfaceConformance(bountyAddr, funderAddr);
+
+    const bountySC: BountySC = new BountySC(bountyAddr);
+    bountySC.claim(zklAddr);
   }
 }
