@@ -12,6 +12,7 @@ import {
   UInt64,
 } from 'o1js';
 import { BountySC } from './BountySC';
+import { ZKLContract } from '../tokens/zkl/ZKLContract';
 
 class Constants {
   static ACCOUNT_CREATION_FEE: UInt64 = Mina.getNetworkConstants().accountCreationFee;
@@ -61,6 +62,26 @@ export class BountyBulletinBoardSC extends SmartContract {
     // so that this smart contract's AU can pay for the zkApp's deployment [?] --> can other addr be used?
     const feeReceiver: AccountUpdate = AccountUpdate.create(this.address);
     feePayer.send({ to: feeReceiver, amount: Constants.ACCOUNT_CREATION_FEE })
+  }
+
+  /**
+   * Funds a bounty by transferring the specified amount of tokens from the funder's address to the bounty's address.
+   * 
+   * @param zklAddr - The address of the ZKL contract.
+   * @param bountyAddr - The address of the bounty contract.
+   * @param funderAddr - The address of the funder.
+   * @param amount - The amount of tokens to fund the bounty with.
+   */
+  @method fundBounty(zklAddr: PublicKey, bountyAddr: PublicKey, funderAddr: PublicKey, amount: UInt64) {
+    this.requireBountyInterfaceConformance(bountyAddr, funderAddr);
+
+    // TODO: put ZKLContract as const
+    const zklContract: ZKLContract = new ZKLContract(zklAddr);
+    zklContract.sendFromTo(
+      this.sender, // asserting the sender is not important: anyone can fund the bounty
+      bountyAddr,
+      amount,
+    )
   }
 
   /**
