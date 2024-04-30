@@ -1,4 +1,4 @@
-import { DeployArgs, SmartContract, State, state , Permissions, method, Field, PublicKey, AccountUpdate, UInt64} from "o1js";
+import { DeployArgs, SmartContract, State, state, Permissions, method, Field, PublicKey, AccountUpdate, UInt64 } from "o1js";
 import { ZKLContract } from "../tokens/zkl/ZKLContract";
 
 export class BountySC extends SmartContract {
@@ -13,9 +13,14 @@ export class BountySC extends SmartContract {
         });
     }
 
+    /**
+     * Claims the bounty by transferring the ZKL tokens to the claimer's address.
+     * 
+     * @param zklTokenAddr - The address of the ZKL token contract.
+     */
     @method claim(zklTokenAddr: PublicKey) {
         // ensure that the sender is the claimed one, by requiring a signature
-        const claimer: PublicKey = this.sender; 
+        const claimer: PublicKey = this.sender;
         const ac: AccountUpdate = AccountUpdate.createSigned(claimer);
         this.approve(ac);
 
@@ -26,8 +31,13 @@ export class BountySC extends SmartContract {
         zklTokenSC.sendFromTo(this.address, claimer, balance);
     }
 
-    @method confirmUsage() {
-        Field(0).assertEquals(Field(0));
+    /**
+     * Asserts that the verification key of the smart contract is the expected one. 
+     * This is done by calling an empty method on the smart contract. 
+     * Method call = Account Update with proof of authorization.
+     */
+    @method assertVerificationKeyIsCorrect() {
+        // must remain empty. no need for assertions or state changes
     }
 
 }

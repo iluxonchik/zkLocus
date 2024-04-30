@@ -1,4 +1,4 @@
-import { AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
+import { AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
 import { BountyBulletinBoardSC } from "../../../../blockchain/contracts/bounty/BountyBulletinBoardSC";
 import { BountySC } from "../../../../blockchain/contracts/bounty/BountySC";
@@ -6,6 +6,7 @@ import { BountySC } from "../../../../blockchain/contracts/bounty/BountySC";
 describe('Bounty Bulletin Board Integration', () => {
   const Local = Mina.LocalBlockchain();
   Local.setProofsEnabled(false);
+  Mina.setActiveInstance(Local);
   let zklSC: ZKLContract;
   const deployerPrivateKey: PrivateKey = Local.testAccounts[0].privateKey;
   const deployerPublicKey: PublicKey = deployerPrivateKey.toPublicKey();
@@ -26,7 +27,7 @@ describe('Bounty Bulletin Board Integration', () => {
 
   zklSC = new ZKLContract(zklAppAddress);
   const bbbSC: BountyBulletinBoardSC = new BountyBulletinBoardSC(bbbAppAddress);
-  
+
   beforeAll(async () => {
     console.log("Compiling smart contracts...");
     const startTimeSC = Date.now();
