@@ -16,7 +16,6 @@ import {
   Bool,
 } from 'o1js';
 import { ZKLContract } from '../tokens/zkl/ZKLContract';
-import { Account } from 'o1js/dist/node/lib/precondition';
 
 /*
   Merkle Witness Mental Model Glossary:
@@ -28,11 +27,8 @@ import { Account } from 'o1js/dist/node/lib/precondition';
 
 
 type GroupHash = {
-  x: Field;
-  y: {
-    x0: Field;
-    x1: Field;
-  };
+  x: Field,
+  y: { x0: Field },
 }
 
 
@@ -50,14 +46,12 @@ type GroupHash = {
  * in a set of hierarchical interfaces and implementaions.
  */
 export class BountyBulletinBoardContract extends TokenContract {
-  // Root of the Merkle Map containing the bounty funding information.
-  @state(PublicKey) bountyMapRoot = State<PublicKey>();
 
   // @method initState(intialBountyMapRoot: Field) {
   //   this.bountyMapRoot.set(intialBountyMapRoot);
   // }
 
-  @method approveBase(forest: AccountUpdateForest) {
+  @method async approveBase(forest: AccountUpdateForest) {
     //this.checkZeroBalanceChange(forest);
     forest.isEmpty().assertFalse();
   }
@@ -81,30 +75,30 @@ export class BountyBulletinBoardContract extends TokenContract {
     // which contains the bounty $ZKL amount
 
     // https://github.com/o1-labs/o1js/blob/0ec1c9da8c714298e6088ffa88178abb3961d200/src/lib/nullifier.ts#L64
-    const newGroupHash: GroupHash = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
-    const group: Group = new Group({ x: newGroupHash.x, y: newGroupHash.y.x0 });
+    const group: Group = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
     const bountyPublicKey: PublicKey = PublicKey.fromGroup(group);
 
     return bountyPublicKey;
   }
 
-  @method deriveBountyAccountAddressMethod(
+  @method.returns(PublicKey)
+  async deriveBountyAccountAddressMethod(
     funderAddress: PublicKey,
     bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
-  ): PublicKey {
+  ){
 
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
 
     // https://github.com/o1-labs/o1js/blob/0ec1c9da8c714298e6088ffa88178abb3961d200/src/lib/nullifier.ts#L64
-    const newGroupHash: GroupHash = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
-    const group: Group = new Group({ x: newGroupHash.x, y: newGroupHash.y.x0 });
+    const group: Group = Poseidon.hashToGroup([...funderAddress.toFields(), ...bountyId.toFields()]);
     const bountyPublicKey: PublicKey = PublicKey.fromGroup(group);
 
     return bountyPublicKey;
   }
 
-  @method sendFromTo(
+  @method
+  async sendFromTo(
     senderAddress: PublicKey,
     receiverAddress: PublicKey,
     amount: UInt64
@@ -121,15 +115,19 @@ export class BountyBulletinBoardContract extends TokenContract {
     this.approveAccountUpdate(accountUpdate);
   }
 
-@method fundBounty(
+
+// TODO: next step: implement the fund and the claim bounty methods using the "peove that I deployed constract X" approach
+@method.returns(PublicKey)
+async fundBounty(
+    
     funderAddress: PublicKey,
-    bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
+    bountyId: UInt64, // TODO: for now, a single bounty ID is supported
     bbAmountIncrement: UInt64,
-  ): PublicKey {
+  ){
 
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
-    const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+    const bountyPublicKey: PublicKey = await this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
 
     // NOTE: funding of new account may be required, if the "bountyPublicKey" is a new account.
     // The sender can easily verify wether the bounty needs to be funded (new bounty operation),
@@ -161,22 +159,22 @@ export class BountyBulletinBoardContract extends TokenContract {
   }
 
 
-  @method fundBountyOriginal(
+  @method.returns(PublicKey) async fundBountyOriginal(
     funderAddress: PublicKey,
     bountyId: UInt64, // the size of the tree will be fixed, but a self-replication mechanism will be implemented
     bbAmountIncrement: UInt64,
-  ): PublicKey {
+  ){
 
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
-    const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+    const bountyPublicKey: PublicKey = await this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
 
     // NOTE: funding of new account may be required, if the "bountyPublicKey" is a new account.
     // The sender can easily verify wether the bounty needs to be funded (new bounty operation),
     // or whether it already exists
     this.internal.send(
       {
-        from: this.sender,
+        from: this.sender.getAndRequireSignature(),
         to: bountyPublicKey,
         amount: bbAmountIncrement,
       }
@@ -191,13 +189,13 @@ export class BountyBulletinBoardContract extends TokenContract {
     });
   }
 
-  @method claimBounty(
+  @method async claimBounty(
     funderAddress: PublicKey,
     bountyId: UInt64,
   ) {
     // 1. Derive the  a PublicKey, which will represent the address of the account 
     // which contains the bounty $ZKL amount
-    const bountyPublicKey: PublicKey = this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
+    const bountyPublicKey: PublicKey = await this.deriveBountyAccountAddressMethod(funderAddress, bountyId);
 
     // // sender acccount update 
     let au = AccountUpdate.create(bountyPublicKey, this.deriveTokenId());
@@ -217,7 +215,7 @@ export class BountyBulletinBoardContract extends TokenContract {
 
     let ac = this.internal.send({
       from: bountyPublicKey,
-      to: this.sender,
+      to: this.sender.getAndRequireSignature(),
       amount: balance,
     });
 
@@ -227,11 +225,11 @@ export class BountyBulletinBoardContract extends TokenContract {
     //this.burnToZKL(bountyPublicKey, this.sender);
   }
 
-  @method approveUpdate(au: AccountUpdate) {
+  @method async approveUpdate(au: AccountUpdate) {
     this.approve(au);
   }
 
-  @method claimBountyWithApprove(
+  @method async claimBountyWithApprove(
     claimAU: AccountUpdate,
     bountyId: UInt64,
   ) {
@@ -240,17 +238,17 @@ export class BountyBulletinBoardContract extends TokenContract {
 
   }
 
-  @method mintFromZKL(
+  @method async mintFromZKL(
     zklAddress: PublicKey,
     amount: UInt64,
   ) {
     const zklContract: ZKLContract = new ZKLContract(zklAddress);
-    zklContract.sendFromTo(this.sender, this.address, amount);
+    zklContract.sendFromTo(this.sender.getAndRequireSignature(), this.address, amount);
     // Mint custom token of the same amount
-    this.internal.mint({ address: this.sender, amount: amount });
+    this.internal.mint({ address: this.sender.getAndRequireSignature(), amount: amount });
   }
 
-  @method burnToZKL(
+  @method async burnToZKL(
     bountyAccountPublicKey: PublicKey,
     receiverAccountAddress: PublicKey,
   ) {
@@ -280,7 +278,7 @@ export class BountyBulletinBoardContract extends TokenContract {
     //zklContract.sendFromTo(this.address, receiverAccountAddress, bountyAmount);
   }
 
-  deploy(args: DeployArgs) {
+  async deploy(args: DeployArgs) {
     super.deploy(args);
     // Temporarily all set to proof, will be refined later
     this.account.permissions.set({
@@ -294,7 +292,7 @@ export class BountyBulletinBoardContract extends TokenContract {
 
   }
 
-  @method init() {
+  @method async init() {
     super.init();
     this.account.tokenSymbol.set("BBB");
   }

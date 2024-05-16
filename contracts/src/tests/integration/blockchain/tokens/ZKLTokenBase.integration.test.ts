@@ -7,19 +7,19 @@ import fs from "fs";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-describe('ZKL Token Smart Contract', () => {
-  const Local = Mina.LocalBlockchain();
+describe('ZKL Token Smart Contract', async () => {
+  const Local = await Mina.LocalBlockchain();
   Local.setProofsEnabled(false);
   // let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
   let zklSC: ZKLContract;
-  const deployerPrivateKey: PrivateKey = Local.testAccounts[0].privateKey;
+  const deployerPrivateKey: PrivateKey = Local.testAccounts[0].key;
   //const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
   const deployerPublicKey: PublicKey = deployerPrivateKey.toPublicKey();
 
-  const interactor1PrivateKey: PrivateKey = Local.testAccounts[1].privateKey;
+  const interactor1PrivateKey: PrivateKey = Local.testAccounts[1].key;
   const interactor1PublicKey: PublicKey = interactor1PrivateKey.toPublicKey();
 
-  const interactor2PrivateKey: PrivateKey = Local.testAccounts[2].privateKey;
+  const interactor2PrivateKey: PrivateKey = Local.testAccounts[2].key;
   const interactor2PublicKey: PublicKey = interactor2PrivateKey.toPublicKey();
 
   const transactionFee: number = 100_000_000;
@@ -65,9 +65,9 @@ describe('ZKL Token Smart Contract', () => {
     console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
 
     console.log("Deploying $ZKL smart contract...");
-    const txn1 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+    const txn1 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey);
-      zklSC.deploy({ verificationKey: zklContractVerificationKey, zkappKey: zklAppPrivateKey });
+      await zklSC.deploy({ verificationKey: zklContractVerificationKey});
     });
     await txn1.prove();
     txn1.sign([deployerPrivateKey, zklAppPrivateKey]);
@@ -79,9 +79,9 @@ describe('ZKL Token Smart Contract', () => {
     console.log(txn1.toJSON());
 
     console.log("Deploying $BBB smart contract...");
-    const txn2 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+    const txn2 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey);
-      bbbSC.deploy({ verificationKey: bbbContractVerificationKey, zkappKey: bbbAppprivateKey });
+      await bbbSC.deploy({ verificationKey: bbbContractVerificationKey });
     });
     await txn2.prove();
     txn2.sign([deployerPrivateKey, bbbAppprivateKey]);
@@ -102,7 +102,7 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
     balance['Account Name'] = name;
 
     try {
-      const zklBalance = Mina.getBalance(publicKey, zklSC.token.id).value.toBigInt();
+      const zklBalance = Mina.getBalance(publicKey, zklSC.deriveTokenId()).value.toBigInt();
       balance['$ZKL'] = zklBalance.toString();
     } catch (error) {
       balance['$ZKL'] = '-';
@@ -133,10 +133,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
     it('Minting tokens to own zkApp succeeds', async () => {
       const mintAmount: UInt64 = UInt64.from(1);
 
-      const mintTxn: Mina.Transaction = await Mina.transaction(
-        deployerPrivateKey.toPublicKey(), () => {
+      const mintTxn = await Mina.transaction(
+        deployerPrivateKey.toPublicKey(), async () => {
           AccountUpdate.fundNewAccount(deployerPrivateKey.toPublicKey());
-          zklSC.mint(zklAppAddress, mintAmount);
+          await zklSC.mint(zklAppAddress, mintAmount);
         });
 
       console.log("Proving mint transaction...")
@@ -145,7 +145,7 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
       console.log("Mint transaction proved!");
 
       // Ensure the tokens got sent to the desired address
-      const zkAppBalance: bigint = Mina.getBalance(zklAppAddress, zklSC.token.id).value.toBigInt();
+      const zkAppBalance: bigint = Mina.getBalance(zklAppAddress, zklSC.deriveTokenId()).value.toBigInt();
       const expectedZkAppBalance: bigint = mintAmount.toBigInt();
       expect(zkAppBalance).toEqual(expectedZkAppBalance);
 
@@ -160,10 +160,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
       it('Minting $BBL_ZKL from $ZKL works', async () => {
         const mintAmount: UInt64 = UInt64.from(100000);
 
-        const mintTxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const mintTxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey);
-            zklSC.mint(deployerPublicKey, mintAmount);
+            await zklSC.mint(deployerPublicKey, mintAmount);
           });
         console.log(`Proving mint of ${mintAmount} of $ZKL...`);
         await mintTxn.prove();
@@ -174,10 +174,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         // Now, let's mint $BBB_ZKL from $ZKL
         console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL...`);
         const mintAmountBBB: UInt64 = UInt64.from(10);
-        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
-          deployerPublicKey, () => {
+        const mintFromZKLtxn = await Mina.transaction(
+          deployerPublicKey, async () => {
             AccountUpdate.fundNewAccount(deployerPublicKey, 2);
-            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+            await bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
           });
 
         console.log("\t - Proving mint transaction...");
@@ -188,11 +188,11 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         console.log("\tMint transaction proved!");
 
         // Confirm balances are correct
-        const zkAppBalance: bigint = Mina.getBalance(deployerPublicKey, zklSC.token.id).value.toBigInt();
+        const zkAppBalance: bigint = Mina.getBalance(deployerPublicKey, zklSC.deriveTokenId()).value.toBigInt();
         const expectedZkAppBalance: bigint = mintAmount.toBigInt() - mintAmountBBB.toBigInt();
         expect(zkAppBalance).toEqual(expectedZkAppBalance);
 
-        const bbbAppBalance: bigint = Mina.getBalance(deployerPublicKey, bbbSC.token.id).value.toBigInt();
+        const bbbAppBalance: bigint = Mina.getBalance(deployerPublicKey, bbbSC.deriveTokenId()).value.toBigInt();
         const expectedBbbAppBalance: bigint = mintAmountBBB.toBigInt();
         expect(bbbAppBalance).toEqual(expectedBbbAppBalance);
       });
@@ -202,10 +202,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         // TODO: this is the test method that I'm currently developing
         const mintAmount: UInt64 = UInt64.from(100000);
 
-        const mintTxn: Mina.Transaction = await Mina.transaction(
-          interactor2PublicKey, () => {
+        const mintTxn = await Mina.transaction(
+          interactor2PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor2PublicKey);
-            zklSC.mint(interactor1PublicKey, mintAmount);
+            await zklSC.mint(interactor1PublicKey, mintAmount);
           });
 
         console.log(`Proving mint of ${mintAmount} of $ZKL...`);
@@ -217,10 +217,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         // Now, let's mint $BBB_ZKL from $ZKL
         console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL...`);
         const mintAmountBBB: UInt64 = UInt64.from(10);
-        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const mintFromZKLtxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey, 2);
-            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+            await bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
           });
 
         console.log("\t - Proving mint transaction...");
@@ -231,21 +231,21 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         console.log("\tMint transaction proved!");
 
         // Confirm balances are correct
-        const zklInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, zklSC.token.id).value.toBigInt();
+        const zklInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, zklSC.deriveTokenId()).value.toBigInt();
         const expectedZKLInteractor1Balance: bigint = mintAmount.toBigInt() - mintAmountBBB.toBigInt();
         expect(zklInteractor1Balance).toEqual(expectedZKLInteractor1Balance);
 
-        const bbbInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, bbbSC.token.id).value.toBigInt();
+        const bbbInteractor1Balance: bigint = Mina.getBalance(interactor1PublicKey, bbbSC.deriveTokenId()).value.toBigInt();
         const expectedBBBInteractor1Balance: bigint = mintAmountBBB.toBigInt();
         expect(bbbInteractor1Balance).toEqual(expectedBBBInteractor1Balance);
 
         console.log("Funding bounty with $BBB");
 
         let fundedPubKey = bbbSC.deriveBountyAccountAddress(interactor1PublicKey, UInt64.from(1));
-        const fundBountyTxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const fundBountyTxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey, 1);
-            fundedPubKey = bbbSC.fundBounty(
+            fundedPubKey = await bbbSC.fundBounty(
               interactor1PublicKey,
               UInt64.from(1),
               mintAmountBBB,
@@ -270,10 +270,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
 
         await printBalances(publicKeyToName, "Initial state");
 
-        const mintTxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const mintTxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey);
-            zklSC.mint(interactor1PublicKey, mintAmount);
+            await zklSC.mint(interactor1PublicKey, mintAmount);
           });
 
         console.log(`Proving mint of ${mintAmount} of $ZKL to ${interactor1PublicKey.toBase58()}...`);
@@ -289,10 +289,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         // Now, let's mint $BBB_ZKL from $ZKL
         console.log(`Minting ${mintAmount} of $BBB_ZKL from $ZKL for ${interactor1PublicKey.toBase58()}...`);
         const mintAmountBBB: UInt64 = UInt64.from(10);
-        const mintFromZKLtxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const mintFromZKLtxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey, 2);
-            bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
+            await bbbSC.mintFromZKL(zklSC.address, mintAmountBBB);
           });
 
         console.log("\t - Proving mint transaction...");
@@ -308,10 +308,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         console.log(`Funding bounty with $BBB from ${interactor1PublicKey.toBase58()}...`);
 
         let fundedPubKey: PublicKey | undefined = undefined;
-        const fundBountyTxn: Mina.Transaction = await Mina.transaction(
-          interactor1PublicKey, () => {
+        const fundBountyTxn = await Mina.transaction(
+          interactor1PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor1PublicKey, 1);
-            fundedPubKey = bbbSC.fundBounty(
+            fundedPubKey = await bbbSC.fundBounty(
               interactor1PublicKey,
               UInt64.from(1),
               mintAmountBBB,
@@ -339,10 +339,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
 
         await printBalances(publicKeyToName, "After Fund Bounty");
 
-        const claimBountyTxn: Mina.Transaction = await Mina.transaction(
-          interactor2PublicKey, () => {
+        const claimBountyTxn = await Mina.transaction(
+          interactor2PublicKey, async () => {
             AccountUpdate.fundNewAccount(interactor2PublicKey, 1);
-            bbbSC.claimBounty(interactor1PublicKey, UInt64.from(1));
+            await bbbSC.claimBounty(interactor1PublicKey, UInt64.from(1));
           });
 
         // const claimBountyTxn: Mina.Transaction = await Mina.transaction(
@@ -380,10 +380,10 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
         // 1. The bounty $BBB_ZKL balance should be zero
         // 2. The $ZKL amount of claimer is incremented by the bounty amount
 
-        const bountyBalance: bigint = Mina.getBalance(fundedPubKey, bbbSC.token.id).value.toBigInt();
+        const bountyBalance: bigint = Mina.getBalance(fundedPubKey, bbbSC.deriveTokenId()).value.toBigInt();
         expect(bountyBalance).toEqual(0);
 
-        const claimerBalance: bigint = Mina.getBalance(interactor2PublicKey, zklSC.token.id).value.toBigInt();
+        const claimerBalance: bigint = Mina.getBalance(interactor2PublicKey, zklSC.deriveTokenId()).value.toBigInt();
         const expectedClaimerBalance: bigint = mintAmountBBB.toBigInt();
         expect(claimerBalance).toEqual(expectedClaimerBalance);
 
@@ -391,8 +391,8 @@ async function printBalances(publicKeyToName: Record<string, PublicKeyWithName>,
       });
 
       it('Account without balance raises exception', async () => {
-        const newAccount = Local.testAccounts[2].privateKey;
-        expect(Mina.getBalance(newAccount.toPublicKey(), zklSC.token.id)).rejects.toThrow();
+        const newAccount = Local.testAccounts[2].key;
+        expect(Mina.getBalance(newAccount.toPublicKey(), zklSC.deriveTokenId())).rejects.toThrow();
 
       });
     });

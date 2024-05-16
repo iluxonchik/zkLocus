@@ -1,14 +1,14 @@
 
 import { AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey } from "o1js";
 import { RandoMinaContract, RandomNumberObservationCircuit, RandomNumberObservationCircuitProof } from "../../../blockchain/contracts/RandoMinaContract";
-import { NetworkValue } from "o1js/dist/node/lib/precondition";
+import { NetworkValue } from "o1js/dist/node/lib/mina/precondition";
 
 
-describe('RandoMina Random Number Generator', () => {
-  const Local = Mina.LocalBlockchain();
+describe('RandoMina Random Number Generator', async () => {
+  const Local = await Mina.LocalBlockchain();
   // let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
   let zkAppInstance: RandoMinaContract;
-  const feePayer: PrivateKey = Local.testAccounts[0].privateKey;
+  const feePayer: PrivateKey = Local.testAccounts[0].key;
   //const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
   const feePayerPublicKey: PublicKey = feePayer.toPublicKey();
   const transactionFee: number = 100_000_000;
@@ -38,9 +38,9 @@ describe('RandoMina Random Number Generator', () => {
     zkAppInstance = new RandoMinaContract(zkAppAddress);
 
     console.log("Deploying smart contract...");
-    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
+    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(feePayerPublicKey);
-      zkAppInstance.deploy();
+      await zkAppInstance.deploy();
     });
     await txn.prove();
     txn.sign([feePayer, zkAppPrivateKey]);
@@ -76,8 +76,8 @@ describe('RandoMina Random Number Generator', () => {
       expect(isPRNGCorrect).toBe(true);
 
       console.log("Posting proof to blockchain...");
-      const txn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-        zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+      const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+        await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
       });
 
       console.log("\tProving smart contract invocation...");
@@ -116,8 +116,8 @@ describe('RandoMina Random Number Generator', () => {
       expect(isPRNGCorrect).toBe(true);
 
       console.log("Creating first transaction..");
-      const firstTxn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-        zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+      const firstTxn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+        await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
       });
 
       console.log("\tProving smart contract invocation...");
@@ -147,8 +147,8 @@ describe('RandoMina Random Number Generator', () => {
       expect(obtainedRandomNumber2.equals(obtainedRandomNumber1).toBoolean()).toBe(true);
 
       console.log("Creating second transaction..");
-      const secondTxn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-        zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+      const secondTxn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+        await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
       });
 
       console.log("\tProving smart contract invocation...");
@@ -197,8 +197,8 @@ describe('RandoMina Random Number Generator', () => {
       expect(isPRNGCorrect).toBe(true);
 
       console.log("Posting proof to blockchain...");
-      const txn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-        zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+      const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+        await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
       });
 
       console.log("\tProving smart contract invocation...");
@@ -239,8 +239,8 @@ describe('RandoMina Random Number Generator', () => {
     expect(isPRNGCorrect).toBe(true);
 
     console.log("Posting proof to blockchain...");
-    await expect(Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-      zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+    await expect(Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+      await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
     })).rejects.toThrow(/Field.assertEquals()/);
   });
 
@@ -279,8 +279,8 @@ describe('RandoMina Random Number Generator', () => {
     expect(isPRNGCorrect).toBe(true);
 
     console.log("Posting proof to blockchain...");
-    const txn: Mina.Transaction = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
-      zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
+    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
+      await zkAppInstance.verifyRandomNumber(randomNumberGenerationObservation);
     });
 
     console.log("\tProving smart contract invocation...");

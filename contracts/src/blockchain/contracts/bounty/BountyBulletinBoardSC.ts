@@ -27,7 +27,7 @@ class Constants {
  */
 export class BountyBulletinBoardSC extends SmartContract {
 
-  deploy(args: DeployArgs) {
+  async deploy(args: DeployArgs) {
     super.deploy(args);
     this.account.permissions.set({
       ...Permissions.default(),
@@ -42,7 +42,7 @@ export class BountyBulletinBoardSC extends SmartContract {
    * @param bountyPubKey - The public key of the bounty.
    * @param bountyVerificationKey - The verification key of the newly minted Bounty contract
    */
-  @method mintBounty(funderAddr: PublicKey, bountyPubKey: PublicKey, bountyVerificationKey: VerificationKey) {
+  @method async mintBounty(funderAddr: PublicKey, bountyPubKey: PublicKey, bountyVerificationKey: VerificationKey) {
     let zkApp: AccountUpdate = AccountUpdate.createSigned(bountyPubKey);
 
     zkApp.account.permissions.set({
@@ -56,7 +56,7 @@ export class BountyBulletinBoardSC extends SmartContract {
     AccountUpdate.setValue(zkApp.body.update.appState[0], Poseidon.hash(this.address.toFields())); // deployer
     AccountUpdate.setValue(zkApp.body.update.appState[1], Poseidon.hash(funderAddr.toFields())); // funder
 
-    const feePayer: AccountUpdate = AccountUpdate.createSigned(this.sender);
+    const feePayer: AccountUpdate = AccountUpdate.createSigned(this.sender.getAndRequireSignature());
     // since the deployment of the zkApp is done a child update of the account update created by this
     // contract's AccountUpdate, we are transferring the account creation fee from the sender to the contract,
     // so that this smart contract's AU can pay for the zkApp's deployment [?] --> can other addr be used?
@@ -72,13 +72,13 @@ export class BountyBulletinBoardSC extends SmartContract {
    * @param funderAddr - The address of the funder.
    * @param amount - The amount of tokens to fund the bounty with.
    */
-  @method fundBounty(zklAddr: PublicKey, bountyAddr: PublicKey, funderAddr: PublicKey, amount: UInt64) {
+  @method async fundBounty(zklAddr: PublicKey, bountyAddr: PublicKey, funderAddr: PublicKey, amount: UInt64) {
     this.requireBountyInterfaceConformance(bountyAddr, funderAddr);
 
     // TODO: put ZKLContract as const
     const zklContract: ZKLContract = new ZKLContract(zklAddr);
     zklContract.sendFromTo(
-      this.sender, // asserting the sender is not important: anyone can fund the bounty
+      this.sender.getAndRequireSignature(), // asserting the sender is not important: anyone can fund the bounty
       bountyAddr,
       amount,
     )
@@ -94,7 +94,7 @@ export class BountyBulletinBoardSC extends SmartContract {
    *
    * @see {@link BountySC} for the bounty contract that this method checks.
    */
-  @method requireBountyInterfaceConformance(bountyAddr: PublicKey, funderAddr: PublicKey) {
+  @method async requireBountyInterfaceConformance(bountyAddr: PublicKey, funderAddr: PublicKey) {
 
     const funderAddrHash: Field = Poseidon.hash(funderAddr.toFields());
     const thisAddrHash: Field = Poseidon.hash(this.address.toFields());
@@ -112,10 +112,10 @@ export class BountyBulletinBoardSC extends SmartContract {
     bountySC.funder.requireEquals(bountyFunderAddrHash);
     bountyFunderAddrHash.assertEquals(funderAddrHash);
 
-    bountySC.confirmUsage();
+    bountySC.assertVerificationKeyIsCorrect();
   }
 
-  @method claimBounty(bountyAddr: PublicKey, funderAddr: PublicKey, zklAddr: PublicKey) {
+  @method async claimBounty(bountyAddr: PublicKey, funderAddr: PublicKey, zklAddr: PublicKey) {
     // TODO: set zklAddr to constant, like this now to ease testing and dev
     this.requireBountyInterfaceConformance(bountyAddr, funderAddr);
 

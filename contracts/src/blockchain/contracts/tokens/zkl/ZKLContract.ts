@@ -22,11 +22,11 @@ export class ZKLContract extends TokenContract {
   SUPPLY_CAP: UInt64 = UInt64.from(10n ** 18n);
   @state(UInt64) circulatingSupply = State<UInt64>();
 
-  approveBase(forest: AccountUpdateForest): void {
+  async approveBase(forest: AccountUpdateForest) {
     forest.isEmpty().assertFalse();
   }
 
-  deploy(args: DeployArgs) {
+  async deploy(args: DeployArgs) {
     super.deploy(args);
 
     const permissionToEdit = Permissions.proof();
@@ -40,13 +40,13 @@ export class ZKLContract extends TokenContract {
     });
   }
 
-  @method init() {
+  @method async init() {
     super.init();
     this.account.tokenSymbol.set(tokenSymbol);
     this.circulatingSupply.set(UInt64.zero);
   }
 
-  @method mint(
+  @method async mint(
     receiverAddress: PublicKey,
     amount: UInt64,
   ) {
@@ -65,7 +65,7 @@ export class ZKLContract extends TokenContract {
     this.circulatingSupply.set(newTotalAmountInCirculation);
   }
 
-  @method sendTo(
+  @method async sendTo(
     senderAddress: PublicKey,
     receiverAddress: PublicKey,
     amount: UInt64
@@ -88,7 +88,7 @@ export class ZKLContract extends TokenContract {
    * @param receiverAddress 
    * @param amount 
    */
-  @method sendFromTo(
+  @method async sendFromTo(
     senderAddress: PublicKey,
     receiverAddress: PublicKey,
     amount: UInt64

@@ -37,7 +37,7 @@ export const RandomNumberObservationCircuit = ZkProgram({
     methods: {
         generateRandomNumber: {
             privateInputs: [Field],
-            method: (parameters: PublicPRNGParameters, nonce: Field): Field => {
+            async method(parameters: PublicPRNGParameters, nonce: Field){
                 return Poseidon.hash(
                     [
                         parameters.networkState, 
@@ -66,9 +66,9 @@ export class RandomNumberObservationCircuitProof extends ZkProgram.Proof(RandomN
  */
 export class RandoMinaContract extends SmartContract {
     
-    @method verifyRandomNumber(observationProof: RandomNumberObservationCircuitProof): void {
+    @method async verifyRandomNumber(observationProof: RandomNumberObservationCircuitProof){
         const claimedSender: Field = observationProof.publicInput.sender;
-        claimedSender.assertEquals(Poseidon.hash(this.sender.toFields()));
+        claimedSender.assertEquals(Poseidon.hash(this.sender.getUnconstrained().toFields()));
 
         const claimedNetworkState: Field = observationProof.publicInput.networkState;
         this.network.stakingEpochData.ledger.hash.requireEquals(claimedNetworkState);

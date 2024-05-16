@@ -5,7 +5,7 @@ import { ExactGeolocationMetadataCircuitProof } from "../../../zkprogram/public/
 export class GeoPointWithMetadataContract extends SmartContract {
     @state(MetadataGeoPointCommitment) geoPointWithMetadata = State<MetadataGeoPointCommitment>();
 
-    @method submitProof(proof: ExactGeolocationMetadataCircuitProof): void {
+    @method async submitProof(proof: ExactGeolocationMetadataCircuitProof){
         proof.verify();
 
         this.geoPointWithMetadata.set(proof.publicOutput);

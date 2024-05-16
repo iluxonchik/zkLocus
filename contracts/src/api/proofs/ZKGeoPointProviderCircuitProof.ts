@@ -30,7 +30,7 @@ export class ZKGeoPointProviderCircuitProof extends ZKLocusProof<GeoPointProvide
         this._proof = proof;
     }
 
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return GeoPointProviderCircuitProof.fromJSON(jsonProof);
     }
 

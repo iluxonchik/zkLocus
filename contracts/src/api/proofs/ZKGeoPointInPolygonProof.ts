@@ -248,7 +248,7 @@ export class ZKGeoPointInPolygonProof extends ZKLocusProof<GeoPointInPolygonCirc
         return Poseidon.hash([leftPolygonHash, rightPolygonHash]);
     }
 
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return GeoPointInPolygonCircuitProof.fromJSON(jsonProof);
     }
 

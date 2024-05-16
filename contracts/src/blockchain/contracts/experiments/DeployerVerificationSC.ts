@@ -7,7 +7,7 @@ import { DeployeeSC } from "./DeployeeSC";
  */
 export class DeployerVerificationSC extends SmartContract {
 
-    deploy(args: DeployArgs) {
+    async deploy(args: DeployArgs) {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
@@ -19,10 +19,10 @@ export class DeployerVerificationSC extends SmartContract {
      * @param deployedSCAddr 
      * @param claimedDeployeeAddrDigest 
      */
-    @method requireDeployedBySender(deployedSCAddr: PublicKey, claimedDeployeeAddrDigest: Field){
+    @method async requireDeployedBySender(deployedSCAddr: PublicKey, claimedDeployeeAddrDigest: Field){
 
         // First, ensure the sender the claimed Deployee
-        const senderDigest: Field = Poseidon.hash(this.sender.toFields());
+        const senderDigest: Field = Poseidon.hash(this.sender.getAndRequireSignature().toFields());
         senderDigest.assertEquals(senderDigest);
         
         // Then, ensure the deployer attribute matches the sender/claimed
@@ -30,8 +30,9 @@ export class DeployerVerificationSC extends SmartContract {
         const supposedDeployerAddr: Field = deployedSC.deployer.get();
         deployedSC.deployer.requireEquals(supposedDeployerAddr);
         supposedDeployerAddr.assertEquals(claimedDeployeeAddrDigest);
+
+        // checking that the verificaton key matches the expected one = call empty method on the deployed SC
+        deployedSC.assertVerificationKeyIsCorrect();
         
-        // TODO:
-        // Verify that the verification key of the SC is the expected one 
     }
 }

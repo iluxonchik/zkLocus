@@ -153,10 +153,10 @@ export function proveGeoPointIn3PointPolygon(
  * @param polygon 
  * @returns 
  */
-export function proveProvidedGeoPointIn3PointPolygon(
+export async function proveProvidedGeoPointIn3PointPolygon(
   sourcedGeoPointProof: GeoPointProviderCircuitProof,
   polygon: ThreePointPolygon,
-): GeoPointInPolygonCommitment {
+): Promise<GeoPointInPolygonCommitment> {
   Provable.log("Verifying...");
   sourcedGeoPointProof.verify();
   Provable.log("Verified!");
@@ -221,10 +221,10 @@ function ANDLiteral(first: GeoPointInPolygonCommitment, second: GeoPointInPolygo
  * @returns CoordinateProofState
  */
 
-export function AND(
+export async function AND(
   proof1: GeoPointInPolygonCircuitProof,
   proof2: GeoPointInPolygonCircuitProof
-): GeoPointInPolygonCommitment {
+): Promise<GeoPointInPolygonCommitment> {
   // IMPORTANT: A caveat of this AND. If you give proof1, which asserts that the user is in Spain, and proof2 that
   // asserts that the user is not in Romania, then the resulting proof from .AND will say that the user is
   // not in Spain AND Romania. This is because the AND operation is applied to the `isInPolygon` field
@@ -312,10 +312,10 @@ function ORLiteral(
  * @returns CoordinateProofState
  */
 
-export function OR(
+export async function OR(
   proof1: GeoPointInPolygonCircuitProof,
   proof2: GeoPointInPolygonCircuitProof
-): GeoPointInPolygonCommitment {
+): Promise<GeoPointInPolygonCommitment> {
   proof1.verify();
   proof2.verify();
 
@@ -325,10 +325,12 @@ export function OR(
   return ORLiteral(first, second);
 
 
-} export function combine(
+} 
+
+export async function combine(
   proof1: SelfProof<Empty, GeoPointInOutPolygonCommitment>,
   proof2: SelfProof<Empty, GeoPointInOutPolygonCommitment>
-): GeoPointInOutPolygonCommitment {
+): Promise<GeoPointInOutPolygonCommitment> {
   proof1.verify();
   proof2.verify();
 
@@ -455,9 +457,10 @@ export function OR(
     coordinatesCommitment: proof1PublicOutput.coordinatesCommitment,
   });
 }
-export function fromCoordinatesInPolygonProof(
+
+export async function fromCoordinatesInPolygonProof(
   proof: SelfProof<Empty, GeoPointInPolygonCommitment>
-): GeoPointInOutPolygonCommitment {
+): Promise<GeoPointInOutPolygonCommitment> {
   proof.verify();
 
   const coodinatesInPolygonProof: GeoPointInPolygonCommitment = proof.publicOutput;
@@ -479,9 +482,9 @@ export function fromCoordinatesInPolygonProof(
   });
 }
 
-export function proofGeoPointInPolygonCommitmentFromOutput(
+export async function proofGeoPointInPolygonCommitmentFromOutput(
   output: GeoPointInPolygonCommitment
-): GeoPointInPolygonCommitment {
+): Promise<GeoPointInPolygonCommitment> {
   return output;
 }
 
@@ -491,7 +494,7 @@ export function proofGeoPointInPolygonCommitmentFromOutput(
  * @param timestampIntervralProof Proof of source of timestamp interval
  * @returns GeoPoint with inclusion in polygon and time stamp interval information
  */
-export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: GeoPointInPolygonCircuitProof, timestampIntervralProof: TimeStampIntervalProviderCircuitProof): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export async function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: GeoPointInPolygonCircuitProof, timestampIntervralProof: TimeStampIntervalProviderCircuitProof): Promise<GeoPointWithTimeStampIntervalInPolygonCommitment> {
   geoPointInPolygonProof.verify();
   timestampIntervralProof.verify();
 
@@ -512,7 +515,7 @@ export function proofAttachSourcedTimestampinterval(geoPointInPolygonProof: GeoP
  * @param secondProof second proof
  * @returns combination of both proofs
  */
-export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export async function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): Promise<GeoPointWithTimeStampIntervalInPolygonCommitment> {
   firstProof.verify();
   secondProof.verify();
 
@@ -535,7 +538,7 @@ export function geoPointWithTimeStampInPolygonAND(firstProof: SelfProof<Empty, G
   });
 }
 
-export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export async function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, secondProof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>): Promise<GeoPointWithTimeStampIntervalInPolygonCommitment> {
   firstProof.verify();
   secondProof.verify();
 
@@ -563,7 +566,7 @@ export function geoPointWithTimeStampInPolygonOR(firstProof: SelfProof<Empty, Ge
  * @param commitment - the proof to expand
  * @param newTimeStampInterval  - the new time interval
  */
-export function expandTimeStampInterval(commitment: GeoPointWithTimeStampIntervalInPolygonCommitment, newTimeStampInterval: TimeStampInterval): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export async function expandTimeStampInterval(commitment: GeoPointWithTimeStampIntervalInPolygonCommitment, newTimeStampInterval: TimeStampInterval): Promise<GeoPointWithTimeStampIntervalInPolygonCommitment> {
   commitment.timestamp.start.assertLessThanOrEqual(newTimeStampInterval.start);
   commitment.timestamp.end.assertGreaterThanOrEqual(newTimeStampInterval.end);
 
@@ -581,7 +584,7 @@ export function expandTimeStampInterval(commitment: GeoPointWithTimeStampInterva
  * @param newTimeStampInterval  - the new and expanded time stamp interval.
  * @returns 
  */
-export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, newTimeStampInterval: TimeStampInterval): GeoPointWithTimeStampIntervalInPolygonCommitment {
+export async function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPointWithTimeStampIntervalInPolygonCommitment>, newTimeStampInterval: TimeStampInterval): Promise<GeoPointWithTimeStampIntervalInPolygonCommitment> {
   proof.verify();
 
   const proofPublicOutput: GeoPointWithTimeStampIntervalInPolygonCommitment = proof.publicOutput;
@@ -589,11 +592,11 @@ export function expandTimeStampIntervalRecursive(proof: SelfProof<Empty, GeoPoin
   return expandTimeStampInterval(proofPublicOutput, newTimeStampInterval);
 }
 
-export function geoPointFromLiteral(point: GeoPoint): GeoPoint {
+export async function geoPointFromLiteral(point: GeoPoint): Promise<GeoPoint> {
   return point;
 }
 
-export function timeStampIntervalFromLiteral(interval: TimeStampInterval): TimeStampInterval {
+export async function timeStampIntervalFromLiteral(interval: TimeStampInterval): Promise<TimeStampInterval> {
   return interval;
 }
 
@@ -601,10 +604,10 @@ export function timeStampIntervalFromLiteral(interval: TimeStampInterval): TimeS
   Given an oracle-signed GeoPoint, this method verifies that the signature is valid, and that the
   claimed GeoPoint is the same as the one that was signed.
 */
-export function exactGeoPointFromOracle(
+export async function exactGeoPointFromOracle(
   oracleProof: OracleGeoPointProviderCircuitProof,
   geoPoint: GeoPoint,
-): GeoPoint {
+): Promise<GeoPoint> {
   oracleProof.verify();
 
   const geoPointCommitnemt: OracleAuthenticatedGeoPointCommitment = oracleProof.publicOutput;

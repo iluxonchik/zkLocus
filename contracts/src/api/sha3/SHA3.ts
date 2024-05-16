@@ -1,5 +1,5 @@
 import { Bytes, Field, Hash, Poseidon} from "o1js";
-import { ProvablePureExtended } from "o1js/dist/node/lib/circuit-value";
+import { ProvablePureExtended } from "o1js/dist/node/lib/provable/types/struct";
 
 
 /**

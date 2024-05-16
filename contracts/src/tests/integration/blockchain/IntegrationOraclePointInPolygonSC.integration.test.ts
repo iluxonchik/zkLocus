@@ -72,9 +72,9 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       zkAppInstance = new GeoPointInPolygonContract(zkAppAddress);
 
       console.log("Deploying smart contract...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
         AccountUpdate.fundNewAccount(feePayerPublicKey);
-        zkAppInstance.deploy();
+        await zkAppInstance.deploy();
       });
       await txn.prove();
       txn.sign([feePayer, zkAppPrivateKey]);
@@ -128,8 +128,8 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       console.log("Point in polygon proved!")
 
       console.log("Posting proof to blockchain...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
-        zkAppInstance.submitProof(zkGeoPointInPolygonProof1);
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
+        await zkAppInstance.submitProof(zkGeoPointInPolygonProof1);
       });
       console.log("\tProving smart contract invocation...");
       await txn.prove();

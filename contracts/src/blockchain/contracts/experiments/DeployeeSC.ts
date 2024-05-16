@@ -14,7 +14,7 @@ export class DeployeeSC extends SmartContract {
     @state(Field) deployer = State<Field>();
     @state(PublicKey) funder = State<PublicKey>();
 
-    deploy(args: DeployArgs) {
+    async deploy(args: DeployArgs) {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
@@ -22,11 +22,14 @@ export class DeployeeSC extends SmartContract {
         });
     }
 
-    @method claim() {
+    @method async claim() {
        // empty (for now) 
     }
 
-    @method confirmUsage() {
+    /**
+     * Asserts that the verification key of the smart contract is the expected one.
+     */
+    @method async assertVerificationKeyIsCorrect() {
         // empty
     }
 

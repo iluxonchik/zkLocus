@@ -4,11 +4,11 @@ import { BountyBulletinBoardContract } from "../../../../blockchain/contracts/bo
 
 
 
-describe('ZKL Token Smart Contract', () => {
-  const Local = Mina.LocalBlockchain();
+describe('ZKL Token Smart Contract', async () => {
+  const Local = await Mina.LocalBlockchain();
   // let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
   let zkAppInstance: BountyBulletinBoardContract;
-  const feePayer: PrivateKey = Local.testAccounts[0].privateKey;
+  const feePayer: PrivateKey = Local.testAccounts[0].key;
   //const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
   const feePayerPublicKey: PublicKey = feePayer.toPublicKey();
   const transactionFee: number = 100_000_000;
@@ -35,12 +35,12 @@ describe('ZKL Token Smart Contract', () => {
     console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
 
     console.log("Deploying smart contract...");
-    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, () => {
+    const txn = await Mina.transaction({ sender: feePayerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(feePayerPublicKey);
-      zkAppInstance.deploy({ verificationKey, zkappKey: zkAppPrivateKey });
+      await zkAppInstance.deploy({ verificationKey });
     });
     await txn.prove();
-    txn.sign([feePayer, zkAppPrivateKey]);
+    txn.sign([feePayer, zkAppPrivateKey])
     await txn.send();
     console.log("Smart contract deployed!");
 
@@ -51,10 +51,10 @@ describe('ZKL Token Smart Contract', () => {
 
   describe('Funding Checks', () => {
     it('Funding a $ZKL bounty suceeds', async () => {
-      const fundTx: Mina.Transaction = await Mina.transaction(
-        feePayer.toPublicKey(), () => {
+      const fundTx = await Mina.transaction(
+        feePayer.toPublicKey(), async () => {
           //AccountUpdate.fundNewAccount(feePayer.toPublicKey());
-          zkAppInstance.fundBounty(feePayer.toPublicKey(), UInt64.from(1), UInt64.from(1));
+          await zkAppInstance.fundBounty(feePayer.toPublicKey(), UInt64.from(1), UInt64.from(1));
         });
 
       console.log("Proving fund transaction...")

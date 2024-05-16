@@ -5,7 +5,7 @@ export class BountySC extends SmartContract {
     @state(Field) deployer = State<Field>();
     @state(Field) funder = State<Field>();
 
-    deploy(args: DeployArgs) {
+    async deploy(args: DeployArgs) {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
@@ -18,9 +18,9 @@ export class BountySC extends SmartContract {
      * 
      * @param zklTokenAddr - The address of the ZKL token contract.
      */
-    @method claim(zklTokenAddr: PublicKey) {
+    @method async claim(zklTokenAddr: PublicKey) {
         // ensure that the sender is the claimed one, by requiring a signature
-        const claimer: PublicKey = this.sender;
+        const claimer: PublicKey = this.sender.getAndRequireSignature();
         const ac: AccountUpdate = AccountUpdate.createSigned(claimer);
         this.approve(ac);
 
@@ -36,7 +36,7 @@ export class BountySC extends SmartContract {
      * This is done by calling an empty method on the smart contract. 
      * Method call = Account Update with proof of authorization.
      */
-    @method assertVerificationKeyIsCorrect() {
+    @method async assertVerificationKeyIsCorrect() {
         // must remain empty. no need for assertions or state changes
     }
 

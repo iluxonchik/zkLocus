@@ -61,7 +61,7 @@ export class ZKExactGeoPointCircuitProof extends ZKLocusProof<ExactGeoPointCircu
      * @param jsonProof The JSON representation of the proof.
      * @returns An instance of ZKExactGeoPointCircuitProof.
      */
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return ExactGeoPointCircuitProof.fromJSON(jsonProof);
     }
 

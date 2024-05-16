@@ -5,7 +5,7 @@ import { GeoPointInPolygonCircuitProof, GeoPointInPolygonCombinerCircuitProof} f
 export class GeoPointInPolygonContract extends SmartContract {
     @state(GeoPointInPolygonCommitment) geoPointInPolygon = State<GeoPointInPolygonCommitment>();
 
-    @method submitProof(proof: GeoPointInPolygonCircuitProof) {
+    @method async submitProof(proof: GeoPointInPolygonCircuitProof) {
         proof.verify();
 
         this.geoPointInPolygon.set(proof.publicOutput);
@@ -15,7 +15,7 @@ export class GeoPointInPolygonContract extends SmartContract {
 export class GeoPointInPolygonCombinedContract extends SmartContract {
     @state(GeoPointInPolygonCommitment) geoPointInPolygon = State<GeoPointInPolygonCommitment>();
 
-    @method submitProof(proof: GeoPointInPolygonCombinerCircuitProof) {
+    @method async submitProof(proof: GeoPointInPolygonCombinerCircuitProof) {
         proof.verify();
 
         this.geoPointInPolygon.set(proof.publicOutput);

@@ -56,9 +56,9 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       zkAppInstance = new GeoPointWithMetadataContract(zkAppAddress);
 
       console.log("Deploying smart contract...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
         AccountUpdate.fundNewAccount(feePayerPublicKey);
-        zkAppInstance.deploy();
+        await zkAppInstance.deploy();
       });
       await txn.prove();
       txn.sign([feePayer, zkAppPrivateKey]);
@@ -97,8 +97,8 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       console.log("Metadata attached to geolocation proof!")
 
       console.log("Posting proof to blockchain...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
-        zkAppInstance.submitProof(zkProof.proof);
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
+        await zkAppInstance.submitProof(zkProof.proof);
       });
       console.log("\tProving smart contract invocation...");
       await txn.prove();

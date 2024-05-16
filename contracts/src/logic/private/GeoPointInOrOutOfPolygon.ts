@@ -10,10 +10,10 @@ import { GeoPointInPolygonCircuitProof } from "../../zkprogram/private/GeoPointI
  * @param outsideProof - The proof of the GeoPoint being outside a polygon.
  * @returns A GeoPointInOutPolygonCommitment object.
  */
-export function fromPointInPolygonProofs(
+export async function fromPointInPolygonProofs(
     insideProof: GeoPointInPolygonCircuitProof,
     outsideProof: GeoPointInPolygonCircuitProof,
-): GeoPointInOutPolygonCommitment {
+): Promise<GeoPointInOutPolygonCommitment> {
     insideProof.verify();
     const insideProofCommitment: GeoPointInPolygonCommitment = insideProof.publicOutput;
     insideProofCommitment.isInPolygon.assertTrue("`insideProof` is not a proof of a GeoPoint being inside a polygon, but rather outside.");
@@ -49,10 +49,10 @@ export function fromPointInPolygonProofs(
  * @param pointInPolygonProof The point-in-polygon proof of the geo point being inside the polygon.
  * @returns The commitment to the geo point inside or outside the polygon.
  */
-export function extendWithPointInPolygonProof(
+export async function extendWithPointInPolygonProof(
     selfProof: SelfProof<Empty, GeoPointInOutPolygonCommitment>,
     pointInPolygonProof: GeoPointInPolygonCircuitProof,
-): GeoPointInOutPolygonCommitment {
+): Promise<GeoPointInOutPolygonCommitment> {
     selfProof.verify();
     pointInPolygonProof.verify();
 

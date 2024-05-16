@@ -78,7 +78,7 @@ export class ZKGeoPointInOrOutOfPolygonCircuitProof extends ZKLocusProof<GeoPoin
         super();
     }
 
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return GeoPointInOrOutOfPolygonCircuitProof.fromJSON(jsonProof);
     }
 

@@ -1,4 +1,4 @@
-import { Bool } from "o1js/dist/node/lib/bool";
+import { Bool } from "o1js";
 import { ZKLocusProof } from "../ZKLocusProof";
 
 /**

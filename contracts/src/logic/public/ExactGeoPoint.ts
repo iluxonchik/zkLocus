@@ -13,7 +13,7 @@ import { Bytes64, SHA3_512 } from "../../api/sha3/SHA3";
 *
 * The return value (`GeoPointCommitment`) can be combined with a Nonce for semi-private geolocation sharing.
 */
-export function proveExactGeoPointFromProvider(geoPointProviderProof: GeoPointProviderCircuitProof): GeoPointCommitment {
+export async function proveExactGeoPointFromProvider(geoPointProviderProof: GeoPointProviderCircuitProof): Promise<GeoPointCommitment> {
     geoPointProviderProof.verify();
     const geoPoint: GeoPoint = geoPointProviderProof.publicOutput;
     const geoPointHash: Field = geoPoint.hash();
@@ -24,7 +24,7 @@ export function proveExactGeoPointFromProvider(geoPointProviderProof: GeoPointPr
 }
 
 
-export function attachMetadataToGeoPoint(geoPointProviderProof: GeoPointProviderCircuitProof, sha3_512: Bytes64): MetadataGeoPointCommitment {
+export async function attachMetadataToGeoPoint(geoPointProviderProof: GeoPointProviderCircuitProof, sha3_512: Bytes64): Promise<MetadataGeoPointCommitment> {
     geoPointProviderProof.verify();
     const geoPoint: GeoPoint = geoPointProviderProof.publicOutput;
     const geoPointHash: Field = geoPoint.hash();

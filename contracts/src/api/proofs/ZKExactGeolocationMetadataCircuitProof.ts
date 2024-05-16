@@ -24,7 +24,7 @@ export class ZKExactGeolocationMetadataCircuitProof extends ZKLocusProof<ExactGe
         this._proof = proof;
     }
  
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return ExactGeolocationMetadataCircuitProof.fromJSON(jsonProof);
     }
 

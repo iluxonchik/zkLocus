@@ -1,20 +1,20 @@
-import { AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey, UInt64 } from "o1js";
+import { AccountUpdate, Field, Mina, Poseidon, PrivateKey, PublicKey, TransactionPromise, UInt64 } from "o1js";
 import { ZKLContract } from "../../../../blockchain/contracts/tokens/zkl/ZKLContract";
 import { BountyBulletinBoardSC } from "../../../../blockchain/contracts/bounty/BountyBulletinBoardSC";
 import { BountySC } from "../../../../blockchain/contracts/bounty/BountySC";
 
-describe('Bounty Bulletin Board Integration', () => {
-  const Local = Mina.LocalBlockchain();
+describe('Bounty Bulletin Board Integration', async () => {
+  const Local = await Mina.LocalBlockchain();
   Local.setProofsEnabled(false);
   Mina.setActiveInstance(Local);
   let zklSC: ZKLContract;
-  const deployerPrivateKey: PrivateKey = Local.testAccounts[0].privateKey;
+  const deployerPrivateKey: PrivateKey = Local.testAccounts[0].key;
   const deployerPublicKey: PublicKey = deployerPrivateKey.toPublicKey();
 
-  const funderPrivateKey: PrivateKey = Local.testAccounts[1].privateKey;
+  const funderPrivateKey: PrivateKey = Local.testAccounts[1].key;
   const funderPublicKey: PublicKey = funderPrivateKey.toPublicKey();
 
-  const claimerPrivateKey: PrivateKey = Local.testAccounts[2].privateKey;
+  const claimerPrivateKey: PrivateKey = Local.testAccounts[2].key;
   const claimerPublicKey: PublicKey = claimerPrivateKey.toPublicKey();
 
   const transactionFee: number = 100_000_000;
@@ -39,9 +39,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log(`Smart contract compilation took ${endTimeSC - startTimeSC} milliseconds.`);
 
     console.log("Deploying $ZKL smart contract...");
-    const txn1 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+    const txn1 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey);
-      zklSC.deploy({ verificationKey: zklContractVerificationKey, zkappKey: zklAppPrivateKey });
+      await zklSC.deploy({ verificationKey: zklContractVerificationKey});
     });
     await txn1.prove();
     txn1.sign([deployerPrivateKey, zklAppPrivateKey]);
@@ -49,9 +49,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log("$ZKL smart contract deployed!");
 
     console.log("Deploying $BBB smart contract...");
-    const txn2 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, () => {
+    const txn2 = await Mina.transaction({ sender: deployerPublicKey, fee: transactionFee }, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey);
-      bbbSC.deploy({ verificationKey: bbbContractVerificationKey, zkappKey: bbbAppPrivateKey });
+      await bbbSC.deploy({ verificationKey: bbbContractVerificationKey});
     });
     await txn2.prove();
     txn2.sign([deployerPrivateKey, bbbAppPrivateKey]);
@@ -63,9 +63,9 @@ describe('Bounty Bulletin Board Integration', () => {
     const bountyPubKey: PublicKey = PrivateKey.random().toPublicKey();
     const bountyVerificationKey: { data: string, hash: Field } = (await BountySC.compile()).verificationKey;
 
-    const mintBountyTxn: Mina.Transaction = await Mina.transaction(deployerPublicKey, () => {
+    const mintBountyTxn = await Mina.transaction(deployerPublicKey, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey, 1);
-      bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
+      await bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
     });
 
     console.log("Proving mintBounty() transaction...");
@@ -83,9 +83,9 @@ describe('Bounty Bulletin Board Integration', () => {
     const bountyPubKey: PublicKey = PrivateKey.random().toPublicKey();
     const bountyVerificationKey: { data: string, hash: Field } = (await BountySC.compile()).verificationKey;
 
-    const mintBountyTxn: Mina.Transaction = await Mina.transaction(deployerPublicKey, () => {
+    const mintBountyTxn = await Mina.transaction(deployerPublicKey, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey, 1);
-      bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
+      await bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
     });
 
     console.log("Proving mintBounty() transaction...");
@@ -94,9 +94,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log("mintBounty() transaction proved and sent to network!");
 
     const mintZKLAmount: UInt64 = UInt64.from(1000);
-    const mintZKLTxn: Mina.Transaction = await Mina.transaction(funderPublicKey, () => {
+    const mintZKLTxn = await Mina.transaction(funderPublicKey, async () => {
       AccountUpdate.fundNewAccount(funderPublicKey);
-      zklSC.mint(funderPublicKey, mintZKLAmount);
+      await zklSC.mint(funderPublicKey, mintZKLAmount);
     });
 
     console.log(`Proving mint of ${mintZKLAmount} of $ZKL to ${funderPublicKey.toBase58()}...`);
@@ -105,9 +105,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log(`Mint of ${mintZKLAmount} of $ZKL proved!`);
 
     const fundBountyAmount: UInt64 = UInt64.from(500);
-    const fundBountyTxn: Mina.Transaction = await Mina.transaction(funderPublicKey, () => {
+    const fundBountyTxn  = await Mina.transaction(funderPublicKey, async () => {
       AccountUpdate.fundNewAccount(funderPublicKey, 1);
-      bbbSC.fundBounty(zklAppAddress, bountyPubKey, funderPublicKey, fundBountyAmount);
+      await bbbSC.fundBounty(zklAppAddress, bountyPubKey, funderPublicKey, fundBountyAmount);
     });
 
     console.log("Proving fundBounty() transaction...");
@@ -115,7 +115,7 @@ describe('Bounty Bulletin Board Integration', () => {
     await fundBountyTxn.sign([funderPrivateKey]).send();
     console.log("fundBounty() transaction proved and sent to network!");
 
-    const bountyZKLBalance: bigint = Mina.getBalance(bountyPubKey, zklSC.token.id).value.toBigInt();
+    const bountyZKLBalance: bigint = Mina.getBalance(bountyPubKey, zklSC.deriveTokenId()).value.toBigInt();
     expect(bountyZKLBalance).toEqual(fundBountyAmount.toBigInt());
   });
 
@@ -123,9 +123,9 @@ describe('Bounty Bulletin Board Integration', () => {
     const bountyPubKey: PublicKey = PrivateKey.random().toPublicKey();
     const bountyVerificationKey: { data: string, hash: Field } = (await BountySC.compile()).verificationKey;
 
-    const mintBountyTxn: Mina.Transaction = await Mina.transaction(deployerPublicKey, () => {
+    const mintBountyTxn = await Mina.transaction(deployerPublicKey, async () => {
       AccountUpdate.fundNewAccount(deployerPublicKey, 1);
-      bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
+      await bbbSC.mintBounty(funderPublicKey, bountyPubKey, bountyVerificationKey);
     });
 
     console.log("Proving mintBounty() transaction...");
@@ -134,9 +134,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log("mintBounty() transaction proved and sent to network!");
 
     const mintZKLAmount: UInt64 = UInt64.from(1000);
-    const mintZKLTxn: Mina.Transaction = await Mina.transaction(funderPublicKey, () => {
+    const mintZKLTxn  = await Mina.transaction(funderPublicKey, async () => {
       AccountUpdate.fundNewAccount(funderPublicKey);
-      zklSC.mint(funderPublicKey, mintZKLAmount);
+      await zklSC.mint(funderPublicKey, mintZKLAmount);
     });
 
     console.log(`Proving mint of ${mintZKLAmount} of $ZKL to ${funderPublicKey.toBase58()}...`);
@@ -145,9 +145,9 @@ describe('Bounty Bulletin Board Integration', () => {
     console.log(`Mint of ${mintZKLAmount} of $ZKL proved!`);
 
     const fundBountyAmount: UInt64 = UInt64.from(500);
-    const fundBountyTxn: Mina.Transaction = await Mina.transaction(funderPublicKey, () => {
+    const fundBountyTxn = await Mina.transaction(funderPublicKey, async () => {
       AccountUpdate.fundNewAccount(funderPublicKey, 1);
-      bbbSC.fundBounty(zklAppAddress, bountyPubKey, funderPublicKey, fundBountyAmount);
+      await bbbSC.fundBounty(zklAppAddress, bountyPubKey, funderPublicKey, fundBountyAmount);
     });
 
     console.log("Proving fundBounty() transaction...");
@@ -155,9 +155,9 @@ describe('Bounty Bulletin Board Integration', () => {
     await fundBountyTxn.sign([funderPrivateKey]).send();
     console.log("fundBounty() transaction proved and sent to network!");
 
-    const claimBountyTxn: Mina.Transaction = await Mina.transaction(claimerPublicKey, () => {
+    const claimBountyTxn = await Mina.transaction(claimerPublicKey, async () => {
       AccountUpdate.fundNewAccount(claimerPublicKey, 1);
-      bbbSC.claimBounty(bountyPubKey, funderPublicKey, zklAppAddress);
+      await bbbSC.claimBounty(bountyPubKey, funderPublicKey, zklAppAddress);
     });
 
     console.log("Proving claimBounty() transaction...");
@@ -165,10 +165,10 @@ describe('Bounty Bulletin Board Integration', () => {
     await claimBountyTxn.sign([claimerPrivateKey]).send();
     console.log("claimBounty() transaction proved and sent to network!");
 
-    const bountyZKLBalance: bigint = Mina.getBalance(bountyPubKey, zklSC.token.id).value.toBigInt();
+    const bountyZKLBalance: bigint = Mina.getBalance(bountyPubKey, zklSC.deriveTokenId()).value.toBigInt();
     expect(bountyZKLBalance).toEqual(0n);
 
-    const claimerZKLBalance: bigint = Mina.getBalance(claimerPublicKey, zklSC.token.id).value.toBigInt();
+    const claimerZKLBalance: bigint = Mina.getBalance(claimerPublicKey, zklSC.deriveTokenId()).value.toBigInt();
     expect(claimerZKLBalance).toEqual(fundBountyAmount.toBigInt());
   });
 

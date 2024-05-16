@@ -20,7 +20,7 @@ export class ZKOracleGeoPointProviderCircuitProof extends ZKLocusProof<OracleGeo
         this._proof = proof;
     }
 
-    static fromJSON(jsonProof: JsonProof): IO1JSProof {
+    static async fromJSON(jsonProof: JsonProof): Promise<IO1JSProof> {
         return OracleGeoPointProviderCircuitProof.fromJSON(jsonProof);
     }
 

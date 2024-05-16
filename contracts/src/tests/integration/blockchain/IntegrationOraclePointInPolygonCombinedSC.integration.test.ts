@@ -17,11 +17,11 @@ const isProofsEnabled: boolean = true;
 
 const PRIVATE_KEY: string = "EKExputMGvW1TXkURDg6W73AzF3csKGKpKKYzvWujCyYcpS3CkTA";
 
-describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
+describe('ZK Locus Oracle Integration Tests For Exact Geolocation', async () => {
   const oracleEndpoint = 'http://127.0.0.1:5577'; // Configurable
   const oracleClient = new OracleClient(oracleEndpoint);
 
-  const Local = Mina.LocalBlockchain();
+  const Local = await Mina.LocalBlockchain();
   let Berkeley = Mina.Network('https://proxy.berkeley.minaexplorer.com/graphql');
   let zkAppInstance: GeoPointInPolygonCombinedContract;
   const feePayer: PrivateKey = PrivateKey.fromBase58(PRIVATE_KEY)
@@ -57,9 +57,9 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       zkAppInstance = new GeoPointInPolygonCombinedContract(zkAppAddress);
 
       console.log("Deploying smart contract...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
         AccountUpdate.fundNewAccount(feePayerPublicKey);
-        zkAppInstance.deploy();
+        await zkAppInstance.deploy();
       });
       await txn.prove();
       txn.sign([feePayer, zkAppPrivateKey]);
@@ -113,8 +113,8 @@ describe('ZK Locus Oracle Integration Tests For Exact Geolocation', () => {
       console.log("Point in polygon proved!")
 
       console.log("Posting proof to blockchain...");
-      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, () => {
-        zkAppInstance.submitProof(zkGeoPointInPolygonProof1);
+      const txn = await Mina.transaction({sender: feePayerPublicKey, fee: transactionFee}, async () => {
+        await zkAppInstance.submitProof(zkGeoPointInPolygonProof1);
       });
       console.log("\tProving smart contract invocation...");
       await txn.prove();

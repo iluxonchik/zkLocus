@@ -8,15 +8,15 @@ export class DeployerSC extends SmartContract {
      
     @state(PublicKey) bountyMapRoot = State<PublicKey>();
 
-    deploy(args: DeployArgs) {
+   async deploy(args: DeployArgs) {
         super.deploy(args);
         this.account.permissions.set({
             ...Permissions.default(),
         });
     }
 
-    @method deployDeployee(deployeeAddr: PublicKey, deployeePubKey: PublicKey,  verificationKey: VerificationKey) {         
-        deployeeAddr.assertEquals(this.sender);
+    @method async deployDeployee(deployeeAddr: PublicKey, deployeePubKey: PublicKey,  verificationKey: VerificationKey) {         
+        deployeeAddr.assertEquals(this.sender.getAndRequireSignature());
 
         let zkApp: AccountUpdate = AccountUpdate.createSigned(deployeePubKey);
 
