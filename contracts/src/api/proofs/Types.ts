@@ -19,7 +19,7 @@ export interface IO1JSProofConstructor {
 export type ZKProgramCompileResult = {verificationKey: {data: string, hash: Field}};
 export type ZKProgramCircuit = {
     compile: (options?: {
-        cache?: import("/Users/iluxonchik/GitHub/zkLocus/contracts/node_modules/o1js/dist/node/lib/proof-system/cache").Cache;
+        cache?: import("o1js/dist/node/lib/proof-system/cache").Cache;
         forceRecompile?: boolean;
     }) => Promise<{
         verificationKey: {
